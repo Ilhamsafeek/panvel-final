@@ -1,6 +1,6 @@
 # =====================================================
 # FILE: app/services/subscription_service.py
-# Subscription Management Service
+# FIXED - Removed is_subscription_valid() call
 # =====================================================
 
 from sqlalchemy.orm import Session
@@ -48,18 +48,28 @@ class SubscriptionService:
                 )
             ).all()
             
-            # Filter out expired subscriptions
-            active_codes = [
-                sub.module_code 
-                for sub in subscriptions 
-                if sub.is_active()
-            ]
+            # ✅ FIXED: Check validity inline instead of calling method
+            active_codes = []
+            for sub in subscriptions:
+                # Check if subscription is valid (not expired)
+                is_valid = True
+                
+                if not sub.is_active:
+                    is_valid = False
+                
+                if sub.expiry_date and sub.expiry_date < datetime.utcnow():
+                    is_valid = False
+                
+                if is_valid:
+                    active_codes.append(sub.module_code)
             
             logger.info(f"Company {company_id} has {len(active_codes)} active subscriptions")
             return active_codes
             
         except Exception as e:
             logger.error(f"Error getting company subscriptions: {str(e)}")
+            import traceback
+            traceback.print_exc()
             return []
     
     @staticmethod
@@ -77,7 +87,11 @@ class SubscriptionService:
             if not subscription:
                 return False
             
-            return subscription.is_active()
+            # ✅ FIXED: Check validity inline
+            if subscription.expiry_date and subscription.expiry_date < datetime.utcnow():
+                return False
+            
+            return True
             
         except Exception as e:
             logger.error(f"Error checking module access: {str(e)}")
