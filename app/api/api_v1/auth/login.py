@@ -174,7 +174,7 @@ async def login(
                 "company_id": user.company_id
             },
             access_token=access_token,
-            redirect_url="/hub"  # Changed to dashboard
+            redirect_url="/dashboard"  # Changed to dashboard
         )
         
     except HTTPException:
@@ -250,7 +250,7 @@ async def verify_2fa(
                 "company_id": user.company_id
             },
             access_token=access_token,
-            redirect_url="/hub"
+            redirect_url="/dashboard"
         )
         
     except HTTPException:
@@ -326,7 +326,7 @@ async def verify_security_question(
                 "company_id": user.company_id
             },
             access_token=access_token,
-            redirect_url="/hub"
+            redirect_url="/dashboard"
         )
         
     except HTTPException:

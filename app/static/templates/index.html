@@ -2700,6 +2700,83 @@ Add this to your <style> section
             opacity: 1;
             transform: translateY(0);
         }
+
+        /* ============================================
+   USER NAVIGATION INFO
+   ============================================ */
+        .user-nav-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: rgba(39, 98, 203, 0.05);
+            border-radius: 50px;
+            border: 1px solid rgba(39, 98, 203, 0.1);
+            transition: var(--transition);
+        }
+
+        .user-nav-info:hover {
+            background: rgba(39, 98, 203, 0.1);
+            border-color: rgba(39, 98, 203, 0.2);
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .user-avatar i {
+            font-size: 20px;
+            color: white;
+        }
+
+        .user-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-color);
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Mobile menu user section */
+        .mobile-user-section {
+            border-top: 1px solid var(--border-color);
+            padding-top: 1rem;
+            margin-top: 1rem;
+        }
+
+        .mobile-user-section .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .user-nav-info {
+                display: none;
+                /* Hide on mobile, show in mobile menu instead */
+            }
+
+            .nav-actions .btn-primary {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .user-name {
+                max-width: 100px;
+            }
+        }
     </style>
 </head>
 
@@ -3122,7 +3199,7 @@ Add this to your <style> section
                 </div>
 
                 <!-- Module 4: Obligation Tracking -->
-                <div class="module-card" data-module="obligations">
+                <!-- <div class="module-card" data-module="obligations">
                     <div class="module-header">
                         <div class="module-icon-wrapper">
                             <div class="module-icon obligations">
@@ -3187,10 +3264,10 @@ Add this to your <style> section
                             Learn More <i class="ti ti-arrow-right"></i>
                         </a>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Module 5: Reports & Analytics -->
-                <div class="module-card" data-module="reports">
+                <!-- <div class="module-card" data-module="reports">
                     <div class="module-header">
                         <div class="module-icon-wrapper">
                             <div class="module-icon reports">
@@ -3255,10 +3332,10 @@ Add this to your <style> section
                             Learn More <i class="ti ti-arrow-right"></i>
                         </a>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Module 6: Blockchain Verification -->
-                <div class="module-card" data-module="blockchain">
+                <!-- <div class="module-card" data-module="blockchain">
                     <div class="module-header">
                         <div class="module-icon-wrapper">
                             <div class="module-icon blockchain">
@@ -3323,10 +3400,10 @@ Add this to your <style> section
                             Learn More <i class="ti ti-arrow-right"></i>
                         </a>
                     </div>
-                </div>
+                </div> -->
 
                 <!-- Module 7: Expert Collaboration -->
-                <div class="module-card" data-module="expert">
+                <!-- <div class="module-card" data-module="expert">
                     <div class="module-header">
                         <div class="module-icon-wrapper">
                             <div class="module-icon expert">
@@ -3391,7 +3468,7 @@ Add this to your <style> section
                             Learn More <i class="ti ti-arrow-right"></i>
                         </a>
                     </div>
-                </div>
+                </div> -->
 
             </div> <!-- End modules-grid -->
 
@@ -3999,10 +4076,11 @@ Add this to your <style> section
                 // User is logged in - redirect to dashboard with module selection
                 window.location.href = `/dashboard?module=${moduleType}`;
             } else {
-                // User is not logged in - redirect to registration with module parameter
-                window.location.href = `/auth/register?module=${moduleType}`;
+                // User is not logged in - redirect to registration
+                window.location.href = `/register?module=${moduleType}`;
             }
         }
+
 
         // Show module details (can be expanded to show modal with more info)
         function showModuleDetails(moduleType, event) {
@@ -4298,7 +4376,155 @@ Add this to your <style> section
                 closeModuleModal();
             }
         });
+
+        // ============================================
+        // CHECK USER AUTHENTICATION ON PAGE LOAD (Cookie-based)
+        // ============================================
+        document.addEventListener('DOMContentLoaded', async function () {
+            const navActions = document.querySelector('.nav-actions');
+
+            if (navActions) {
+                try {
+                    // Your system uses /api/auth/me endpoint
+                    const response = await fetch('/api/auth/me', {
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        const userData = await response.json();
+
+                        // Debug: Log the full userData object to see its structure
+                        console.log('Full userData object:', userData);
+                        console.log('Available properties:', Object.keys(userData));
+
+                        // Try to find the name/email from the response
+                        let displayName = 'My Account';
+
+                        // Check all possible property names
+                        if (userData.full_name) displayName = userData.full_name;
+                        else if (userData.fullName) displayName = userData.fullName;
+                        else if (userData.name) displayName = userData.name;
+                        else if (userData.username) displayName = userData.username;
+                        else if (userData.email) displayName = userData.email;
+                        else if (userData.user && userData.user.full_name) displayName = userData.user.full_name;
+                        else if (userData.user && userData.user.email) displayName = userData.user.email;
+
+                        console.log('Display name will be:', displayName);
+
+                        // Replace nav actions with user info and dashboard button
+                        navActions.innerHTML = `
+                    <div class="user-nav-info">
+                        <div class="user-avatar">
+                            <i class="ti ti-user"></i>
+                        </div>
+                        <span class="user-name">${displayName}</span>
+                    </div>
+                    <a href="/dashboard" class="btn btn-primary">
+                        <i class="ti ti-layout-dashboard"></i> Dashboard
+                    </a>
+                `;
+                    } else {
+                        console.log('User not authenticated');
+                    }
+                } catch (error) {
+                    console.error('Error checking authentication:', error);
+                }
+            }
+        });
+
+        // Handle module selection with cookie-based auth check
+        async function selectModule(moduleType) {
+            try {
+                const response = await fetch('/api/auth/me', {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    // User is logged in - redirect to dashboard with module selection
+                    window.location.href = `/dashboard?module=${moduleType}`;
+                } else {
+                    // User is not logged in - redirect to registration
+                    window.location.href = `/register?module=${moduleType}`;
+                }
+            } catch (error) {
+                // On error, assume not logged in
+                window.location.href = `/register?module=${moduleType}`;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', async function () {
+            const navActions = document.querySelector('.nav-actions');
+
+            if (navActions) {
+                try {
+                    // Check authentication by calling the API (cookies are sent automatically)
+                    const response = await fetch('/api/users/me', {
+                        credentials: 'include'  // Important: sends cookies with request
+                    });
+
+                    if (response.ok) {
+                        const userData = await response.json();
+
+                        console.log('User authenticated:', userData.email);
+
+                        // Replace nav actions with user info and dashboard button
+                        navActions.innerHTML = `
+                    <div class="user-nav-info">
+                        <div class="user-avatar">
+                            <i class="ti ti-user"></i>
+                        </div>
+                        <span class="user-name">${userData.full_name || userData.email}</span>
+                    </div>
+                    <a href="/hub" class="btn btn-primary">
+                        <i class="ti ti-layout-dashboard"></i> Dashboard
+                    </a>
+                `;
+                    } else {
+                        console.log('User not authenticated');
+                    }
+                } catch (error) {
+                    console.error('Error checking authentication:', error);
+                }
+            }
+        });
+
+        // Update mobile menu for logged-in users
+        async function toggleMobileMenu() {
+            const menu = document.querySelector('.nav-menu');
+
+            if (menu.style.display === 'flex') {
+                menu.style.display = 'none';
+            } else {
+                menu.style.display = 'flex';
+
+                // Check if user is logged in and add dashboard link
+                try {
+                    const response = await fetch('/api/auth/me', {
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        const userData = await response.json();
+                        const existingUserSection = menu.querySelector('.mobile-user-section');
+
+                        if (!existingUserSection) {
+                            const userSection = document.createElement('li');
+                            userSection.className = 'mobile-user-section';
+                            userSection.innerHTML = `
+                        <a href="/dashboard" class="nav-link" style="font-weight: 700; color: var(--primary-color);">
+                            <i class="ti ti-layout-dashboard"></i> Dashboard (${userData.full_name || userData.name || userData.email || userData.username || 'My Account'})
+                        </a>
+                    `;
+                            menu.appendChild(userSection);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking auth in mobile menu:', error);
+                }
+            }
+        }
     </script>
+
+
 </body>
 
 </html>

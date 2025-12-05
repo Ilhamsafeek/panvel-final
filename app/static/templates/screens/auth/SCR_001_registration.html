@@ -519,13 +519,38 @@
             grid-template-columns: 1fr;
         }
     }
+
+    .module-banner {
+        background-color: #e7f3ff;
+        color: #004085;
+        padding: 15px 20px;
+        text-align: center;
+        border-radius: 6px;
+        border-left: 4px solid #0d6efd;
+        margin-bottom: 25px;
+        font-size: 16px;
+    }
+
+    .module-banner i {
+        margin-right: 8px;
+        color: #0d6efd;
+    }
+
+    .module-banner strong {
+        font-weight: 600;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <!-- Main Registration Container -->
 <div class="registration-container">
+
+
+
     <div class="registration-card">
+
+       
         <div class="form-container">
             <div class="form-header">
                 <h1 class="form-title">
@@ -533,6 +558,14 @@
                 </h1>
                 <!-- <p class="form-subtitle">Join Smart CLM to streamline your contract management</p> -->
             </div>
+
+             <!-- Only shows banner IF module_name exists -->
+        {% if module_name %}
+        <div class="module-banner" role="alert">
+            <i class="ti ti-info-circle me-2"></i>
+            <strong>You're signing up for:</strong> {{ module_name }}
+        </div>
+        {% endif %}
 
             <!-- Progress Steps -->
             <div class="progress-steps">
@@ -1187,6 +1220,29 @@
     const prevBtn = document.getElementById('prevBtn');
     const progressLine = document.getElementById('progressLine');
 
+    // Email validation helper
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(String(email).toLowerCase());
+    }
+
+    // Show alert message
+    function showAlert(message, type) {
+        const alertDiv = type === 'success' ? document.getElementById('successAlert') : document.getElementById('errorAlert');
+        const messageSpan = type === 'error' ? document.getElementById('errorMessage') : alertDiv.querySelector('span');
+
+        messageSpan.textContent = message;
+        alertDiv.style.display = 'flex';
+
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            alertDiv.style.display = 'none';
+        }, 5000);
+
+        // Scroll to top to show alert
+        document.querySelector('.registration-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     // Step Navigation
     function showStep(step) {
         // Hide all steps
@@ -1233,25 +1289,68 @@
         const currentStepElement = document.querySelector(`.form-step[data-step="${step}"]`);
         const inputs = currentStepElement.querySelectorAll('.form-input[required], .form-select[required]');
         let isValid = true;
+        let errorMessages = [];
 
         inputs.forEach(input => {
+            const fieldName = input.name || 'This field';
+
+            // Check if empty
             if (!input.value.trim()) {
                 input.classList.add('error');
+                const errorSpan = input.parentElement.querySelector('.error-message');
+                if (errorSpan) errorSpan.style.display = 'flex';
                 isValid = false;
+                return; // Skip other validations if empty
             } else {
                 input.classList.remove('error');
+                const errorSpan = input.parentElement.querySelector('.error-message');
+                if (errorSpan) errorSpan.style.display = 'none';
             }
 
-            // Special validations
+            // Email validation
             if (input.type === 'email' && !validateEmail(input.value)) {
                 input.classList.add('error');
+                const errorSpan = input.parentElement.querySelector('.error-message');
+                if (errorSpan) {
+                    errorSpan.innerHTML = '<i class="ti ti-alert-circle"></i> Please enter a valid email address';
+                    errorSpan.style.display = 'flex';
+                }
+                errorMessages.push('Please enter a valid email address');
                 isValid = false;
             }
 
+            // Password confirmation validation
             if (input.name === 'confirmPassword') {
                 const password = document.getElementById('password').value;
                 if (input.value !== password) {
                     input.classList.add('error');
+                    const errorSpan = input.parentElement.querySelector('.error-message');
+                    if (errorSpan) {
+                        errorSpan.innerHTML = '<i class="ti ti-alert-circle"></i> Passwords do not match';
+                        errorSpan.style.display = 'flex';
+                    }
+                    errorMessages.push('Passwords do not match');
+                    isValid = false;
+                } else {
+                    input.classList.remove('error');
+                    const errorSpan = input.parentElement.querySelector('.error-message');
+                    if (errorSpan) errorSpan.style.display = 'none';
+                }
+            }
+
+            // Password strength validation
+            if (input.name === 'password') {
+                const password = input.value;
+                const requirements = {
+                    length: password.length >= 8,
+                    uppercase: /[A-Z]/.test(password),
+                    number: /[0-9]/.test(password),
+                    special: /[^a-zA-Z0-9]/.test(password)
+                };
+
+                if (!requirements.length || !requirements.uppercase || !requirements.number || !requirements.special) {
+                    input.classList.add('error');
+                    errorMessages.push('Password does not meet requirements');
                     isValid = false;
                 }
             }
@@ -1263,18 +1362,38 @@
             const privacyCheckbox = document.getElementById('privacy');
 
             if (!termsCheckbox.checked || !privacyCheckbox.checked) {
-                showAlert('Please accept Terms and Conditions and Privacy Policy', 'error');
+                errorMessages.push('Please accept Terms and Conditions and Privacy Policy');
                 isValid = false;
             }
         }
 
-        // Validate license selection
+        // Validate license selection on step 3
         if (step === 3) {
             const licenseType = document.querySelector('input[name="licenseType"]:checked');
             if (!licenseType) {
-                showAlert('Please select a license type', 'error');
+                errorMessages.push('Please select a license type');
                 isValid = false;
             }
+        }
+
+        // Validate CR expiry date on step 2
+        if (step === 2) {
+            const crExpiryDate = document.getElementById('crExpiryDate');
+            if (crExpiryDate && crExpiryDate.value) {
+                const selectedDate = new Date(crExpiryDate.value);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (selectedDate < today) {
+                    errorMessages.push('Commercial Registration has expired');
+                    isValid = false;
+                }
+            }
+        }
+
+        // Show error messages
+        if (!isValid && errorMessages.length > 0) {
+            showAlert(errorMessages[0], 'error');
         }
 
         return isValid;
@@ -1303,8 +1422,45 @@
         }
     });
 
-    // Password strength checker with popup
+    // Real-time password confirmation validation
+    const confirmPasswordInput = document.querySelector('input[name="confirmPassword"]');
+    confirmPasswordInput?.addEventListener('input', function () {
+        const password = document.getElementById('password').value;
+        const errorSpan = this.parentElement.querySelector('.error-message');
+
+        if (this.value && this.value !== password) {
+            this.classList.add('error');
+            if (errorSpan) {
+                errorSpan.innerHTML = '<i class="ti ti-alert-circle"></i> Passwords do not match';
+                errorSpan.style.display = 'flex';
+            }
+        } else if (this.value && this.value === password) {
+            this.classList.remove('error');
+            if (errorSpan) errorSpan.style.display = 'none';
+        }
+    });
+
+    // Also validate confirm password when main password changes
     const passwordInput = document.getElementById('password');
+    passwordInput?.addEventListener('input', function () {
+        const confirmPassword = document.querySelector('input[name="confirmPassword"]');
+        if (confirmPassword && confirmPassword.value) {
+            const errorSpan = confirmPassword.parentElement.querySelector('.error-message');
+
+            if (confirmPassword.value !== this.value) {
+                confirmPassword.classList.add('error');
+                if (errorSpan) {
+                    errorSpan.innerHTML = '<i class="ti ti-alert-circle"></i> Passwords do not match';
+                    errorSpan.style.display = 'flex';
+                }
+            } else {
+                confirmPassword.classList.remove('error');
+                if (errorSpan) errorSpan.style.display = 'none';
+            }
+        }
+    });
+
+    // Password strength checker with popup
     const strengthBar = document.getElementById('strengthBar');
     const passwordRequirements = document.getElementById('passwordRequirements');
 
@@ -1425,12 +1581,12 @@
                 const fileItem = document.createElement('div');
                 fileItem.className = 'file-item';
                 fileItem.innerHTML = `
-                        <i class="ti ti-file"></i>
-                        <span>${file.name} (${formatFileSize(file.size)})</span>
-                        <button type="button" onclick="removeFile(${index})" style="margin-left: auto; background: none; border: none; color: var(--danger-color); cursor: pointer;">
-                            <i class="ti ti-x"></i>
-                        </button>
-                    `;
+                    <i class="ti ti-file"></i>
+                    <span>${file.name} (${formatFileSize(file.size)})</span>
+                    <button type="button" onclick="removeFile(${index})" style="margin-left: auto; background: none; border: none; color: var(--danger-color); cursor: pointer;">
+                        <i class="ti ti-x"></i>
+                    </button>
+                `;
                 fileList.appendChild(fileItem);
             });
         }
@@ -1439,13 +1595,28 @@
     // Remove file function
     function removeFile(index) {
         uploadedFiles.splice(index, 1);
+        const dataTransfer = new DataTransfer();
+        uploadedFiles.forEach(file => dataTransfer.items.add(file));
+        fileInput.files = dataTransfer.files;
+
         if (uploadedFiles.length === 0) {
-            document.getElementById('documentUpload').classList.remove('has-files');
-            document.getElementById('fileList').innerHTML = '';
+            uploadDiv.classList.remove('has-files');
+            fileList.innerHTML = '';
         } else {
             // Re-render file list
-            const event = new Event('change');
-            fileInput.dispatchEvent(event);
+            fileList.innerHTML = '<div style="margin-top: 1rem; font-weight: 600;">Uploaded Files:</div>';
+            uploadedFiles.forEach((file, idx) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <i class="ti ti-file"></i>
+                    <span>${file.name} (${formatFileSize(file.size)})</span>
+                    <button type="button" onclick="removeFile(${idx})" style="margin-left: auto; background: none; border: none; color: var(--danger-color); cursor: pointer;">
+                        <i class="ti ti-x"></i>
+                    </button>
+                `;
+                fileList.appendChild(fileItem);
+            });
         }
     }
 
@@ -1506,9 +1677,6 @@
 
                 // Show success message
                 showAlert('Registration successful! Check your email for verification.', 'success');
-
-                // Scroll to top to show success message
-                window.scrollTo({ top: 0, behavior: 'smooth' });
 
                 // Redirect after 3 seconds
                 setTimeout(() => {

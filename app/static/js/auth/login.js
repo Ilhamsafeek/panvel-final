@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Redirect after short delay
                 setTimeout(() => {
-                    const redirectUrl = data.redirect_url || '/hub';  // Changed from '/dashboard' to '/hub'
+                    const redirectUrl = data.redirect_url || '/dashboard';  // Changed from '/dashboard' to '/hub'
                     console.log(`🔄 Redirecting to: ${redirectUrl}`);
                     window.location.href = redirectUrl;
                 }, 1000);

@@ -106,7 +106,7 @@ async function login(email, password, rememberMe = false) {
 
             // Redirect to dashboard or intended page
             const urlParams = new URLSearchParams(window.location.search);
-            const redirect = urlParams.get('redirect') || '/hub';  // Changed from '/dashboard' to '/hub'
+            const redirect = urlParams.get('redirect') || '/dashboard';  // Changed from '/dashboard' to '/hub'
             window.location.href = redirect;
 
             return data;

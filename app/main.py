@@ -599,12 +599,25 @@ async def about(request: Request):
     })
 
 
+
+MODULES = {
+    "clm": "Smart Contract Lifecycle Management",
+    "correspondence": "Correspondence Management",
+    "risk": "Risk Analysis & Assessment",
+    "obligations": "Obligation Tracking",
+    "reports": "Reports & Analytics",
+    "blockchain": "Blockchain Verification",
+    "expert": "Expert Collaboration"
+}
+
+
+
 @app.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
-    """User Registration Page"""
+async def register_page(request: Request, module: str = None):  # ← Optional (= None)
+    module_name = MODULES.get(module) if module else None
     return templates.TemplateResponse("screens/auth/SCR_001_registration.html", {
         "request": request,
-        "current_page": "register"
+        "module_name": module_name
     })
 
 @app.get("/verify-email", response_class=HTMLResponse)
@@ -632,7 +645,7 @@ async def login_page(request: Request, db: Session = Depends(get_db)):
                 
                 if current_user and current_user.is_active:
                     logger.info(f"✅ User {current_user.email} already authenticated")
-                    return RedirectResponse(url="/hub", status_code=302)
+                    return RedirectResponse(url="/dashboard", status_code=302)
         
         return templates.TemplateResponse("screens/auth/SCR_002_login.html", {
             "request": request,
