@@ -2864,8 +2864,8 @@ Add this to your <style> section
                     Blockchain-Secured | AI-Powered Contract Intelligence
                 </div>
                 <h1 class="hero-title">
-                    End-to-End Project, Contract & Compliance Intelligence -<br>
-                    <span class="highlight">Delivered in One Unified Platform.</span>
+                    End-to-End Project, Contract & Compliance Intelligence
+                    <!-- <span class="highlight">Delivered in One Unified Platform.</span> -->
                 </h1>
                 <p class="hero-description">
                     Transform the way you manage projects, contracts, claims & compliance - all in one 360° ecosystem.
@@ -4566,42 +4566,6 @@ Add this to your <style> section
             }
         }
 
-
-        document.addEventListener('DOMContentLoaded', async function () {
-            const navActions = document.querySelector('.nav-actions');
-
-            if (navActions) {
-                try {
-                    // Check authentication by calling the API (cookies are sent automatically)
-                    const response = await fetch('/api/auth/me', {
-                        credentials: 'include'  // Important: sends cookies with request
-                    });
-
-                    if (response.ok) {
-                        const userData = await response.json();
-
-                        console.log('User authenticated:', userData.email);
-
-                        // Replace nav actions with user info and dashboard button
-                        navActions.innerHTML = `
-                    <div class="user-nav-info">
-                        <div class="user-avatar">
-                            <i class="ti ti-user"></i>
-                        </div>
-                        <span class="user-name">${userData.full_name || userData.email}</span>
-                    </div>
-                    <a href="/hub" class="btn btn-primary">
-                        <i class="ti ti-layout-dashboard"></i> Dashboard
-                    </a>
-                `;
-                    } else {
-                        console.log('User not authenticated');
-                    }
-                } catch (error) {
-                    console.error('Error checking authentication:', error);
-                }
-            }
-        });
 
         // Update mobile menu for logged-in users
         async function toggleMobileMenu() {

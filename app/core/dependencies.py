@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, status, Request, Cookie, Response
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, Dict, List
 import logging
 
 from app.core.database import get_db
@@ -235,3 +235,45 @@ def get_user_context(current_user: User, db: Session) -> dict:
         "department": current_user.department,
         "profile_picture": current_user.profile_picture_url
     }
+
+
+
+from app.services.subscription_service import SubscriptionService
+
+def get_user_context_with_subscriptions(current_user: User, db: Session) -> Dict:
+    """
+    Get user context with subscription information for templates
+    """
+    # Get basic user info
+    user_context = {
+        "id": current_user.id,
+        "email": current_user.email,
+        "first_name": current_user.first_name,
+        "last_name": current_user.last_name,
+        "full_name": f"{current_user.first_name} {current_user.last_name}",
+        "user_type": current_user.user_type,
+        "company_id": current_user.company_id,
+    }
+    
+    # Get subscriptions
+    subscribed_modules = []
+    is_internal = current_user.user_type == 'internal'
+    
+    if is_internal:
+        # Internal users have access to all modules
+        subscribed_modules = ['clm', 'correspondence', 'obligations', 'risk', 'reports', 'blockchain', 'expert']
+    elif current_user.company_id:
+        # External users - get their company subscriptions
+        subscribed_modules = SubscriptionService.get_company_subscriptions(
+            current_user.company_id,
+            db
+        )
+    
+    # Add subscription data to context
+    user_context['subscriptions'] = subscribed_modules
+    user_context['is_internal'] = is_internal
+    
+    # Helper function for templates - check if subscribed
+    user_context['has_module'] = lambda module: module in subscribed_modules
+    
+    return user_context

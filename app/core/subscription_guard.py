@@ -1,6 +1,7 @@
 # =====================================================
 # FILE: app/core/subscription_guard.py
 # Subscription-based Route Protection
+# Internal users have full access, External users need subscriptions
 # =====================================================
 
 from fastapi import Depends, HTTPException, status
@@ -21,6 +22,11 @@ def require_module_subscription(module_code: str):
     """
     Dependency to check if user's company has subscription to specific module
     
+    LOGIC:
+    - Super admins: Always have access
+    - Internal users: Always have access (they can't subscribe, but they have full system access)
+    - External users: Must have company subscription
+    
     Usage in routes:
     @app.get("/some-protected-route")
     async def protected_route(
@@ -40,7 +46,12 @@ def require_module_subscription(module_code: str):
                 logger.info(f"Super admin {current_user.email} accessing {module_code}")
                 return current_user
             
-            # Check if user has company
+            # Internal users always have access (they are staff/administrators)
+            if current_user.user_type == 'internal':
+                logger.info(f"Internal user {current_user.email} accessing {module_code}")
+                return current_user
+            
+            # External users must have company and subscription
             if not current_user.company_id:
                 logger.warning(f"User {current_user.email} has no company")
                 raise HTTPException(
@@ -48,7 +59,7 @@ def require_module_subscription(module_code: str):
                     detail="User not associated with any company"
                 )
             
-            # Check subscription
+            # Check subscription for external users
             has_access = SubscriptionService.has_module_access(
                 current_user.company_id,
                 module_code,
@@ -61,7 +72,7 @@ def require_module_subscription(module_code: str):
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail=f"Your company does not have access to the {module_code.upper()} module. Please contact your administrator."
+                    detail=f"Your company does not have access to the {module_code.upper()} module. Please subscribe to this module in User Settings."
                 )
             
             logger.info(
@@ -92,3 +103,34 @@ class ModuleCodes:
     REPORTS = "reports"
     BLOCKCHAIN = "blockchain"
     EXPERT = "expert"
+
+
+def get_user_accessible_modules(user: User, db: Session) -> list:
+    """
+    Get list of modules the user can access
+    
+    Returns:
+        List of module codes the user has access to
+    """
+    try:
+        # Super admins and internal users have access to all modules
+        if user.user_type in ['super_admin', 'internal']:
+            return [
+                ModuleCodes.CLM,
+                ModuleCodes.CORRESPONDENCE,
+                ModuleCodes.RISK,
+                ModuleCodes.OBLIGATIONS,
+                ModuleCodes.REPORTS,
+                ModuleCodes.BLOCKCHAIN,
+                ModuleCodes.EXPERT
+            ]
+        
+        # External users get modules based on company subscription
+        if user.company_id:
+            return SubscriptionService.get_company_subscriptions(user.company_id, db)
+        
+        return []
+        
+    except Exception as e:
+        logger.error(f"Error getting accessible modules: {str(e)}")
+        return []

@@ -1521,19 +1521,19 @@
 
 
         #sidebarLogo img {
-    content: url('/app/static/img/logo/contriq-logo.png');
-    width: 110px;
-    transition: all 0.3s ease;
-}
+            content: url('/app/static/img/logo/contriq-logo.png');
+            width: 110px;
+            transition: all 0.3s ease;
+        }
 
-.sidebar-collapsed #sidebarLogo {
-    padding-left: 0px !important;
-}
+        .sidebar-collapsed #sidebarLogo {
+            padding-left: 0px !important;
+        }
 
-.sidebar-collapsed #sidebarLogo img {
-    content: url('/app/static/img/logo/contriq-icon.png');
-    width: 40px;
-}
+        .sidebar-collapsed #sidebarLogo img {
+            content: url('/app/static/img/logo/contriq-icon.png');
+            width: 40px;
+        }
     </style>
 
     <!-- Block for additional CSS from child templates -->
@@ -1563,6 +1563,7 @@
                             <span class="nav-text">Dashboard</span>
                         </a>
                     </div>
+                     {% if 'clm' in subscriptions %}
                     <div class="nav-item">
                         <a href="#" class="nav-link nav-dropdown-toggle"
                             onclick="toggleNavDropdown(event, 'contractsDropdown')">
@@ -1585,6 +1586,16 @@
                             </a>
                         </div>
                     </div>
+                     {% endif %}
+                    {% if 'correspondence' in subscriptions %}
+                    <div class="nav-item">
+                        <a href="/correspondence" class="nav-link">
+                            <i class="ti ti-mail nav-icon"></i>
+                            <span class="nav-text">Correspondence</span>
+                        </a>
+                    </div>
+                     {% endif %}
+
                     <div class="nav-item">
                         <a href="/projects" class="nav-link">
                             <i class="ti ti-folder nav-icon"></i>
@@ -1599,15 +1610,19 @@
                     </div>
                 </div>
 
+                 {% if 'expert' in subscriptions %}
                 <!-- Expert & Support -->
                 <div class="nav-section">
                     <div class="nav-section-title">Expert Support</div>
+                   
                     <div class="nav-item">
                         <a href="/ask-expert" class="nav-link">
                             <i class="ti ti-user-question nav-icon"></i>
                             <span class="nav-text">Ask an Expert</span>
                         </a>
                     </div>
+                   
+
                     <div class="nav-item">
                         <a href="/expert-directory" class="nav-link">
                             <i class="ti ti-users-group nav-icon"></i>
@@ -1621,6 +1636,7 @@
                         </a>
                     </div>
                 </div>
+                 {% endif %}
 
                 <!-- Add this in the sidebar navigation, under Settings section -->
                 <div class="nav-section">
@@ -2099,27 +2115,27 @@
         });
 
         // ============================================
-// SIDEBAR FUNCTIONS - CORRECTED
-// ============================================
-function toggleSidebar() {
-    const sidebar = document.getElementById('sidebar');
-    
-    sidebar.classList.toggle('collapsed');
-    sidebar.classList.toggle('sidebar-collapsed'); // Add this line
-    
-    localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-}
+        // SIDEBAR FUNCTIONS - CORRECTED
+        // ============================================
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
 
-// Load sidebar preference - CORRECTED
-window.addEventListener('DOMContentLoaded', () => {
-    const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
-    const sidebar = document.getElementById('sidebar');
-    
-    if (collapsed) {
-        sidebar.classList.add('collapsed');
-        sidebar.classList.add('sidebar-collapsed'); // Add this line
-    }
-});
+            sidebar.classList.toggle('collapsed');
+            sidebar.classList.toggle('sidebar-collapsed'); // Add this line
+
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        }
+
+        // Load sidebar preference - CORRECTED
+        window.addEventListener('DOMContentLoaded', () => {
+            const collapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+            const sidebar = document.getElementById('sidebar');
+
+            if (collapsed) {
+                sidebar.classList.add('collapsed');
+                sidebar.classList.add('sidebar-collapsed'); // Add this line
+            }
+        });
 
         // ============================================
         // USER MENU DROPDOWN - FIXED

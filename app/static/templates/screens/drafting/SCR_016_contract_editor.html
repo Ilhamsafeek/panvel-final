@@ -1494,6 +1494,276 @@
     }
 </style>
 
+
+
+<style>
+    /* Blockchain Activity Panel Styles */
+    .blockchain-evidence-panel {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .evidence-panel-header {
+        background: linear-gradient(135deg, #0066cc 0%, #00b4d8 100%);
+        color: white;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .evidence-panel-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .evidence-panel-title i {
+        font-size: 1.5rem;
+    }
+
+    .live-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .live-dot {
+        width: 6px;
+        height: 6px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: livePulse 2s infinite;
+    }
+
+    @keyframes livePulse {
+
+        0%,
+        100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        50% {
+            opacity: 0.5;
+            transform: scale(1.2);
+        }
+    }
+
+    .evidence-panel-body {
+        padding: 1.5rem;
+    }
+
+    /* Network Status Bar */
+    .network-status-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .status-label {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .status-value {
+        color: #1e293b;
+        font-weight: 700;
+    }
+
+    /* Activity Stream */
+    .activity-stream {
+        max-height: 500px;
+        overflow-y: auto;
+        padding-right: 0.5rem;
+    }
+
+    .activity-stream::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .activity-stream::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .activity-stream::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .stream-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: #f8fafc;
+        border-left: 3px solid #0066cc;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .stream-item:hover {
+        background: #f1f5f9;
+        transform: translateX(4px);
+    }
+
+    .stream-item.success {
+        border-left-color: #10b981;
+    }
+
+    .stream-item.processing {
+        border-left-color: #f59e0b;
+    }
+
+    .stream-item.error {
+        border-left-color: #ef4444;
+    }
+
+    .stream-icon {
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 1.25rem;
+    }
+
+    .stream-item.success .stream-icon {
+        background: #d1fae5;
+        color: #10b981;
+    }
+
+    .stream-item.processing .stream-icon {
+        background: #fef3c7;
+        color: #f59e0b;
+    }
+
+    .stream-item.error .stream-icon {
+        background: #fee2e2;
+        color: #ef4444;
+    }
+
+    .stream-item.processing .stream-icon i {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .stream-content {
+        flex: 1;
+    }
+
+    .stream-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+
+    .stream-description {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-bottom: 0.5rem;
+    }
+
+    .stream-timestamp {
+        font-size: 0.75rem;
+        color: #94a3b8;
+        font-family: 'Courier New', monospace;
+    }
+
+    .stream-metadata {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .metadata-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* Hash Visualization */
+    .hash-visual {
+        background: #1e293b;
+        color: #10b981;
+        padding: 0.75rem;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.75rem;
+        word-break: break-all;
+        margin-top: 0.5rem;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Empty State */
+    .empty-activity-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #64748b;
+    }
+
+    .empty-activity-state i {
+        font-size: 3rem;
+        opacity: 0.3;
+        margin-bottom: 1rem;
+    }
+</style>
+
+
 {% endblock %}
 
 {% block content %}
@@ -1508,7 +1778,6 @@
 <div id="contractEditor"></div>
 
 
-<!-- ADD THIS BLOCKCHAIN VERIFICATION SECTION -->
 <!-- UPDATED BLOCKCHAIN SECTION WITH CSS CLASSES -->
 <div class="card blockchain-card mb-3">
     <div class="blockchain-header">
@@ -1552,7 +1821,54 @@
     </div>
 </div>
 <!-- END BLOCKCHAIN VERIFICATION SECTION -->
-<!-- MODALS -->
+
+
+<!-- Blockchain Evidence Panel HTML -->
+<div class="blockchain-evidence-panel" id="blockchainEvidencePanel">
+    <div class="evidence-panel-header">
+        <div class="evidence-panel-title">
+            <i class="ti ti-shield-lock"></i>
+            Blockchain Operations Monitor
+        </div>
+        <div class="live-indicator">
+            <span class="live-dot"></span>
+            <span>LIVE</span>
+        </div>
+    </div>
+
+    <div class="evidence-panel-body">
+        <!-- Network Status Bar -->
+        <div class="network-status-bar" id="networkStatusBar">
+            <div class="status-item">
+                <i class="ti ti-network" style="color: #0066cc;"></i>
+                <span class="status-label">Network:</span>
+                <span class="status-value">Hyperledger Fabric</span>
+            </div>
+            <div class="status-item">
+                <i class="ti ti-circle-check" style="color: #10b981;"></i>
+                <span class="status-label">Status:</span>
+                <span class="status-value" id="networkStatusValue">operational</span>
+            </div>
+            <div class="status-item">
+                <i class="ti ti-server" style="color: #0066cc;"></i>
+                <span class="status-label">Peers:</span>
+                <span class="status-value" id="peersCount">3</span>
+            </div>
+        </div>
+
+        <!-- Activity Stream -->
+        <div class="activity-stream" id="activityStream">
+            <div class="empty-activity-state">
+                <i class="ti ti-clock-hour-4"></i>
+                <p>Waiting for blockchain operations...</p>
+                <p style="font-size: 0.875rem; margin-top: 0.5rem;">
+                    Save or update the contract to see blockchain activity
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <!-- MOD-027/028: Contract Workflow Setup Modal -->
 <div class="modal" id="contractWorkflowModal">
@@ -3567,38 +3883,43 @@
 
     // Save Draft - CONNECTED TO BACKEND
     async function saveAsDraft() {
-        const content = document.getElementById('contractContent').innerHTML;
-
-        showLoader();
-        updateSaveStatus('saving');
-
         try {
+            console.log('💾 Auto-saving draft...');
+
+            // Get contract content
+            const content = {
+                content: getContractContent() // Your function to get content
+            };
+
+            // Save draft
             const response = await fetch(`/api/contracts/save-draft/${contractId}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ content })
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify(content)
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (data.success) {
-                showNotification('Draft saved successfully (Version ' + data.version + ')', 'success');
-                updateSaveStatus('saved');
-                // Update version in UI if returned
-                if (data.version && document.querySelector('.document-name')) {
-                    const currentText = document.querySelector('.document-name').textContent;
-                    document.querySelector('.document-name').textContent = currentText.replace(/Version \d+/, `Version ${data.version}`);
+            console.log('📦 Save response:', result);
+
+            if (result.success) {
+                // ✅ ADD THIS: Display blockchain activities
+                if (result.blockchain_activities && result.blockchain_activities.length > 0) {
+                    console.log('🔗 Blockchain activities received:', result.blockchain_activities.length);
+                    displayBlockchainActivities(result.blockchain_activities);
+                } else {
+                    console.warn('⚠️ No blockchain activities in response');
                 }
-            } else {
-                showNotification('Failed to save draft', 'error');
-                updateSaveStatus('error');
+
+                showNotification('Draft saved successfully', 'success');
             }
+
         } catch (error) {
-            console.error('Error saving draft:', error);
-            showNotification('Failed to save draft', 'error');
-            updateSaveStatus('error');
-        } finally {
-            hideLoader();
+            console.error('❌ Error saving draft:', error);
+            showNotification('Error saving draft', 'error');
         }
     }
 
@@ -5537,6 +5858,61 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         button.disabled = !checkbox.checked;
     }
 
+
+    async function saveContract() {
+        try {
+            console.log('💾 Saving contract...');
+
+            // Show loading
+            document.getElementById('loadingOverlay')?.classList.add('show');
+
+            // Get all contract data
+            const contractData = {
+                content: getContractContent(),
+                // ... other fields
+            };
+
+            // Save contract
+            const response = await fetch(`/api/contracts/save-draft/${contractId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify(contractData)
+            });
+
+            const result = await response.json();
+
+            // Hide loading
+            document.getElementById('loadingOverlay')?.classList.remove('show');
+
+            console.log('📦 Save result:', result);
+
+            if (result.success) {
+                // ✅ ADD THIS: Display blockchain activities
+                if (result.blockchain_activities && result.blockchain_activities.length > 0) {
+                    console.log('🔗 Displaying', result.blockchain_activities.length, 'blockchain activities');
+                    displayBlockchainActivities(result.blockchain_activities);
+                } else {
+                    console.warn('⚠️ No blockchain activities returned');
+                    console.log('Full response:', result);
+                }
+
+                showNotification('✅ Contract saved and secured on blockchain', 'success');
+            } else {
+                showNotification('❌ Failed to save contract', 'error');
+            }
+
+        } catch (error) {
+            console.error('❌ Error:', error);
+            document.getElementById('loadingOverlay')?.classList.remove('show');
+            showNotification('❌ Error: ' + error.message, 'error');
+        }
+    }
+
+
+
     // Execute Contract - CONNECTED TO BACKEND
     async function executeContract() {
         if (!confirm('Are you sure you want to execute this contract? This action will mark the contract as officially active and enforceable.')) {
@@ -6297,6 +6673,372 @@ Powered by Claude AI
     }
 </script>
 
+
+<script>
+    // =====================================================
+    // BLOCKCHAIN EVIDENCE SHOWCASE JAVASCRIPT
+    // =====================================================
+
+    // Activity tracking
+    let activityLog = [];
+
+    // Toggle panel collapse
+    function toggleEvidencePanel() {
+        const panel = document.getElementById('blockchainEvidencePanel');
+        panel.classList.toggle('collapsed');
+    }
+
+    // Load network status
+    async function loadBlockchainNetworkStatus() {
+        try {
+            const response = await fetch('/api/blockchain/network-status', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            const data = await response.json();
+
+            if (data.success) {
+                updateNetworkStatus(data.network_status);
+            }
+        } catch (error) {
+            console.error('Error loading network status:', error);
+        }
+    }
+
+    // Update network status display
+    function updateNetworkStatus(status) {
+        document.getElementById('networkStatusValue').textContent = status.status || 'Operational';
+        document.getElementById('peersCount').textContent = status.peers_count || 3;
+    }
+
+    // Add activity to stream
+    function addBlockchainActivity(activity) {
+        activityLog.push(activity);
+
+        const stream = document.getElementById('activityStream');
+
+        // Remove empty state
+        const emptyState = stream.querySelector('.empty-activity-state');
+        if (emptyState) {
+            emptyState.remove();
+        }
+
+        // Create activity item
+        const item = document.createElement('div');
+        item.className = `stream-item ${activity.status}`;
+        item.id = `activity-${activity.id}`;
+
+        // Get icon based on step
+        const icon = getBlockchainIcon(activity.step);
+
+        // Build metadata HTML
+        let metadataHtml = '';
+        if (activity.metadata && Object.keys(activity.metadata).length > 0) {
+            metadataHtml = '<div class="stream-metadata">';
+            for (const [key, value] of Object.entries(activity.metadata)) {
+                if (key !== 'full_hash' && key !== 'data_size') {
+                    metadataHtml += `<span class="metadata-tag"><i class="ti ti-point"></i> ${key}: ${value}</span>`;
+                }
+            }
+            metadataHtml += '</div>';
+        }
+
+        // Add hash visualization for hash generation step
+        let hashHtml = '';
+        if (activity.step === 'hash_generation' && activity.metadata?.full_hash) {
+            hashHtml = `<div class="hash-visual">${activity.metadata.full_hash}</div>`;
+        }
+
+        item.innerHTML = `
+        <div class="stream-icon">
+            <i class="${icon}"></i>
+        </div>
+        <div class="stream-content">
+            <div class="stream-title">${formatStepName(activity.step)}</div>
+            <div class="stream-description">${activity.details}</div>
+            <div class="stream-timestamp">${new Date(activity.timestamp).toLocaleTimeString()}</div>
+            ${hashHtml}
+            ${metadataHtml}
+        </div>
+    `;
+
+        // Insert at top of stream
+        stream.insertBefore(item, stream.firstChild);
+
+        // Scroll to show new item
+        stream.scrollTop = 0;
+    }
+
+    // Show progress indicator
+    function showBlockchainProgress(message) {
+        const stream = document.getElementById('activityStream');
+
+        const progress = document.createElement('div');
+        progress.className = 'progress-indicator';
+        progress.id = 'blockchain-progress';
+        progress.innerHTML = `
+        <div class="progress-spinner"></div>
+        <div class="progress-text">${message}</div>
+    `;
+
+        stream.insertBefore(progress, stream.firstChild);
+    }
+
+    // Hide progress indicator
+    function hideBlockchainProgress() {
+        const progress = document.getElementById('blockchain-progress');
+        if (progress) {
+            progress.remove();
+        }
+    }
+
+    // Process blockchain storage with activity logging
+    async function storeContractOnBlockchainWithEvidence(contractId) {
+        showBlockchainProgress('Initiating blockchain storage...');
+
+        try {
+            const response = await fetch(`/api/blockchain/store-contract/${contractId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            const data = await response.json();
+
+            hideBlockchainProgress();
+
+            if (data.success && data.activities) {
+                // Display each activity step
+                data.activities.forEach((activity, index) => {
+                    setTimeout(() => {
+                        addBlockchainActivity(activity);
+                    }, index * 300); // Stagger the display for visual effect
+                });
+
+                return data;
+            } else {
+                addBlockchainActivity({
+                    id: Date.now(),
+                    step: 'error',
+                    status: 'error',
+                    details: data.error || 'Failed to store contract on blockchain',
+                    timestamp: new Date().toISOString(),
+                    metadata: {}
+                });
+                return null;
+            }
+        } catch (error) {
+            hideBlockchainProgress();
+            console.error('Error storing on blockchain:', error);
+            addBlockchainActivity({
+                id: Date.now(),
+                step: 'error',
+                status: 'error',
+                details: `Error: ${error.message}`,
+                timestamp: new Date().toISOString(),
+                metadata: {}
+            });
+            return null;
+        }
+    }
+
+    // Get icon for activity step
+    function getBlockchainIcon(step) {
+        const icons = {
+            'data_extraction': 'ti ti-file-search',
+            'hash_generation': 'ti ti-hash',
+            'transaction_preparation': 'ti ti-file-code',
+            'blockchain_submission': 'ti ti-cloud-upload',
+            'database_storage': 'ti ti-database',
+            'audit_logging': 'ti ti-history',
+            'completion': 'ti ti-circle-check',
+            'error': 'ti ti-alert-triangle'
+        };
+        return icons[step] || 'ti ti-point';
+    }
+
+    // Format step name for display
+    function formatStepName(step) {
+        return step.split('_').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function () {
+        loadBlockchainNetworkStatus();
+
+        // Refresh network status every 30 seconds
+        setInterval(loadBlockchainNetworkStatus, 30000);
+    });
+
+    // Example: Hook into contract save function
+    // Replace your existing save function call with this:
+    async function saveContractWithBlockchain() {
+        // Your existing save logic here
+        // ...
+
+        // After successful save, store on blockchain
+        const contractId = getContractIdFromURL(); // Your function to get contract ID
+        if (contractId) {
+            await storeContractOnBlockchainWithEvidence(contractId);
+        }
+    }
+
+    // Helper function to get contract ID from URL
+    function getContractIdFromURL() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('id');
+    }
+
+</script>
+
+
+<script>
+    // =====================================================
+    // BLOCKCHAIN ACTIVITY DISPLAY FUNCTIONS
+    // =====================================================
+
+    /**
+     * Display blockchain activities in the panel
+     */
+    function displayBlockchainActivities(activities) {
+        console.log('📊 Displaying blockchain activities:', activities.length, 'items');
+
+        const stream = document.getElementById('activityStream');
+        if (!stream) {
+            console.error('❌ Activity stream element not found');
+            return;
+        }
+
+        // Clear empty state
+        stream.innerHTML = '';
+
+        // Display each activity with staggered animation
+        activities.forEach((activity, index) => {
+            setTimeout(() => {
+                addBlockchainActivity(activity);
+            }, index * 300);
+        });
+    }
+
+    /**
+     * Add a single activity to the stream
+     */
+    function addBlockchainActivity(activity) {
+        const stream = document.getElementById('activityStream');
+        if (!stream) return;
+
+        console.log('➕ Adding activity:', activity.step);
+
+        const item = document.createElement('div');
+        item.className = `stream-item ${activity.status}`;
+
+        const icon = getBlockchainActivityIcon(activity.step);
+
+        // Build metadata HTML
+        let metadataHtml = '';
+        if (activity.metadata && Object.keys(activity.metadata).length > 0) {
+            metadataHtml = '<div class="stream-metadata">';
+            for (const [key, value] of Object.entries(activity.metadata)) {
+                if (key !== 'full_hash' && key !== 'data_size' && value) {
+                    metadataHtml += `
+                    <span class="metadata-tag">
+                        <i class="ti ti-point"></i> 
+                        <strong>${key}:</strong> ${value}
+                    </span>
+                `;
+                }
+            }
+            metadataHtml += '</div>';
+        }
+
+        // Add hash display for hash generation step
+        let hashHtml = '';
+        if (activity.step === 'hash_generation' && activity.metadata?.full_hash) {
+            hashHtml = `<div class="hash-visual">${activity.metadata.full_hash}</div>`;
+        }
+
+        item.innerHTML = `
+        <div class="stream-icon">
+            <i class="${icon}"></i>
+        </div>
+        <div class="stream-content">
+            <div class="stream-title">${formatStepName(activity.step)}</div>
+            <div class="stream-description">${activity.details}</div>
+            <div class="stream-timestamp">${new Date(activity.timestamp).toLocaleTimeString()}</div>
+            ${hashHtml}
+            ${metadataHtml}
+        </div>
+    `;
+
+        stream.insertBefore(item, stream.firstChild);
+    }
+
+    /**
+     * Get icon for blockchain activity step
+     */
+    function getBlockchainActivityIcon(step) {
+        const icons = {
+            'data_extraction': 'ti ti-file-search',
+            'hash_generation': 'ti ti-hash',
+            'transaction_preparation': 'ti ti-file-code',
+            'blockchain_submission': 'ti ti-cloud-upload',
+            'database_storage': 'ti ti-database',
+            'audit_logging': 'ti ti-history',
+            'completion': 'ti ti-circle-check',
+            'error': 'ti ti-alert-triangle'
+        };
+        return icons[step] || 'ti ti-point';
+    }
+
+    /**
+     * Format step name for display
+     */
+    function formatStepName(step) {
+        return step.split('_').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+    }
+
+    // Test function - run in console: testBlockchainDisplay()
+    function testBlockchainDisplay() {
+        const mockActivities = [
+            {
+                id: "1",
+                step: "data_extraction",
+                status: "success",
+                details: "Successfully extracted 60,533 bytes of contract data",
+                timestamp: new Date().toISOString(),
+                metadata: { data_size: 60533 }
+            },
+            {
+                id: "2",
+                step: "hash_generation",
+                status: "success",
+                details: "Generated SHA-256 hash",
+                timestamp: new Date().toISOString(),
+                metadata: {
+                    hash_algorithm: "SHA-256",
+                    full_hash: "16a01b7b750ee5f9...8d34d311fb39963e"
+                }
+            },
+            {
+                id: "3",
+                step: "completion",
+                status: "success",
+                details: "Contract successfully secured on blockchain",
+                timestamp: new Date().toISOString(),
+                metadata: { total_steps: 7 }
+            }
+        ];
+
+        console.log('🧪 Testing with mock data...');
+        displayBlockchainActivities(mockActivities);
+    }
+</script>
 
 {% endblock %}
 

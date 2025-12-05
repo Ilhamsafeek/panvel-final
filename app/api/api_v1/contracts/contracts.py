@@ -1164,6 +1164,7 @@ async def get_contract_editor_data(
         logger.error(f"Error fetching contract editor data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @router.post("/save-draft/{contract_id}")
 async def save_contract_draft(
     contract_id: int,
@@ -1171,7 +1172,7 @@ async def save_contract_draft(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Save contract draft - creates a new version"""
+    """Save contract draft - creates a new version with blockchain logging"""
     try:
         # Get the latest version number
         version_check = text("""
@@ -1208,35 +1209,54 @@ async def save_contract_draft(
         db.execute(update_contract, {"contract_id": contract_id})
         db.commit()
 
-
-        result = await blockchain_service.store_contract_hash(
-            contract_id=contract_id,
-            document_content=content,
-            uploaded_by=1,
-            company_id=1,
-            contract_number="TEST-001",
-            contract_type="service"
-        )
+        # ✅ Store on blockchain WITH ACTIVITY LOGGING
+        blockchain_activities = []
+        blockchain_success = False
         
-        if result.get("success"):
-            print("✅ PASS: Contract hash stored")
-            print(f"   Transaction ID: {result['transaction_id']}")
-            print(f"   Document Hash: {result['document_hash']}")
+        try:
+            logger.info(f"🔗 Storing contract {contract_id} on blockchain with activity logging")
+            
+            # ✅ USE THE LOGGING VERSION
+            blockchain_result = await blockchain_service.store_contract_hash_with_logging(
+                contract_id=contract_id,
+                document_content=content.get("content", ""),
+                uploaded_by=current_user.id,
+                company_id=current_user.company_id,
+                db=db
+            )
+            
+            if blockchain_result.get("success"):
+                blockchain_success = True
+                blockchain_activities = blockchain_result.get("activities", [])
+                logger.info(f"✅ Blockchain storage successful with {len(blockchain_activities)} activity steps")
+            else:
+                logger.warning(f"⚠️ Blockchain storage failed: {blockchain_result.get('error')}")
+                
+        except Exception as blockchain_error:
+            # Don't fail the save if blockchain fails
+            logger.error(f"❌ Blockchain storage error (non-critical): {str(blockchain_error)}")
+            import traceback
+            logger.error(traceback.format_exc())
         
-
-        
-        return {
+        # ✅ RETURN ACTIVITIES IN RESPONSE
+        response = {
             "success": True, 
             "message": "Draft saved successfully",
-            "version": next_version
+            "version": next_version,
+            "blockchain_success": blockchain_success,
+            "blockchain_activities": blockchain_activities  # ← This is what frontend needs!
         }
+        
+        logger.info(f"📤 Returning response with {len(blockchain_activities)} blockchain activities")
+        return response
         
     except Exception as e:
         db.rollback()
         logger.error(f"Error saving draft: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
-
-
+        
 
 @router.post("/send-for-signature")
 async def send_for_signature(

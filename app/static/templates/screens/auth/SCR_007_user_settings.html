@@ -44,7 +44,7 @@
         background: white;
         border-radius: 12px;
         border: 1px solid var(--border-color);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         height: fit-content;
         position: sticky;
         top: calc(var(--header-height) + 2rem);
@@ -120,7 +120,7 @@
         background: white;
         border-radius: 12px;
         border: 1px solid var(--border-color);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         overflow: hidden;
     }
 
@@ -307,11 +307,11 @@
         border-radius: 50%;
     }
 
-    input:checked + .toggle-slider {
+    input:checked+.toggle-slider {
         background: var(--success-color);
     }
 
-    input:checked + .toggle-slider:before {
+    input:checked+.toggle-slider:before {
         transform: translateX(24px);
     }
 
@@ -422,14 +422,16 @@
     }
 
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     @media (max-width: 1024px) {
         .settings-layout {
             grid-template-columns: 1fr;
         }
-        
+
         .settings-sidebar {
             position: static;
         }
@@ -439,6 +441,151 @@
         .form-row {
             grid-template-columns: 1fr;
         }
+    }
+
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .module-card {
+        background: var(--background-light);
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .module-card.subscribed {
+        border-color: var(--success-color);
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .module-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .module-header {
+        display: flex;
+        align-items: start;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .module-icon {
+        width: 48px;
+        height: 48px;
+        background: var(--primary-color);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+    }
+
+    .module-card.subscribed .module-icon {
+        background: var(--success-color);
+    }
+
+    .subscription-badge {
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: var(--success-color);
+        color: white;
+    }
+
+    .module-card:not(.subscribed) .subscription-badge {
+        background: var(--text-muted);
+    }
+
+    .module-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-color);
+        margin-top: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .module-description {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .module-features {
+        list-style: none;
+        margin-bottom: 1rem;
+        padding-left: 0;
+    }
+
+    .module-features li {
+        font-size: 0.813rem;
+        color: var(--text-muted);
+        padding: 0.25rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .module-features li::before {
+        content: "✓";
+        color: var(--success-color);
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .module-action-btn {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .module-action-btn.subscribe-btn {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .module-action-btn.subscribe-btn:hover {
+        background: #1e4ba8;
+    }
+
+    .module-action-btn.unsubscribe-btn {
+        background: transparent;
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+    }
+
+    .module-action-btn.unsubscribe-btn:hover {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .module-action-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .loading-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
     }
 </style>
 {% endblock %}
@@ -467,7 +614,8 @@
             <div class="user-info-card">
                 <div class="user-avatar-large" id="userAvatar">{{ user.avatar_initial if user else 'U' }}</div>
                 <div class="user-name" id="userName">{{ user.full_name if user else 'Loading...' }}</div>
-                <div style="font-size: 0.875rem; color: var(--text-muted);" id="userEmail">{{ user.email if user else '' }}</div>
+                <div style="font-size: 0.875rem; color: var(--text-muted);" id="userEmail">{{ user.email if user else ''
+                    }}</div>
                 <div class="user-type-badge" id="userType">{{ user.user_type if user else 'USER' }}</div>
             </div>
 
@@ -493,6 +641,7 @@
                     <i class="ti ti-certificate"></i>
                     <span>License & Users</span>
                 </button>
+
             </nav>
         </div>
 
@@ -602,7 +751,8 @@
                         <div class="document-header">
                             <div>
                                 <div class="document-title">Commercial Registration (CR)</div>
-                                <div style="font-size: 0.813rem; color: var(--text-muted);" id="crNumber">CR Number: -</div>
+                                <div style="font-size: 0.813rem; color: var(--text-muted);" id="crNumber">CR Number: -
+                                </div>
                             </div>
                             <div class="document-status status-valid" id="crStatus">
                                 <i class="ti ti-circle-check"></i>
@@ -645,22 +795,25 @@
                 </div>
 
                 <h3 style="margin-bottom: 1rem; font-size: 1.125rem;">Change Password</h3>
-                
+
                 <form id="passwordForm">
                     <div class="form-group">
                         <label class="form-label">Current Password</label>
-                        <input type="password" class="form-control" id="currentPassword" name="current_password" placeholder="Enter current password">
+                        <input type="password" class="form-control" id="currentPassword" name="current_password"
+                            placeholder="Enter current password">
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">New Password</label>
-                            <input type="password" class="form-control" id="newPassword" name="new_password" placeholder="Enter new password">
+                            <input type="password" class="form-control" id="newPassword" name="new_password"
+                                placeholder="Enter new password">
                             <span class="form-hint">Minimum 8 characters with letters and numbers</span>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Confirm New Password</label>
-                            <input type="password" class="form-control" id="confirmPassword" name="confirm_password" placeholder="Confirm new password">
+                            <input type="password" class="form-control" id="confirmPassword" name="confirm_password"
+                                placeholder="Confirm new password">
                         </div>
                     </div>
                 </form>
@@ -788,6 +941,34 @@
                 </div>
             </div>
 
+
+            <!-- Module Subscriptions Section -->
+            <div class="settings-section" id="subscriptionsSection">
+                <div class="section-header">
+                    <h2 class="section-title">Module Subscriptions</h2>
+                    <p class="section-description">Manage your company's access to CALIM 360 modules</p>
+                </div>
+
+                <!-- Access Check Container -->
+                <div id="subscriptionAccessCheck" style="display: none;">
+                    <div
+                        style="padding: 2rem; text-align: center; background: var(--background-light); border-radius: 8px;">
+                        <i class="ti ti-lock"
+                            style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
+                        <h3 style="color: var(--text-color); margin-bottom: 0.5rem;">Access Restricted</h3>
+                        <p style="color: var(--text-muted);">Module subscription management is only available for
+                            external company users. Internal staff have automatic access to all system features.</p>
+                    </div>
+                </div>
+
+                <!-- Modules Container -->
+                <div id="modulesContainer" class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Loading modules...</p>
+                </div>
+            </div>
+
+
             <!-- Save Actions -->
             <div class="settings-actions">
                 <div id="lastSaved" style="color: var(--text-muted); font-size: 0.875rem;">
@@ -805,447 +986,447 @@
 </div>
 
 <script>
-// Global state
-let currentSettings = {};
-let currentSection = 'personal';
+    // Global state
+    let currentSettings = {};
+    let currentSection = 'personal';
 
-// Load user settings on page load
-document.addEventListener('DOMContentLoaded', async () => {
-    await loadUserSettings();
-});
-
-// Load user settings from API
-async function loadUserSettings() {
-    try {
-        showLoading(true);
-        
-        const response = await fetch('/api/user/settings', {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to load settings');
-        }
-        
-        const result = await response.json();
-        currentSettings = result.data;
-        
-        // Populate form fields
-        populatePersonalInfo(currentSettings.personal);
-        populateCompanyInfo(currentSettings.company);
-        populateSecuritySettings(currentSettings.security);
-        populatePreferences(currentSettings.preferences);
-        populateLicenseInfo(currentSettings.license);
-        
-        // Update sidebar
-        updateSidebar(currentSettings.personal);
-        
-        document.getElementById('lastSaved').textContent = 'Settings loaded';
-        
-    } catch (error) {
-        console.error('Error loading settings:', error);
-        showToast('Failed to load settings', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Populate Personal Information
-function populatePersonalInfo(data) {
-    if (!data) return;
-    
-    document.getElementById('firstName').value = data.first_name || '';
-    document.getElementById('lastName').value = data.last_name || '';
-    document.getElementById('email').value = data.email || '';
-    document.getElementById('phone').value = data.phone || '';
-    document.getElementById('jobTitle').value = data.job_title || '';
-}
-
-// Populate Company Information
-function populateCompanyInfo(data) {
-    if (!data) {
-        document.getElementById('companyName').value = 'No Company';
-        return;
-    }
-    
-    document.getElementById('companyName').value = data.company_name || '';
-    document.getElementById('industry').value = data.industry || '';
-    document.getElementById('website').value = data.website || '';
-    
-    if (data.cr_number) {
-        document.getElementById('crNumber').textContent = `CR Number: ${data.cr_number}`;
-    }
-    
-    if (data.qid_number) {
-        document.getElementById('qidNumber').textContent = `QID: ${data.qid_number}`;
-    }
-}
-
-// Populate Security Settings
-function populateSecuritySettings(data) {
-    if (!data) return;
-    
-    document.getElementById('twoFA').checked = data.two_factor_enabled || false;
-}
-
-// Populate Preferences
-function populatePreferences(data) {
-    if (!data) return;
-    
-    document.getElementById('userTypeField').value = data.user_type || '';
-    document.getElementById('languagePreference').value = data.language_preference || 'en';
-    document.getElementById('timezone').value = data.timezone || 'Asia/Qatar';
-    document.getElementById('emailNotifications').checked = data.email_notifications !== false;
-    document.getElementById('newsletter').checked = data.newsletter || false;
-    document.getElementById('smsNotifications').checked = data.sms_notifications || false;
-}
-
-// Populate License Information
-function populateLicenseInfo(data) {
-    if (!data) return;
-    
-    document.getElementById('licenseType').textContent = data.type || 'Individual';
-    document.getElementById('contractLimit').textContent = data.max_contracts || '10';
-    document.getElementById('userSeats').textContent = `${data.max_users || 1} Users`;
-    document.getElementById('activeUsers').textContent = `${data.active_users || 1} / ${data.max_users || 1}`;
-    
-    if (data.expiry) {
-        const expiryDate = new Date(data.expiry);
-        document.getElementById('renewalDate').textContent = expiryDate.toLocaleDateString();
-    }
-}
-
-// Update Sidebar
-function updateSidebar(data) {
-    if (!data) return;
-    
-    const initials = `${data.first_name?.[0] || ''}${data.last_name?.[0] || ''}`.toUpperCase();
-    document.getElementById('userAvatar').textContent = initials || 'U';
-    document.getElementById('userName').textContent = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'User';
-    document.getElementById('userEmail').textContent = data.email || '';
-}
-
-// Switch Section
-function switchSection(sectionName) {
-    currentSection = sectionName;
-    
-    // Update navigation
-    document.querySelectorAll('.settings-nav-item').forEach(item => {
-        item.classList.toggle('active', item.dataset.section === sectionName);
+    // Load user settings on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadUserSettings();
     });
 
-    // Update content
-    document.querySelectorAll('.settings-section').forEach(section => {
-        section.classList.remove('active');
-    });
-    
-    const targetSection = document.getElementById(sectionName + 'Section');
-    if (targetSection) {
-        targetSection.classList.add('active');
-    }
-}
-
-// Save Current Section
-async function saveCurrentSection() {
-    switch(currentSection) {
-        case 'personal':
-            await savePersonalInfo();
-            break;
-        case 'company':
-            await saveCompanyInfo();
-            break;
-        case 'security':
-            await saveSecuritySettings();
-            break;
-        case 'preferences':
-            await savePreferences();
-            break;
-        default:
-            showToast('Nothing to save in this section', 'info');
-    }
-}
-
-// Save Personal Information
-async function savePersonalInfo() {
-    try {
-        const formData = {
-            first_name: document.getElementById('firstName').value,
-            last_name: document.getElementById('lastName').value,
-            phone: document.getElementById('phone').value,
-            job_title: document.getElementById('jobTitle').value,
-            country: document.getElementById('country').value
-        };
-        
-        showLoading(true);
-        
-        const response = await fetch('/api/user/settings/personal', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('Personal information updated successfully', 'success');
-            await loadUserSettings(); // Reload to refresh sidebar
-        } else {
-            throw new Error(result.message || 'Failed to update');
-        }
-        
-    } catch (error) {
-        console.error('Error saving personal info:', error);
-        showToast('Failed to update personal information', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Save Company Information
-async function saveCompanyInfo() {
-    try {
-        const formData = {
-            industry: document.getElementById('industry').value,
-            company_size: document.getElementById('companySize').value,
-            website: document.getElementById('website').value
-        };
-        
-        showLoading(true);
-        
-        const response = await fetch('/api/user/settings/company', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('Company information updated successfully', 'success');
-        } else {
-            throw new Error(result.message || 'Failed to update');
-        }
-        
-    } catch (error) {
-        console.error('Error saving company info:', error);
-        showToast('Failed to update company information', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Save Security Settings (Password)
-async function saveSecuritySettings() {
-    const currentPass = document.getElementById('currentPassword').value;
-    const newPass = document.getElementById('newPassword').value;
-    const confirmPass = document.getElementById('confirmPassword').value;
-    
-    // If password fields are filled, validate and save password
-    if (currentPass || newPass || confirmPass) {
-        if (!currentPass) {
-            showToast('Please enter your current password', 'error');
-            return;
-        }
-        
-        if (newPass !== confirmPass) {
-            showToast('New passwords do not match', 'error');
-            return;
-        }
-        
-        if (newPass.length < 8) {
-            showToast('Password must be at least 8 characters', 'error');
-            return;
-        }
-        
+    // Load user settings from API
+    async function loadUserSettings() {
         try {
             showLoading(true);
-            
-            const response = await fetch('/api/user/settings/password', {
-                method: 'POST',
+
+            const response = await fetch('/api/user/settings', {
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load settings');
+            }
+
+            const result = await response.json();
+            currentSettings = result.data;
+
+            // Populate form fields
+            populatePersonalInfo(currentSettings.personal);
+            populateCompanyInfo(currentSettings.company);
+            populateSecuritySettings(currentSettings.security);
+            populatePreferences(currentSettings.preferences);
+            populateLicenseInfo(currentSettings.license);
+
+            // Update sidebar
+            updateSidebar(currentSettings.personal);
+
+            document.getElementById('lastSaved').textContent = 'Settings loaded';
+
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            showToast('Failed to load settings', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // Populate Personal Information
+    function populatePersonalInfo(data) {
+        if (!data) return;
+
+        document.getElementById('firstName').value = data.first_name || '';
+        document.getElementById('lastName').value = data.last_name || '';
+        document.getElementById('email').value = data.email || '';
+        document.getElementById('phone').value = data.phone || '';
+        document.getElementById('jobTitle').value = data.job_title || '';
+    }
+
+    // Populate Company Information
+    function populateCompanyInfo(data) {
+        if (!data) {
+            document.getElementById('companyName').value = 'No Company';
+            return;
+        }
+
+        document.getElementById('companyName').value = data.company_name || '';
+        document.getElementById('industry').value = data.industry || '';
+        document.getElementById('website').value = data.website || '';
+
+        if (data.cr_number) {
+            document.getElementById('crNumber').textContent = `CR Number: ${data.cr_number}`;
+        }
+
+        if (data.qid_number) {
+            document.getElementById('qidNumber').textContent = `QID: ${data.qid_number}`;
+        }
+    }
+
+    // Populate Security Settings
+    function populateSecuritySettings(data) {
+        if (!data) return;
+
+        document.getElementById('twoFA').checked = data.two_factor_enabled || false;
+    }
+
+    // Populate Preferences
+    function populatePreferences(data) {
+        if (!data) return;
+
+        document.getElementById('userTypeField').value = data.user_type || '';
+        document.getElementById('languagePreference').value = data.language_preference || 'en';
+        document.getElementById('timezone').value = data.timezone || 'Asia/Qatar';
+        document.getElementById('emailNotifications').checked = data.email_notifications !== false;
+        document.getElementById('newsletter').checked = data.newsletter || false;
+        document.getElementById('smsNotifications').checked = data.sms_notifications || false;
+    }
+
+    // Populate License Information
+    function populateLicenseInfo(data) {
+        if (!data) return;
+
+        document.getElementById('licenseType').textContent = data.type || 'Individual';
+        document.getElementById('contractLimit').textContent = data.max_contracts || '10';
+        document.getElementById('userSeats').textContent = `${data.max_users || 1} Users`;
+        document.getElementById('activeUsers').textContent = `${data.active_users || 1} / ${data.max_users || 1}`;
+
+        if (data.expiry) {
+            const expiryDate = new Date(data.expiry);
+            document.getElementById('renewalDate').textContent = expiryDate.toLocaleDateString();
+        }
+    }
+
+    // Update Sidebar
+    function updateSidebar(data) {
+        if (!data) return;
+
+        const initials = `${data.first_name?.[0] || ''}${data.last_name?.[0] || ''}`.toUpperCase();
+        document.getElementById('userAvatar').textContent = initials || 'U';
+        document.getElementById('userName').textContent = `${data.first_name || ''} ${data.last_name || ''}`.trim() || 'User';
+        document.getElementById('userEmail').textContent = data.email || '';
+    }
+
+    // Switch Section
+    function switchSection(sectionName) {
+        currentSection = sectionName;
+
+        // Update navigation
+        document.querySelectorAll('.settings-nav-item').forEach(item => {
+            item.classList.toggle('active', item.dataset.section === sectionName);
+        });
+
+        // Update content
+        document.querySelectorAll('.settings-section').forEach(section => {
+            section.classList.remove('active');
+        });
+
+        const targetSection = document.getElementById(sectionName + 'Section');
+        if (targetSection) {
+            targetSection.classList.add('active');
+        }
+    }
+
+    // Save Current Section
+    async function saveCurrentSection() {
+        switch (currentSection) {
+            case 'personal':
+                await savePersonalInfo();
+                break;
+            case 'company':
+                await saveCompanyInfo();
+                break;
+            case 'security':
+                await saveSecuritySettings();
+                break;
+            case 'preferences':
+                await savePreferences();
+                break;
+            default:
+                showToast('Nothing to save in this section', 'info');
+        }
+    }
+
+    // Save Personal Information
+    async function savePersonalInfo() {
+        try {
+            const formData = {
+                first_name: document.getElementById('firstName').value,
+                last_name: document.getElementById('lastName').value,
+                phone: document.getElementById('phone').value,
+                job_title: document.getElementById('jobTitle').value,
+                country: document.getElementById('country').value
+            };
+
+            showLoading(true);
+
+            const response = await fetch('/api/user/settings/personal', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Personal information updated successfully', 'success');
+                await loadUserSettings(); // Reload to refresh sidebar
+            } else {
+                throw new Error(result.message || 'Failed to update');
+            }
+
+        } catch (error) {
+            console.error('Error saving personal info:', error);
+            showToast('Failed to update personal information', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // Save Company Information
+    async function saveCompanyInfo() {
+        try {
+            const formData = {
+                industry: document.getElementById('industry').value,
+                company_size: document.getElementById('companySize').value,
+                website: document.getElementById('website').value
+            };
+
+            showLoading(true);
+
+            const response = await fetch('/api/user/settings/company', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Company information updated successfully', 'success');
+            } else {
+                throw new Error(result.message || 'Failed to update');
+            }
+
+        } catch (error) {
+            console.error('Error saving company info:', error);
+            showToast('Failed to update company information', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // Save Security Settings (Password)
+    async function saveSecuritySettings() {
+        const currentPass = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+
+        // If password fields are filled, validate and save password
+        if (currentPass || newPass || confirmPass) {
+            if (!currentPass) {
+                showToast('Please enter your current password', 'error');
+                return;
+            }
+
+            if (newPass !== confirmPass) {
+                showToast('New passwords do not match', 'error');
+                return;
+            }
+
+            if (newPass.length < 8) {
+                showToast('Password must be at least 8 characters', 'error');
+                return;
+            }
+
+            try {
+                showLoading(true);
+
+                const response = await fetch('/api/user/settings/password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        current_password: currentPass,
+                        new_password: newPass,
+                        confirm_password: confirmPass
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Clear password fields
+                    document.getElementById('currentPassword').value = '';
+                    document.getElementById('newPassword').value = '';
+                    document.getElementById('confirmPassword').value = '';
+                    showToast('Password updated successfully', 'success');
+                } else {
+                    throw new Error(result.message || 'Failed to update password');
+                }
+
+            } catch (error) {
+                console.error('Error changing password:', error);
+                showToast(error.message || 'Failed to change password', 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Save 2FA setting
+        try {
+            showLoading(true);
+
+            const response = await fetch('/api/user/settings/security', {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 credentials: 'include',
                 body: JSON.stringify({
-                    current_password: currentPass,
-                    new_password: newPass,
-                    confirm_password: confirmPass
+                    two_factor_enabled: document.getElementById('twoFA').checked
                 })
             });
-            
+
             const result = await response.json();
-            
+
             if (result.success) {
-                // Clear password fields
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-                showToast('Password updated successfully', 'success');
-            } else {
-                throw new Error(result.message || 'Failed to update password');
+                showToast('Security settings updated', 'success');
             }
-            
+
         } catch (error) {
-            console.error('Error changing password:', error);
-            showToast(error.message || 'Failed to change password', 'error');
+            console.error('Error updating security settings:', error);
         } finally {
             showLoading(false);
         }
     }
-    
-    // Save 2FA setting
-    try {
-        showLoading(true);
-        
-        const response = await fetch('/api/user/settings/security', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                two_factor_enabled: document.getElementById('twoFA').checked
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('Security settings updated', 'success');
-        }
-        
-    } catch (error) {
-        console.error('Error updating security settings:', error);
-    } finally {
-        showLoading(false);
-    }
-}
 
-// Save Preferences
-async function savePreferences() {
-    try {
-        const formData = {
-            language_preference: document.getElementById('languagePreference').value,
-            timezone: document.getElementById('timezone').value,
-            email_notifications: document.getElementById('emailNotifications').checked,
-            newsletter: document.getElementById('newsletter').checked,
-            sms_notifications: document.getElementById('smsNotifications').checked
-        };
-        
-        showLoading(true);
-        
-        const response = await fetch('/api/user/settings/preferences', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('Preferences updated successfully', 'success');
+    // Save Preferences
+    async function savePreferences() {
+        try {
+            const formData = {
+                language_preference: document.getElementById('languagePreference').value,
+                timezone: document.getElementById('timezone').value,
+                email_notifications: document.getElementById('emailNotifications').checked,
+                newsletter: document.getElementById('newsletter').checked,
+                sms_notifications: document.getElementById('smsNotifications').checked
+            };
+
+            showLoading(true);
+
+            const response = await fetch('/api/user/settings/preferences', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('Preferences updated successfully', 'success');
+            } else {
+                throw new Error(result.message || 'Failed to update');
+            }
+
+        } catch (error) {
+            console.error('Error saving preferences:', error);
+            showToast('Failed to update preferences', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // Handle CR Document Upload
+    document.getElementById('crUpload')?.addEventListener('change', async function (e) {
+        if (!e.target.files[0]) return;
+
+        try {
+            showLoading(true);
+
+            const formData = new FormData();
+            formData.append('file', e.target.files[0]);
+
+            const response = await fetch('/api/user/settings/upload-document?document_type=cr', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('CR document uploaded successfully', 'success');
+            } else {
+                throw new Error(result.message || 'Upload failed');
+            }
+
+        } catch (error) {
+            console.error('Error uploading CR:', error);
+            showToast('Failed to upload CR document', 'error');
+        } finally {
+            showLoading(false);
+        }
+    });
+
+    // Handle QID Document Upload
+    document.getElementById('qidUpload')?.addEventListener('change', async function (e) {
+        if (!e.target.files[0]) return;
+
+        try {
+            showLoading(true);
+
+            const formData = new FormData();
+            formData.append('file', e.target.files[0]);
+
+            const response = await fetch('/api/user/settings/upload-document?document_type=qid', {
+                method: 'POST',
+                credentials: 'include',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('QID document uploaded successfully', 'success');
+            } else {
+                throw new Error(result.message || 'Upload failed');
+            }
+
+        } catch (error) {
+            console.error('Error uploading QID:', error);
+            showToast('Failed to upload QID document', 'error');
+        } finally {
+            showLoading(false);
+        }
+    });
+
+    // Show Loading Overlay
+    function showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (show) {
+            overlay.classList.add('active');
         } else {
-            throw new Error(result.message || 'Failed to update');
+            overlay.classList.remove('active');
         }
-        
-    } catch (error) {
-        console.error('Error saving preferences:', error);
-        showToast('Failed to update preferences', 'error');
-    } finally {
-        showLoading(false);
     }
-}
 
-// Handle CR Document Upload
-document.getElementById('crUpload')?.addEventListener('change', async function(e) {
-    if (!e.target.files[0]) return;
-    
-    try {
-        showLoading(true);
-        
-        const formData = new FormData();
-        formData.append('file', e.target.files[0]);
-        
-        const response = await fetch('/api/user/settings/upload-document?document_type=cr', {
-            method: 'POST',
-            credentials: 'include',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('CR document uploaded successfully', 'success');
-        } else {
-            throw new Error(result.message || 'Upload failed');
-        }
-        
-    } catch (error) {
-        console.error('Error uploading CR:', error);
-        showToast('Failed to upload CR document', 'error');
-    } finally {
-        showLoading(false);
-    }
-});
-
-// Handle QID Document Upload
-document.getElementById('qidUpload')?.addEventListener('change', async function(e) {
-    if (!e.target.files[0]) return;
-    
-    try {
-        showLoading(true);
-        
-        const formData = new FormData();
-        formData.append('file', e.target.files[0]);
-        
-        const response = await fetch('/api/user/settings/upload-document?document_type=qid', {
-            method: 'POST',
-            credentials: 'include',
-            body: formData
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            showToast('QID document uploaded successfully', 'success');
-        } else {
-            throw new Error(result.message || 'Upload failed');
-        }
-        
-    } catch (error) {
-        console.error('Error uploading QID:', error);
-        showToast('Failed to upload QID document', 'error');
-    } finally {
-        showLoading(false);
-    }
-});
-
-// Show Loading Overlay
-function showLoading(show) {
-    const overlay = document.getElementById('loadingOverlay');
-    if (show) {
-        overlay.classList.add('active');
-    } else {
-        overlay.classList.remove('active');
-    }
-}
-
-// Show Toast Notification
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.style.cssText = `
+    // Show Toast Notification
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
         position: fixed;
         bottom: 2rem;
         right: 2rem;
@@ -1261,21 +1442,21 @@ function showToast(message, type = 'info') {
         gap: 0.75rem;
         max-width: 400px;
     `;
-    
-    const icon = type === 'success' ? 'check' : type === 'error' ? 'x' : 'info-circle';
-    toast.innerHTML = `<i class="ti ti-${icon}"></i> ${message}`;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'fadeOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
 
-// Add animation styles
-const style = document.createElement('style');
-style.textContent = `
+        const icon = type === 'success' ? 'check' : type === 'error' ? 'x' : 'info-circle';
+        toast.innerHTML = `<i class="ti ti-${icon}"></i> ${message}`;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
     @keyframes slideInUp {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
@@ -1285,6 +1466,294 @@ style.textContent = `
         to { opacity: 0; }
     }
 `;
-document.head.appendChild(style);
+    document.head.appendChild(style);
+
+
+
 </script>
+
+<script>
+    // Check if user can access subscriptions
+    async function checkSubscriptionAccess() {
+        try {
+            const response = await fetch('/api/subscriptions/access-info', {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                return data.can_manage_subscriptions;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error checking subscription access:', error);
+            return false;
+        }
+    }
+
+    // Initialize subscription navigation
+    document.addEventListener('DOMContentLoaded', async () => {
+        const canManage = await checkSubscriptionAccess();
+
+        // Only add navigation item if user can manage subscriptions
+        if (canManage) {
+            const subscriptionsNavItem = `
+                <button class="settings-nav-item" data-section="subscriptions" onclick="switchSection('subscriptions')">
+                    <i class="ti ti-packages"></i>
+                    <span>Module Subscriptions</span>
+                </button>
+            `;
+
+            const nav = document.querySelector('.settings-nav');
+            if (nav) {
+                nav.insertAdjacentHTML('beforeend', subscriptionsNavItem);
+            }
+        }
+
+        // Override switchSection to handle loading
+        const originalSwitchSection = window.switchSection;
+        window.switchSection = async function (sectionName) {
+            originalSwitchSection(sectionName);
+            if (sectionName === 'subscriptions') {
+                const canManage = await checkSubscriptionAccess();
+                if (canManage) {
+                    document.getElementById('subscriptionAccessCheck').style.display = 'none';
+                    document.getElementById('modulesContainer').style.display = 'grid';
+                    loadModuleSubscriptions();
+                } else {
+                    document.getElementById('subscriptionAccessCheck').style.display = 'block';
+                    document.getElementById('modulesContainer').style.display = 'none';
+                }
+            }
+        };
+    });
+
+    // Module definitions with icons and features
+    const moduleData = {
+        'clm': {
+            icon: 'ti ti-file-text',
+            title: 'Contract Lifecycle Management',
+            description: 'Complete contract management from creation to execution',
+            features: [
+                'Contract creation & templates',
+                'Version control & tracking',
+                'Digital signatures',
+                'Approval workflows'
+            ]
+        },
+        'correspondence': {
+            icon: 'ti ti-mail',
+            title: 'Correspondence Management',
+            description: 'Manage all project communications and documentation',
+            features: [
+                'Email integration',
+                'Document tracking',
+                'Response management',
+                'Audit trails'
+            ]
+        },
+        'obligations': {
+            icon: 'ti ti-list-check',
+            title: 'Obligations Tracking',
+            description: 'Track and manage contractual obligations and deliverables',
+            features: [
+                'Automated reminders',
+                'Deadline tracking',
+                'Progress monitoring',
+                'Escalation alerts'
+            ]
+        },
+        'risk': {
+            icon: 'ti ti-alert-triangle',
+            title: 'Risk Management',
+            description: 'Identify, assess, and mitigate project risks',
+            features: [
+                'Risk assessment',
+                'Mitigation planning',
+                'Real-time monitoring',
+                'Compliance tracking'
+            ]
+        },
+        'reports': {
+            icon: 'ti ti-chart-bar',
+            title: 'Reports & Analytics',
+            description: 'Comprehensive reporting and business intelligence',
+            features: [
+                'Custom dashboards',
+                'Data visualization',
+                'Export capabilities',
+                'Scheduled reports'
+            ]
+        },
+        'blockchain': {
+            icon: 'ti ti-lock',
+            title: 'Blockchain Audit Trail',
+            description: 'Immutable record-keeping with blockchain technology',
+            features: [
+                'Tamper-proof records',
+                'Hyperledger Fabric',
+                'Compliance verification',
+                'Digital certificates'
+            ]
+        },
+        'expert': {
+            icon: 'ti ti-users',
+            title: 'Expert Consultation',
+            description: 'Connect with legal and technical experts',
+            features: [
+                'Video consultation',
+                'Chat support',
+                'Document review',
+                'Expert advice'
+            ]
+        }
+    };
+
+    // Subscribe to module
+    async function subscribeToModule(moduleCode, button) {
+        try {
+            button.disabled = true;
+            button.innerHTML = '<i class="ti ti-loader"></i> Subscribing...';
+
+            const response = await fetch(`/api/subscriptions/subscribe/${moduleCode}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showToast(data.message || 'Successfully subscribed!', 'success');
+                setTimeout(() => loadModuleSubscriptions(), 500);
+            } else {
+                throw new Error(data.detail || 'Subscription failed');
+            }
+        } catch (error) {
+            console.error('Subscribe error:', error);
+            showToast(error.message || 'Failed to subscribe', 'error');
+            button.disabled = false;
+            button.innerHTML = '<i class="ti ti-plus"></i> Subscribe';
+        }
+    }
+
+    // Unsubscribe from module
+    async function unsubscribeFromModule(moduleCode, button) {
+        if (!confirm('Are you sure you want to unsubscribe from this module? You will lose access to its features.')) {
+            return;
+        }
+
+        try {
+            button.disabled = true;
+            button.innerHTML = '<i class="ti ti-loader"></i> Unsubscribing...';
+
+            const response = await fetch(`/api/subscriptions/unsubscribe/${moduleCode}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                showToast(data.message || 'Successfully unsubscribed', 'success');
+                setTimeout(() => loadModuleSubscriptions(), 500);
+            } else {
+                throw new Error(data.detail || 'Unsubscribe failed');
+            }
+        } catch (error) {
+            console.error('Unsubscribe error:', error);
+            showToast(error.message || 'Failed to unsubscribe', 'error');
+            button.disabled = false;
+            button.innerHTML = '<i class="ti ti-trash"></i> Unsubscribe';
+        }
+    }
+
+    // Create module card
+    function createModuleCard(module, isSubscribed) {
+        const info = moduleData[module.code] || {
+            icon: 'ti ti-package',
+            title: module.name,
+            description: module.description || 'Module description',
+            features: []
+        };
+
+        const card = document.createElement('div');
+        card.className = `module-card ${isSubscribed ? 'subscribed' : ''}`;
+        card.innerHTML = `
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="${info.icon}"></i>
+                </div>
+                <span class="subscription-badge">
+                    ${isSubscribed ? 'Active' : 'Available'}
+                </span>
+            </div>
+            <h3 class="module-title">${info.title}</h3>
+            <p class="module-description">${info.description}</p>
+            ${info.features.length > 0 ? `
+                <ul class="module-features">
+                    ${info.features.map(f => `<li>${f}</li>`).join('')}
+                </ul>
+            ` : ''}
+            <button 
+                class="module-action-btn ${isSubscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" 
+                onclick="${isSubscribed ? 'unsubscribeFromModule' : 'subscribeToModule'}('${module.code}', this)"
+            >
+                <i class="ti ti-${isSubscribed ? 'trash' : 'plus'}"></i>
+                ${isSubscribed ? 'Unsubscribe' : 'Subscribe'}
+            </button>
+        `;
+        return card;
+    }
+
+    // Load module subscriptions
+    async function loadModuleSubscriptions() {
+        const container = document.getElementById('modulesContainer');
+
+        try {
+            const response = await fetch('/api/subscriptions/modules', {
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    // User is internal - show access restricted message
+                    container.style.display = 'none';
+                    document.getElementById('subscriptionAccessCheck').style.display = 'block';
+                    return;
+                }
+                throw new Error('Failed to load modules');
+            }
+
+            const data = await response.json();
+
+            if (data.success && data.modules) {
+                container.innerHTML = '';
+                container.className = 'modules-grid';
+                container.style.display = 'grid';
+
+                data.modules.forEach(module => {
+                    const card = createModuleCard(module, module.subscribed);
+                    container.appendChild(card);
+                });
+            } else {
+                throw new Error('Invalid response format');
+            }
+        } catch (error) {
+            console.error('Load modules error:', error);
+            container.innerHTML = `
+                <div class="loading-state">
+                    <p style="color: var(--danger-color);">Failed to load modules. Please refresh the page.</p>
+                </div>
+            `;
+            showToast('Failed to load modules', 'error');
+        }
+    }
+</script>
+
 {% endblock %}

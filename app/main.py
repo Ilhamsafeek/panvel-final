@@ -19,6 +19,7 @@ import uvicorn
 from sqlalchemy import text
 from app.routers import subscription_router
 from app.core.subscription_guard import require_module_subscription, ModuleCodes
+from app.core.dependencies import get_user_context_with_subscriptions
 
 # Core imports
 from app.core.dependencies import get_current_user
@@ -198,11 +199,9 @@ except ImportError:
         logger.warning("⚠️ Correspondence router not found")
 
 
-try:
-    from app.api.api_v1.blockchain.router import router as blockchain_router
-    logger.info("✅ Blockchain router imported")
-except ImportError:
-    logger.warning("⚠️ Blockchain router not found")
+
+from app.api.api_v1.blockchain.router import router as blockchain_router
+
 
 
 # =====================================================
@@ -344,6 +343,7 @@ app.include_router(registration_router)
 app.include_router(login_router)
 app.include_router(logout_router)
 
+
 logger.info("✅ Auth routers registered")
 
 # Register router
@@ -351,7 +351,7 @@ app.include_router(chatbot_router, tags=["AI Chatbot"])
 # Settings router
 app.include_router(settings_router)
 
-app.include_router(blockchain_router)
+app.include_router(blockchain_router, prefix="/api/blockchain", tags=["Blockchain"])
 
 # Admin/Super Admin routes
 if admin_router:
@@ -571,12 +571,13 @@ async def landing_hub(
     Only CLM module is active, others show "Coming Soon"
     """
     try:
-        user_context = get_user_context(current_user, db)
+        user_context = get_user_context_with_subscriptions(current_user, db)
         
         return templates.TemplateResponse("screens/hub/SCR_009_landing_hub.html", {
             "request": request,
             "current_page": "hub",
-            "user": user_context
+            "user": user_context,
+        "subscriptions": user_context['subscriptions'],
         })
         
     except Exception as e:
@@ -686,13 +687,14 @@ async def settings_page(
     db: Session = Depends(get_db)
 ):
     """User Settings page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/auth/SCR_007_user_settings.html", {
         "request": request,
         "active_tab": "settings",
         "current_page": "settings",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/api/auth/me")
@@ -702,10 +704,11 @@ async def get_current_user_info(
 ):
     """Get current user information"""
     try:
-        user_context = get_user_context(current_user, db)
+        user_context = get_user_context_with_subscriptions(current_user, db)
         return {
             "success": True,
-            "user": user_context
+            "user": user_context,
+        "subscriptions": user_context['subscriptions'],
         }
     except Exception as e:
         logger.error(f"Get user info error: {str(e)}")
@@ -725,12 +728,13 @@ async def dashboard_page(
 ):
     """Protected Dashboard - Requires Authentication"""
     try:
-        user_context = get_user_context(current_user, db)
+        user_context = get_user_context_with_subscriptions(current_user, db)
         
         return templates.TemplateResponse("screens/dashboard/SCR_008_main_dashboard.html", {
             "request": request,
             "current_page": "dashboard",
-            "user": user_context
+            "user": user_context,
+            "subscriptions": user_context['subscriptions'],
         })
         
     except Exception as e:
@@ -744,12 +748,13 @@ async def contracts_dashboard(
     db: Session = Depends(get_db)
 ):
     """Display the Contracts Dashboard"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/dashboard/SCR_010_contract_dashboard.html", {
         "request": request,
         "current_page": "contracts",
-        "user": user_context
+        "user": user_context,
+    "subscriptions": user_context['subscriptions'],
     })
 
 # =====================================================
@@ -762,12 +767,13 @@ async def contract_creation_page(
     db: Session = Depends(get_db)
 ):
     """Contract Creation Page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/drafting/SCR_013_contract_creation.html", {
         "request": request,
         "current_page": "contract_creation",
         "user": user_context,
+        "subscriptions": user_context['subscriptions'],
         "profile_type": current_user.user_type
     })
 
@@ -778,12 +784,13 @@ async def contract_editor_page(
     db: Session = Depends(get_db)
 ):
     """Display Contract Editor Screen"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/drafting/SCR_016_contract_editor.html", {
         "request": request,
         "current_page": "editor",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/contract/edit/{contract_id}", response_class=HTMLResponse)
@@ -794,13 +801,14 @@ async def contract_editor_with_id(
     db: Session = Depends(get_db)
 ):
     """Display Contract Editor Screen for specific contract"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/drafting/SCR_016_contract_editor.html", {
         "request": request,
         "contract_id": contract_id,
         "current_page": "editor",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/contract/counter-party-edit/{contract_id}", response_class=HTMLResponse)
@@ -811,13 +819,14 @@ async def contract_counterparty_editor(
     db: Session = Depends(get_db)
 ):
     """Display Contract Editor Screen for counterparty"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/negotiation/counterparty_review.html", {
         "request": request,
         "contract_id": contract_id,
         "current_page": "negotiation",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/contract/templates")
@@ -827,12 +836,13 @@ async def template_selection(
     db: Session = Depends(get_db)
 ):
     """Template Selection Page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/drafting/SCR_014_template_selection.html", {
         "request": request,
         "current_page": "templates",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/contract/invite/{contract_id}", response_class=HTMLResponse)
@@ -843,13 +853,14 @@ async def counterparty_invite_page(
     db: Session = Depends(get_db)
 ):
     """Counterparty Invitation Page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/negotiation/SCR_030_counterparty_invite.html", {
         "request": request,
         "contract_id": contract_id,
         "current_page": "negotiation",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/clause-library", response_class=HTMLResponse)
@@ -859,12 +870,13 @@ async def clause_library(
     db: Session = Depends(get_db)
 ):
     """Display the clause library page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/drafting/SCR_017_clause_library.html", {
         "request": request,
         "current_page": "clause_library",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 # Fetch all templates
@@ -1104,16 +1116,16 @@ async def verify_template_content(db: Session = Depends(get_db)):
 @app.get("/projects", response_class=HTMLResponse)
 async def projects_page(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),       # for specific access - Depends(require_module_subscription("clm")),
     db: Session = Depends(get_db)
 ):
     """Projects Dashboard"""
-    user_context = get_user_context(current_user, db)
-    
+    user_context = get_user_context_with_subscriptions(current_user, db)
     return templates.TemplateResponse("screens/dashboard/SCR_011_project_dashboard.html", {
         "request": request,
         "current_page": "projects",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/users", response_class=HTMLResponse)
@@ -1123,10 +1135,11 @@ async def users_page(
     db: Session = Depends(get_db)
 ):
     """User Management Page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     return templates.TemplateResponse("users.html", {
         "request": request,
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/master-workflow", response_class=HTMLResponse)
@@ -1136,12 +1149,13 @@ async def master_workflow(
     db: Session = Depends(get_db)
 ):
     """Master Workflow Setup Page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/workflow/SCR_024_master_workflow.html", {
         "request": request,
         "current_page": "master-workflow",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 # =====================================================
@@ -1154,12 +1168,13 @@ async def reports_page(
     db: Session = Depends(get_db)
 ):
     """Analytics Dashboard"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/reports/SCR_051_analytics_dashboard.html", {
         "request": request,
         "current_page": "reports",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/audit-trail", response_class=HTMLResponse)
@@ -1169,12 +1184,13 @@ async def audit_trail(
     db: Session = Depends(get_db)
 ):
     """Audit Trail Screen - SCR-052"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/reports/SCR_052_audit_trail.html", {
         "request": request,
         "current_page": "audit-trail",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 # =====================================================
@@ -1187,12 +1203,13 @@ async def obligations_dashboard(
     db: Session = Depends(get_db)
 ):
     """Obligations Dashboard"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/obligations/SCR_039_obligations_dashboard.html", {
         "request": request,
         "current_page": "obligations",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/contract/obligations/{contract_id}", response_class=HTMLResponse)
@@ -1203,13 +1220,14 @@ async def contract_obligations(
     db: Session = Depends(get_db)
 ):
     """AI-Generated Obligations for a specific contract"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/obligations/SCR_040_ai_obligations.html", {
         "request": request,
         "current_page": "obligations",
         "contract_id": contract_id,
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 # =====================================================
@@ -1218,16 +1236,17 @@ async def contract_obligations(
 @app.get("/correspondence", response_class=HTMLResponse)
 async def correspondence_page(
     request: Request,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_module_subscription("correspondence")),
     db: Session = Depends(get_db)
 ):
     """Correspondence Management"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/correspondence/SCR_044_correspondence_management.html", {
         "request": request,
         "current_page": "correspondence",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 # =====================================================
@@ -1240,12 +1259,13 @@ async def expert_directory(
     db: Session = Depends(get_db)
 ):
     """Expert Directory"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/experts/SCR_057_expert_directory.html", {
         "request": request,
         "current_page": "experts",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/ask-expert", response_class=HTMLResponse)
@@ -1257,14 +1277,15 @@ async def ask_expert_page(
     db: Session = Depends(get_db)
 ):
     """Ask an Expert page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/experts/SCR_056_ask_expert.html", {
         "request": request,
         "pre_selected_expert": expert,
         "action": action,
         "current_page": "experts",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/consultation-room", response_class=HTMLResponse)
@@ -1280,7 +1301,7 @@ async def consultation_room_page(
     Loads consultation room based on query ID instead of expert ID
     """
     try:
-        user_context = get_user_context(current_user, db)
+        user_context = get_user_context_with_subscriptions(current_user, db)
         
         # Fetch query details to get expert information
         query_sql = text("""
@@ -1316,7 +1337,8 @@ async def consultation_room_page(
             "session_id": session,
             "query_info": query_info,
             "current_page": "experts",
-            "user": user_context
+            "user": user_context,
+        "subscriptions": user_context['subscriptions'],
         })
         
     except HTTPException as he:
@@ -1335,12 +1357,13 @@ async def my_consultations_page(
     db: Session = Depends(get_db)
 ):
     """My Consultations page"""
-    user_context = get_user_context(current_user, db)
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
     return templates.TemplateResponse("screens/experts/SCR_058_my_consultations.html", {
         "request": request,
         "current_page": "consultations",
-        "user": user_context
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
     })
 
 @app.get("/consultations/{consultation_id}")
