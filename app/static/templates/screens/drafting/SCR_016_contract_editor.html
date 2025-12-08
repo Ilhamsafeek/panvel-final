@@ -1901,7 +1901,8 @@
                         </p>
 
                         <!-- Master Workflow Preview -->
-                        <div style="background: var(--background-light); padding: 1rem; border-radius: 8px;">
+                        <div class="workflow-step-preview"
+                            style="background: var(--background-light); padding: 1rem; border-radius: 8px;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
                                 <span
                                     style="background: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600;">1</span>
@@ -5510,6 +5511,8 @@ ${(riskAnalysisData.risk_items || []).map(item => `
 
     // Workflow Functions
     function selectContractWorkflow(type) {
+        console.log('🎯 Selecting workflow type:', type);
+
         document.getElementById('masterWorkflowOption').classList.remove('selected');
         document.getElementById('customWorkflowOption').classList.remove('selected');
 
@@ -5519,6 +5522,13 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         } else {
             document.getElementById('customWorkflowOption').classList.add('selected');
             document.getElementById('customWorkflowConfig').style.display = 'block';
+
+            // Add default step if table is empty
+            const tbody = document.getElementById('contractWorkflowSteps');
+            if (tbody && tbody.children.length === 0) {
+                console.log('📝 Adding default step');
+                addContractWorkflowStep();
+            }
         }
 
         selectedContractWorkflow = type;
@@ -5529,6 +5539,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         contractWorkflowStepCount++;
         const tbody = document.getElementById('contractWorkflowSteps');
         const newRow = document.createElement('tr');
+
         newRow.innerHTML = `
         <td style="padding: 0.75rem;">
             <span style="width: 28px; height: 28px; background: var(--primary-color); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600;">${contractWorkflowStepCount}</span>
@@ -5538,27 +5549,37 @@ ${(riskAnalysisData.risk_items || []).map(item => `
                 <option value="">Select Role</option>
                 <option value="reviewer">Reviewer</option>
                 <option value="approver">Approver</option>
+                <option value="e-sign">E-Sign</option>
+                <option value="counter-party">Counter-Party</option>
             </select>
         </td>
         <td style="padding: 0.75rem;">
-            <input type="text" placeholder="Enter email or name" style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+            <input type="email" 
+                placeholder="Enter email address" 
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
         </td>
         <td style="padding: 0.75rem;">
             <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
                 <option value="">Select Department</option>
-                <option value="legal">Legal</option>
-                <option value="finance">Finance</option>
-                <option value="operations">Operations</option>
+                <option value="Legal">Legal</option>
+                <option value="Finance">Finance</option>
+                <option value="Operations">Operations</option>
+                <option value="Executive">Executive</option>
+                <option value="Technical">Technical</option>
+                <option value="Commercial">Commercial</option>
             </select>
         </td>
-        <td style="padding: 0.75rem;">
-            <button onclick="removeContractWorkflowStep(this)" style="background: none; border: none; color: var(--danger-color); cursor: pointer;">
-                <i class="ti ti-trash"></i>
+        <td style="padding: 0.75rem; text-align: center;">
+            <button onclick="removeWorkflowStepRow(this)" 
+                style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 0.25rem 0.5rem;">
+                <i class="ti ti-trash" style="font-size: 1.125rem;"></i>
             </button>
         </td>
     `;
+
         tbody.appendChild(newRow);
     }
+
 
     function removeContractWorkflowStep(button) {
         if (contractWorkflowStepCount > 1) {
@@ -5580,9 +5601,411 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         contractWorkflowStepCount = steps.length;
     }
 
-    function openWorkflowSetupModal() {
-        openModal('contractWorkflowModal');
+
+    async function openWorkflowSetupModal() {
+        console.log('🔄 Opening workflow modal for contract:', contractId);
+
+        const modal = document.getElementById('contractWorkflowModal');
+        if (!modal) {
+            console.error('❌ Modal not found: contractWorkflowModal');
+            return;
+        }
+
+        // Show the modal first
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        // Then load the data
+        await loadExistingWorkflow();
     }
+
+
+
+
+    async function loadExistingWorkflow() {
+        if (!contractId) {
+            console.log('⚠️ No contract ID, skipping workflow load');
+            return;
+        }
+
+        console.log('📥 Loading workflow for contract:', contractId);
+        showLoader();
+
+        // ✅ FIX: Clear the table FIRST before loading anything
+        const tbody = document.getElementById('contractWorkflowSteps');
+        if (tbody) {
+            tbody.innerHTML = '';  // ← Clear all existing rows!
+            contractWorkflowStepCount = 0;  // Reset counter
+        }
+
+        try {
+            const response = await fetch(`/api/contracts/workflow/${contractId}`);
+            const data = await response.json();
+
+            console.log('📦 Workflow API response:', data);
+
+            if (data.success && data.workflow) {
+                const workflow = data.workflow;
+                console.log('✅ Workflow loaded:', workflow);
+                console.log('📊 Steps:', workflow.steps);
+
+                // Check if it's a master workflow or custom workflow
+                if (workflow.is_master) {
+                    console.log('🔧 Loading MASTER workflow');
+                    selectContractWorkflow('master');
+
+                    if (workflow.steps && workflow.steps.length > 0) {
+                        updateMasterWorkflowPreview(workflow.steps);
+                    }
+
+                    showNotification(`✓ Master Workflow: ${workflow.workflow_name}`, 'success');
+                } else {
+                    console.log('🔧 Loading CUSTOM workflow');
+                    selectContractWorkflow('custom');
+
+                    if (workflow.steps && workflow.steps.length > 0) {
+                        console.log(`📝 Populating ${workflow.steps.length} custom steps`);
+                        populateCustomWorkflowSteps(workflow.steps);
+                    } else {
+                        console.log('⚠️ No steps found, adding empty row');
+                        addContractWorkflowStep();  // Only adds 1 row because table is cleared above
+                    }
+
+                    showNotification(`✓ Custom Workflow: ${workflow.workflow_name}`, 'success');
+                }
+
+                // Update status text
+                const statusEl = document.getElementById('workflowStatusText');
+                if (statusEl) {
+                    statusEl.textContent = workflow.status || 'Active';
+                }
+            } else {
+                console.log('ℹ️ No workflow found for this contract');
+                // Reset to default
+                resetWorkflowModal();
+            }
+        } catch (error) {
+            console.error('❌ Error loading workflow:', error);
+            showNotification('Could not load workflow', 'warning');
+        } finally {
+            hideLoader();
+        }
+    }
+    // STEP 3: ADD this NEW function (resetWorkflowModal)
+    function resetWorkflowModal() {
+        console.log('🔄 Resetting workflow modal to default state');
+
+        // Clear selections
+        document.getElementById('masterWorkflowOption').classList.remove('selected');
+        document.getElementById('customWorkflowOption').classList.remove('selected');
+        document.getElementById('customWorkflowConfig').style.display = 'none';
+
+        // Clear the table
+        const tbody = document.getElementById('contractWorkflowSteps');
+        if (tbody) {
+            tbody.innerHTML = '';
+        }
+        contractWorkflowStepCount = 0;
+
+        // Reset selection
+        selectedContractWorkflow = null;
+        document.getElementById('saveWorkflowBtn').disabled = true;
+    }
+
+    // STEP 4: ADD this NEW function (updateMasterWorkflowPreview)
+    function updateMasterWorkflowPreview(steps) {
+        console.log('🎨 Updating master workflow preview with', steps.length, 'steps');
+
+        const previewContainer = document.querySelector('#masterWorkflowOption .workflow-step-preview');
+        if (!previewContainer) {
+            console.warn('⚠️ Preview container not found');
+            return;
+        }
+
+        let previewHTML = '<div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; flex-wrap: wrap;">';
+
+        steps.forEach((step, index) => {
+            const stepName = step.step_name || step.assignee_role || 'Review';
+            const userCount = step.users ? step.users.length : 0;
+
+            console.log(`  Step ${index + 1}: ${stepName} (${userCount} users)`);
+
+            previewHTML += `
+            <span style="background: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600;">${index + 1}</span>
+            <span>${stepName}${userCount > 0 ? ` (${userCount})` : ''}</span>
+        `;
+
+            if (index < steps.length - 1) {
+                previewHTML += '<i class="ti ti-arrow-right" style="color: var(--text-muted);"></i>';
+            }
+        });
+
+        previewHTML += '</div>';
+        previewContainer.innerHTML = previewHTML;
+        console.log('✅ Master workflow preview updated');
+    }
+
+    // STEP 5: ADD this NEW function (populateCustomWorkflowSteps)
+    function populateCustomWorkflowSteps(steps) {
+        console.log('📋 Populating custom workflow steps:', steps);
+
+        const tbody = document.getElementById('contractWorkflowSteps');
+        if (!tbody) {
+            console.error('❌ tbody not found: contractWorkflowSteps');
+            return;
+        }
+
+        // ✅ SAFETY: Clear existing rows (in case called directly)
+        tbody.innerHTML = '';
+        contractWorkflowStepCount = 0;
+
+        console.log(`🔄 Processing ${steps.length} steps`);
+
+        // Add each step
+        steps.forEach((step, stepIndex) => {
+            console.log(`Step ${stepIndex + 1}:`, {
+                role: step.assignee_role,
+                department: step.department,
+                users: step.users ? step.users.length : 0
+            });
+
+            if (step.users && step.users.length > 0) {
+                // Create row for each user
+                step.users.forEach((user, userIndex) => {
+                    contractWorkflowStepCount++;
+                    console.log(`  User ${userIndex + 1}: ${user.email}`);
+                    addWorkflowStepRow(step, user);
+                });
+            } else {
+                // No users, create empty row
+                contractWorkflowStepCount++;
+                addWorkflowStepRow(step, null);
+            }
+        });
+
+        // Show the custom workflow config section
+        document.getElementById('customWorkflowConfig').style.display = 'block';
+        console.log(`✅ Populated ${contractWorkflowStepCount} workflow rows`);
+    }
+
+
+
+    // STEP 6: ADD this NEW function (addWorkflowStepRow)
+    function addWorkflowStepRow(step, user) {
+        const tbody = document.getElementById('contractWorkflowSteps');
+        const newRow = document.createElement('tr');
+
+        const stepType = step.step_type || step.assignee_role || '';
+        const userEmail = user ? user.email : '';
+        const department = step.department || '';
+
+        console.log(`  ➕ Adding row: role=${stepType}, email=${userEmail}, dept=${department}`);
+
+        newRow.innerHTML = `
+        <td style="padding: 0.75rem;">
+            <span style="width: 28px; height: 28px; background: var(--primary-color); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600;">${contractWorkflowStepCount}</span>
+        </td>
+        <td style="padding: 0.75rem;">
+            <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+                <option value="">Select Role</option>
+                <option value="reviewer" ${stepType === 'reviewer' ? 'selected' : ''}>Reviewer</option>
+                <option value="approver" ${stepType === 'approver' ? 'selected' : ''}>Approver</option>
+                <option value="e-sign" ${stepType === 'e-sign' ? 'selected' : ''}>E-Sign</option>
+                <option value="counter-party" ${stepType === 'counter-party' ? 'selected' : ''}>Counter-Party</option>
+            </select>
+        </td>
+        <td style="padding: 0.75rem;">
+            <input type="email" 
+                placeholder="Enter email address" 
+                value="${userEmail}"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+        </td>
+        <td style="padding: 0.75rem;">
+            <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+                <option value="">Select Department</option>
+                <option value="Legal" ${department === 'Legal' ? 'selected' : ''}>Legal</option>
+                <option value="Finance" ${department === 'Finance' ? 'selected' : ''}>Finance</option>
+                <option value="Operations" ${department === 'Operations' ? 'selected' : ''}>Operations</option>
+                <option value="Executive" ${department === 'Executive' ? 'selected' : ''}>Executive</option>
+                <option value="Technical" ${department === 'Technical' ? 'selected' : ''}>Technical</option>
+                <option value="Commercial" ${department === 'Commercial' ? 'selected' : ''}>Commercial</option>
+            </select>
+        </td>
+        <td style="padding: 0.75rem; text-align: center;">
+            <button onclick="removeWorkflowStepRow(this)" 
+                style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 0.25rem 0.5rem;"
+                title="Remove this step">
+                <i class="ti ti-trash" style="font-size: 1.125rem;"></i>
+            </button>
+        </td>
+    `;
+
+        tbody.appendChild(newRow);
+    }
+
+    // STEP 7: ADD this NEW function (removeWorkflowStepRow)
+    function removeWorkflowStepRow(button) {
+        const tbody = document.getElementById('contractWorkflowSteps');
+        if (tbody.children.length > 1) {
+            button.closest('tr').remove();
+            updateWorkflowStepNumbers();
+        } else {
+            alert('At least one workflow step is required.');
+        }
+    }
+
+    // STEP 8: ADD this NEW function (updateWorkflowStepNumbers)
+    function updateWorkflowStepNumbers() {
+        const rows = document.querySelectorAll('#contractWorkflowSteps tr');
+        rows.forEach((row, index) => {
+            const stepSpan = row.querySelector('span');
+            if (stepSpan) {
+                stepSpan.textContent = index + 1;
+            }
+        });
+        contractWorkflowStepCount = rows.length;
+        console.log('✅ Step numbers updated, total:', contractWorkflowStepCount);
+    }
+
+
+
+    // Update master workflow preview with actual steps
+
+    function updateMasterWorkflowPreview(steps) {
+        const previewContainer = document.querySelector('#masterWorkflowOption .workflow-step-preview');
+        if (!previewContainer) {
+            console.warn('Preview container not found');
+            return;
+        }
+
+        let previewHTML = '<div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; flex-wrap: wrap;">';
+
+        steps.forEach((step, index) => {
+            const stepName = step.step_name || step.assignee_role || 'Review';
+            const userCount = step.users ? step.users.length : 0;
+
+            previewHTML += `
+            <span style="background: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600;">${index + 1}</span>
+            <span>${stepName}${userCount > 0 ? ` (${userCount})` : ''}</span>
+        `;
+
+            if (index < steps.length - 1) {
+                previewHTML += '<i class="ti ti-arrow-right" style="color: var(--text-muted);"></i>';
+            }
+        });
+
+        previewHTML += '</div>';
+        previewContainer.innerHTML = previewHTML;
+        console.log('✅ Master workflow preview updated');
+    }
+
+
+    // Populate custom workflow steps table
+    function populateCustomWorkflowSteps(steps) {
+        const tbody = document.getElementById('contractWorkflowSteps');
+        if (!tbody) {
+            console.error('contractWorkflowSteps tbody not found');
+            return;
+        }
+
+        // Clear existing rows
+        tbody.innerHTML = '';
+
+        // Reset counter
+        contractWorkflowStepCount = 0;
+
+        console.log('🔄 Populating custom workflow with', steps.length, 'steps');
+
+        // Add each step - if step has multiple users, create one row per user
+        steps.forEach((step, stepIndex) => {
+            console.log(`Step ${stepIndex + 1}:`, step);
+
+            if (step.users && step.users.length > 0) {
+                // Create a row for each user in this step
+                step.users.forEach((user, userIndex) => {
+                    contractWorkflowStepCount++;
+                    addWorkflowStepRow(step, user, contractWorkflowStepCount);
+                });
+            } else {
+                // No users assigned, create empty row
+                contractWorkflowStepCount++;
+                addWorkflowStepRow(step, null, contractWorkflowStepCount);
+            }
+        });
+
+        // Show custom workflow config
+        document.getElementById('customWorkflowConfig').style.display = 'block';
+        console.log('✅ Custom workflow populated with', contractWorkflowStepCount, 'rows');
+    }
+
+
+    function addWorkflowStepRow(step, user, rowNumber) {
+        const tbody = document.getElementById('contractWorkflowSteps');
+        const newRow = document.createElement('tr');
+
+        // Determine values
+        const stepType = step.step_type || step.assignee_role || '';
+        const userEmail = user ? user.email : '';
+        const department = step.department || '';
+
+        console.log(`  Row ${rowNumber}: role=${stepType}, email=${userEmail}, dept=${department}`);
+
+        newRow.innerHTML = `
+        <td style="padding: 0.75rem;">
+            <span style="width: 28px; height: 28px; background: var(--primary-color); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600;">${rowNumber}</span>
+        </td>
+        <td style="padding: 0.75rem;">
+            <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+                <option value="">Select Role</option>
+                <option value="reviewer" ${stepType === 'reviewer' ? 'selected' : ''}>Reviewer</option>
+                <option value="approver" ${stepType === 'approver' ? 'selected' : ''}>Approver</option>
+                <option value="e-sign" ${stepType === 'e-sign' ? 'selected' : ''}>E-Sign</option>
+                <option value="counter-party" ${stepType === 'counter-party' ? 'selected' : ''}>Counter-Party</option>
+            </select>
+        </td>
+        <td style="padding: 0.75rem;">
+            <input type="email" 
+                placeholder="Enter email address" 
+                value="${userEmail}"
+                style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+        </td>
+        <td style="padding: 0.75rem;">
+            <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+                <option value="">Select Department</option>
+                <option value="Legal" ${department === 'Legal' ? 'selected' : ''}>Legal</option>
+                <option value="Finance" ${department === 'Finance' ? 'selected' : ''}>Finance</option>
+                <option value="Operations" ${department === 'Operations' ? 'selected' : ''}>Operations</option>
+                <option value="Executive" ${department === 'Executive' ? 'selected' : ''}>Executive</option>
+                <option value="Technical" ${department === 'Technical' ? 'selected' : ''}>Technical</option>
+                <option value="Commercial" ${department === 'Commercial' ? 'selected' : ''}>Commercial</option>
+            </select>
+        </td>
+        <td style="padding: 0.75rem; text-align: center;">
+            <button onclick="this.closest('tr').remove(); updateStepNumbers();" 
+                style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 0.25rem 0.5rem;"
+                title="Remove this step">
+                <i class="ti ti-trash" style="font-size: 1.125rem;"></i>
+            </button>
+        </td>
+    `;
+
+        tbody.appendChild(newRow);
+    }
+
+
+    function updateStepNumbers() {
+        const rows = document.querySelectorAll('#contractWorkflowSteps tr');
+        rows.forEach((row, index) => {
+            const stepNumber = row.querySelector('span');
+            if (stepNumber) {
+                stepNumber.textContent = index + 1;
+            }
+        });
+        contractWorkflowStepCount = rows.length;
+    }
+
+
+
 
     function navigateToStep(step) {
         showNotification(`Navigating to ${step} phase`, 'info');
@@ -5606,30 +6029,24 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         }
     }
 
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
 
-            // Clean up modal-specific items
-            if (modalId === 'signatureModal') {
-                clearCanvas();
-                if (document.getElementById('typedSig')) {
-                    document.getElementById('typedSig').value = '';
-                }
-                if (document.getElementById('sigPreview')) {
-                    document.getElementById('sigPreview').textContent = '';
-                }
-                if (document.getElementById('agreeTerms')) {
-                    document.getElementById('agreeTerms').checked = false;
-                }
-                if (document.getElementById('signBtn')) {
-                    document.getElementById('signBtn').disabled = true;
-                }
+    function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        // ✅ If closing workflow modal, reset it
+        if (modalId === 'contractWorkflowModal') {
+            // Don't reset completely, just clear table to prevent duplicates
+            const tbody = document.getElementById('contractWorkflowSteps');
+            if (tbody) {
+                tbody.innerHTML = '';
             }
+            contractWorkflowStepCount = 0;
         }
     }
+}
 
     function showLoader() {
         const loader = document.getElementById('loadingOverlay');

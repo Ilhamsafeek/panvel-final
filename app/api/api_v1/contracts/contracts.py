@@ -1837,6 +1837,148 @@ async def setup_contract_workflow(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
+@router.get("/workflow/{contract_id}")
+async def get_contract_workflow(
+    contract_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get workflow configuration for a specific contract"""
+    try:
+        logger.info(f"Fetching workflow for contract {contract_id}")
+        
+        # Get workflow instance
+        instance_query = text("""
+            SELECT 
+                wi.id as instance_id,
+                wi.workflow_id,
+                wi.status,
+                w.workflow_name,
+                w.is_master,
+                w.workflow_type,
+                w.workflow_json
+            FROM workflow_instances wi
+            LEFT JOIN workflows w ON wi.workflow_id = w.id
+            WHERE wi.contract_id = :contract_id
+            ORDER BY wi.started_at DESC
+            LIMIT 1
+        """)
+        
+        workflow_instance = db.execute(instance_query, {
+            "contract_id": contract_id
+        }).fetchone()
+        
+        if not workflow_instance:
+            logger.warning(f"No workflow found for contract {contract_id}")
+            return {
+                "success": False,
+                "message": "No workflow configured for this contract"
+            }
+        
+        # Parse department mapping from workflow_json
+        departments_map = {}
+        if workflow_instance.workflow_json:
+            try:
+                if isinstance(workflow_instance.workflow_json, str):
+                    config = json.loads(workflow_instance.workflow_json)
+                else:
+                    config = workflow_instance.workflow_json
+                departments_map = config.get('departments', {})
+                logger.info(f"Department mapping loaded: {departments_map}")
+            except Exception as e:
+                logger.error(f"Error parsing workflow_json: {e}")
+        
+        # Get workflow steps with user information
+        steps_query = text("""
+            SELECT 
+                ws.id,
+                ws.step_number,
+                ws.step_name,
+                ws.step_type,
+                ws.assignee_role,
+                ws.assignee_user_id,
+                ws.sla_hours,
+                ws.is_mandatory,
+                u.email as assignee_email,
+                u.first_name,
+                u.last_name
+            FROM workflow_steps ws
+            LEFT JOIN users u ON ws.assignee_user_id = u.id
+            WHERE ws.workflow_id = :workflow_id
+            ORDER BY ws.step_number ASC, ws.id ASC
+        """)
+        
+        steps = db.execute(steps_query, {
+            "workflow_id": workflow_instance.workflow_id
+        }).fetchall()
+        
+        logger.info(f"Found {len(steps)} workflow step entries")
+        
+        # Group steps by step_number and collect users
+        steps_map = {}
+        for step in steps:
+            step_num = step.step_number
+            
+            # Get department from mapping
+            dept = None
+            if str(step_num) in departments_map:
+                dept = departments_map[str(step_num)]
+            elif step_num in departments_map:
+                dept = departments_map[step_num]
+            else:
+                dept = ''
+            
+            if step_num not in steps_map:
+                steps_map[step_num] = {
+                    "id": step.id,
+                    "step_number": step_num,
+                    "step_name": step.step_name,
+                    "step_type": step.step_type,
+                    "assignee_role": step.assignee_role,
+                    "department": dept,
+                    "sla_hours": step.sla_hours,
+                    "is_mandatory": bool(step.is_mandatory) if step.is_mandatory is not None else True,
+                    "users": []
+                }
+            
+            # Add user if exists
+            if step.assignee_user_id and step.assignee_email:
+                user_exists = any(u['id'] == step.assignee_user_id for u in steps_map[step_num]['users'])
+                if not user_exists:
+                    steps_map[step_num]['users'].append({
+                        "id": step.assignee_user_id,
+                        "name": f"{step.first_name} {step.last_name}" if step.first_name else step.assignee_email,
+                        "email": step.assignee_email
+                    })
+        
+        # Convert to sorted list
+        steps_list = [steps_map[k] for k in sorted(steps_map.keys())]
+        
+        logger.info(f"Returning {len(steps_list)} workflow steps with department info")
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "workflow": {
+                "id": workflow_instance.workflow_id,
+                "workflow_name": workflow_instance.workflow_name,
+                "is_master": bool(workflow_instance.is_master),
+                "workflow_type": workflow_instance.workflow_type,
+                "status": workflow_instance.status,
+                "steps": steps_list
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Error retrieving workflow: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+
+        
 @router.post("/submit-review")
 async def submit_for_internal_review(
     review_data: dict,
@@ -2916,3 +3058,4 @@ async def quick_approve_contract(
         db.rollback()
         logger.error(f"❌ Error approving contract: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
