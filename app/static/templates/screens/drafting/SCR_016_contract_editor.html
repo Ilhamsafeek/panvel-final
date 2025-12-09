@@ -363,7 +363,7 @@
     }
 
     /* Comment Bubble */
-    .comment-bubble {
+    /* .comment-bubble {
         position: absolute;
         right: -200px;
         background: white;
@@ -374,8 +374,9 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         font-size: 0.8rem;
         z-index: 100;
-    }
+    } */
 
+    
     .comment-author {
         font-weight: 600;
         color: var(--primary-color);
@@ -1759,6 +1760,46 @@
         opacity: 0.3;
         margin-bottom: 1rem;
     }
+
+
+    /* Email Search Suggestions Dropdown */
+    .email-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        margin-top: 4px;
+    }
+
+    .email-suggestions::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .email-suggestions::-webkit-scrollbar-track {
+        background: var(--background-light);
+    }
+
+    .email-suggestions::-webkit-scrollbar-thumb {
+        background: var(--border-color);
+        border-radius: 3px;
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
 </style>
 
 
@@ -1901,7 +1942,7 @@
                         </p>
 
                         <!-- Master Workflow Preview -->
-                        <div class="workflow-step-preview"
+                        <!-- <div class="workflow-step-preview"
                             style="background: var(--background-light); padding: 1rem; border-radius: 8px;">
                             <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem;">
                                 <span
@@ -1916,7 +1957,7 @@
                                     style="background: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600;">3</span>
                                 <span>Executive Sign-off</span>
                             </div>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -2046,7 +2087,7 @@
                     <div>
                         <span
                             style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); text-decoration: underline;">
-                            USE MASTER WORKFLOW
+                            USE WORKFLOW
                         </span>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
                             Automatically send to predefined reviewers in sequence
@@ -2057,7 +2098,7 @@
                 </label>
             </div>
 
-            <div style="margin-bottom: 1.5rem;">
+            <!-- <div style="margin-bottom: 1.5rem;">
                 <label
                     style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.3s ease;"
                     onmouseover="this.style.borderColor='var(--primary-color)'; this.style.background='var(--background-light)'"
@@ -2076,7 +2117,7 @@
 
 
                 </label>
-            </div>
+            </div> -->
 
             <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
                 <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Additional
@@ -3568,13 +3609,13 @@
             }
         } else if (contract.status === 'counterparty_internal_review') {
 
-            if(contract.is_counterparty===true){
-            actionButtons = `
+            if (contract.is_counterparty === true) {
+                actionButtons = `
         <button class="btn btn-success" onclick="markCounterpartyReviewComplete()">
             <i class="ti ti-check"></i> Mark Review Complete
         </button>
     `;
-    }
+            }
 
 
         } else if (contract.status === 'negotiation') {
@@ -5099,18 +5140,35 @@ ${contract.content && contract.content.trim() !== '' ?
             return;
         }
 
+        console.log('🔄 Saving workflow...');
+        console.log('Selected workflow type:', selectedContractWorkflow);
+
         const workflowData = {
             contract_id: contractId,
             workflow_type: selectedContractWorkflow
         };
 
         if (selectedContractWorkflow === 'custom') {
-            const steps = [];
-            document.querySelectorAll('#contractWorkflowSteps tr').forEach((row, index) => {
-                const role = row.querySelector('select')?.value;
-                const email = row.querySelector('input[placeholder*="email"]')?.value;
-                const department = row.querySelectorAll('select')[1]?.value;
+            console.log('📋 Collecting custom workflow steps...');
 
+            const steps = [];
+            const rows = document.querySelectorAll('#contractWorkflowSteps tr');
+
+            console.log(`Found ${rows.length} workflow step rows`);
+
+            rows.forEach((row, index) => {
+                // Get all select and input elements in this row
+                const roleSelect = row.querySelector('select:nth-of-type(1)');
+                const emailInput = row.querySelector('input[type="email"]');
+                const deptSelect = row.querySelector('select:nth-of-type(2)');
+
+                const role = roleSelect?.value || '';
+                const email = emailInput?.value || '';
+                const department = deptSelect?.value || '';
+
+                console.log(`Row ${index + 1}: role="${role}", email="${email}", dept="${department}"`);
+
+                // Only add if we have at least role and email
                 if (role && email) {
                     steps.push({
                         step_order: index + 1,
@@ -5118,39 +5176,65 @@ ${contract.content && contract.content.trim() !== '' ?
                         assigned_email: email,
                         department: department
                     });
+
+                    console.log(`✅ Added step ${index + 1}:`, {
+                        step_order: index + 1,
+                        step_label: role,
+                        assigned_email: email,
+                        department: department
+                    });
+                } else {
+                    console.warn(`⚠️ Skipping row ${index + 1}: missing role or email`);
                 }
             });
 
             workflowData.steps = steps;
             workflowData.justification = "Custom workflow for this contract";
+
+            console.log(`📦 Prepared ${steps.length} steps for backend:`, steps);
+
+            if (steps.length === 0) {
+                alert('Please add at least one workflow step with role and email.');
+                return;
+            }
         }
 
+        console.log('📤 Sending to backend:', workflowData);
         showLoader();
+
         try {
             const response = await fetch('/api/contracts/workflow/setup', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
                 body: JSON.stringify(workflowData)
             });
 
+            console.log('📥 Response status:', response.status);
             const data = await response.json();
+            console.log('📥 Response data:', data);
 
             if (data.success) {
-                showNotification('Workflow configured successfully', 'success');
+                showNotification('✓ Workflow configured successfully', 'success');
                 closeModal('contractWorkflowModal');
+
+                // Update status text
                 document.getElementById('workflowStatusText').textContent =
-                    selectedContractWorkflow === 'master' ? 'Master Workflow Active' : 'Custom Workflow Active';
+                    selectedContractWorkflow === 'master' ?
+                        'Master Workflow Applied' :
+                        'Custom Workflow Applied';
             } else {
-                showNotification('Failed to configure workflow', 'error');
+                showNotification(data.message || 'Failed to configure workflow', 'error');
             }
         } catch (error) {
-            console.error('Error configuring workflow:', error);
-            showNotification('Failed to configure workflow', 'error');
+            console.error('❌ Error saving workflow:', error);
+            showNotification('Failed to save workflow', 'error');
         } finally {
             hideLoader();
         }
     }
-
 
     function downloadMinutes() {
         alert('Downloading negotiation minutes...');
@@ -5374,49 +5458,522 @@ ${contract.content && contract.content.trim() !== '' ?
         }
     }
 
-    // Comments - FULL FUNCTIONALITY
+
+    let commentSelection = null;
+    let activeCommentBubble = null;
+
+    // Enhanced addComment function
     function addComment() {
         const selection = window.getSelection();
-        if (selection.toString()) {
+        if (selection.toString().trim()) {
+            // Store the selection details
+            commentSelection = {
+                text: selection.toString(),
+                range: selection.getRangeAt(0).cloneRange()
+            };
             openModal('commentModal');
         } else {
             showNotification('Please select text to add a comment', 'warning');
         }
     }
 
-    function insertComment() {
-        const commentText = document.getElementById('commentText').value;
-        const selection = window.getSelection();
+    // Enhanced insertComment function with database persistence
+    async function insertComment() {
+        const commentText = document.getElementById('commentText').value.trim();
 
-        if (!commentText || !selection.toString()) return;
+        if (!commentText) {
+            showNotification('Please enter a comment', 'warning');
+            return;
+        }
 
-        const range = selection.getRangeAt(0);
-        const span = document.createElement('span');
-        span.className = 'track-change-comment';
-        span.style.position = 'relative';
+        if (!commentSelection || !commentSelection.text) {
+            showNotification('Please select text first', 'warning');
+            return;
+        }
 
-        const commentId = 'comment_' + Date.now();
-        span.setAttribute('data-comment-id', commentId);
+        try {
+            // Show loading state
+            const submitBtn = document.querySelector('#commentModal .btn-primary');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="ti ti-loader-2"></i> Saving...';
+            submitBtn.disabled = true;
 
-        range.surroundContents(span);
+            // Save comment to database
+            const response = await fetch('/api/contracts/comments/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contract_id: parseInt(contractId),
+                    comment_text: commentText,
+                    selected_text: commentSelection.text
+                })
+            });
 
-        // Add comment bubble
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'Failed to save comment');
+            }
+
+            if (data.success) {
+                // Add visual comment indicator to the editor
+                addVisualCommentMarker(data.comment, commentSelection.range);
+
+                // Close modal and reset
+                closeModal('commentModal');
+                document.getElementById('commentText').value = '';
+                commentSelection = null;
+
+                showNotification('Comment added successfully', 'success');
+
+                // Auto-save the contract
+                saveAsDraft();
+            } else {
+                throw new Error(data.message || 'Failed to save comment');
+            }
+
+        } catch (error) {
+            console.error('❌ Error adding comment:', error);
+            showNotification('Failed to add comment: ' + error.message, 'error');
+        } finally {
+            // Restore button state
+            const submitBtn = document.querySelector('#commentModal .btn-primary');
+            if (submitBtn) {
+                submitBtn.innerHTML = 'Add Comment';
+                submitBtn.disabled = false;
+            }
+        }
+    }
+
+    // =====================================================
+    // IMPROVED: Add Visual Comment Marker
+    // =====================================================
+    function addVisualCommentMarker(comment, range) {
+        try {
+            const span = document.createElement('span');
+            span.className = 'track-change-comment';
+            span.style.cssText = `
+            background: rgba(255, 193, 7, 0.2);
+            border-bottom: 2px dotted #ffc107;
+            cursor: pointer;
+            position: relative;
+            padding: 2px 0;
+        `;
+
+            const commentId = 'comment_' + comment.id;
+            span.setAttribute('data-comment-id', commentId);
+            span.setAttribute('data-comment-db-id', comment.id);
+            span.setAttribute('title', 'Click to view/hide comment');
+
+            // Wrap the selected text
+            try {
+                range.surroundContents(span);
+            } catch (e) {
+                console.warn('Could not wrap text, inserting marker instead');
+                const marker = document.createElement('span');
+                marker.className = 'comment-marker';
+                marker.innerHTML = `<i class="ti ti-message-circle" style="color: #ffc107; font-size: 16px; vertical-align: middle;"></i>`;
+                marker.setAttribute('data-comment-id', commentId);
+                marker.setAttribute('data-comment-db-id', comment.id);
+                marker.title = comment.comment_text;
+                range.insertNode(marker);
+                span = marker; // Use marker as span reference
+            }
+
+            // Create comment bubble
+            createCommentBubble(span, comment);
+
+        } catch (visualError) {
+            console.error('Error adding visual comment:', visualError);
+            showNotification('Comment saved but visual indicator failed', 'warning');
+        }
+    }
+
+    // =====================================================
+    // IMPROVED: Create Comment Bubble with Delete Button
+    // =====================================================
+    function createCommentBubble(parentElement, comment) {
+        const commentId = 'comment_' + comment.id;
+
+        // Remove old bubble if exists
+        const oldBubble = document.getElementById(commentId);
+        if (oldBubble) oldBubble.remove();
+
         const bubble = document.createElement('div');
         bubble.className = 'comment-bubble';
         bubble.id = commentId;
-        bubble.innerHTML = `
-        <div class="comment-author">You</div>
-        <div class="comment-text">${commentText}</div>
-        <div class="comment-time">${new Date().toLocaleString()}</div>
+        bubble.style.cssText = `
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        min-width: 280px;
+        max-width: 400px;
+        z-index: 10000;
+        display: none;
+        margin-top: 8px;
     `;
-        span.appendChild(bubble);
 
-        closeModal('commentModal');
-        document.getElementById('commentText').value = '';
+        bubble.innerHTML = `
+        <div style="display: flex; align-items: flex-start;">
+            <i class="ti ti-user-circle" style="font-size: 24px; color: var(--primary-color); flex-shrink: 0;"></i>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; font-size: 14px; color: #333; margin-bottom: 2px;">
+                    ${comment.user_name}
+                </div>
+                <div style="font-size: 11px; color: #999;">
+                    ${new Date(comment.created_at).toLocaleString()}
+                </div>
+            </div>
+            <button 
+                onclick="deleteComment(${comment.id}, '${commentId}')" 
+                class="comment-delete-btn"
+                style="
+                    background: #dc3545;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    padding: 6px 10px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                    transition: all 0.2s;
+                "
+                onmouseover="this.style.background='#c82333'"
+                onmouseout="this.style.background='#dc3545'"
+                title="Delete comment"
+            >
+                <i class="ti ti-trash" style="font-size: 14px;"></i>
+               
+            </button>
+        </div>
+        <div style="font-size: 14px; color: #444; line-height: 1.6; padding: 8px 12px; background: #f8f9fa; border-radius: 8px;">
+            ${comment.comment_text}
+        </div>
+       
+    `;
 
-        showNotification('Comment added', 'success');
-        saveAsDraft();
+        // Add bubble to parent element
+        parentElement.appendChild(bubble);
+
+        // ✅ IMPROVED: Better click handler with proper positioning
+        parentElement.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // Close other bubbles
+            closeAllCommentBubbles();
+
+            // Toggle this bubble
+            const isHidden = bubble.style.display === 'none';
+            bubble.style.display = isHidden ? 'block' : 'none';
+
+            if (isHidden) {
+                // Position bubble properly
+                positionCommentBubble(bubble, parentElement);
+                activeCommentBubble = bubble;
+
+                // Highlight the comment
+                parentElement.classList.add('active');
+            } else {
+                parentElement.classList.remove('active');
+                activeCommentBubble = null;
+            }
+        });
     }
+
+    // =====================================================
+    // IMPROVED: Position Comment Bubble Properly
+    // =====================================================
+    function positionCommentBubble(bubble, parentElement) {
+        // Get parent position
+        const rect = parentElement.getBoundingClientRect();
+        const containerRect = document.getElementById('contractContent').getBoundingClientRect();
+
+        // Reset position
+        bubble.style.top = '';
+        bubble.style.bottom = '';
+        bubble.style.left = '';
+        bubble.style.right = '';
+
+        // Calculate available space
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+
+        // Position bubble
+        if (spaceBelow > 250 || spaceBelow > spaceAbove) {
+            // Show below
+            bubble.style.top = '100%';
+            bubble.style.bottom = 'auto';
+        } else {
+            // Show above
+            bubble.style.bottom = '100%';
+            bubble.style.top = 'auto';
+            bubble.style.marginBottom = '8px';
+            bubble.style.marginTop = '0';
+        }
+
+        // Horizontal positioning
+        bubble.style.left = '0';
+
+        // Ensure bubble is visible within viewport
+        setTimeout(() => {
+            const bubbleRect = bubble.getBoundingClientRect();
+
+            // Adjust if going off right edge
+            if (bubbleRect.right > window.innerWidth - 20) {
+                bubble.style.left = 'auto';
+                bubble.style.right = '0';
+            }
+
+            // Adjust if going off left edge
+            if (bubbleRect.left < 20) {
+                bubble.style.left = '20px';
+            }
+        }, 10);
+    }
+
+    // =====================================================
+    // Close All Comment Bubbles
+    // =====================================================
+    function closeAllCommentBubbles() {
+        document.querySelectorAll('.comment-bubble').forEach(bubble => {
+            bubble.style.display = 'none';
+        });
+        document.querySelectorAll('.track-change-comment, .comment-marker').forEach(marker => {
+            marker.classList.remove('active');
+        });
+        activeCommentBubble = null;
+    }
+
+    // =====================================================
+    // DELETE COMMENT FUNCTION
+    // =====================================================
+    async function deleteComment(commentId, bubbleId) {
+        if (!confirm('Are you sure you want to delete this comment?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/contracts/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || 'Failed to delete comment');
+            }
+
+            if (data.success) {
+                // Remove the visual indicator
+                const commentElement = document.querySelector(`[data-comment-db-id="${commentId}"]`);
+                if (commentElement) {
+                    // If it's a span wrapper, unwrap the text
+                    if (commentElement.tagName === 'SPAN' && commentElement.className === 'track-change-comment') {
+                        const parent = commentElement.parentNode;
+                        while (commentElement.firstChild) {
+                            parent.insertBefore(commentElement.firstChild, commentElement);
+                        }
+                        commentElement.remove();
+                    } else {
+                        // If it's a marker icon, just remove it
+                        commentElement.remove();
+                    }
+                }
+
+                // Remove the bubble
+                const bubble = document.getElementById(bubbleId);
+                if (bubble) {
+                    bubble.remove();
+                }
+
+                showNotification('Comment deleted successfully', 'success');
+
+                // Auto-save the contract
+                saveAsDraft();
+            } else {
+                throw new Error(data.message || 'Failed to delete comment');
+            }
+
+        } catch (error) {
+            console.error('❌ Error deleting comment:', error);
+            showNotification('Failed to delete comment: ' + error.message, 'error');
+        }
+    }
+
+    // =====================================================
+    // Global Click Handler - Close Bubbles When Clicking Outside
+    // =====================================================
+    document.addEventListener('click', function (e) {
+        // Don't close if clicking inside a comment or bubble
+        if (!e.target.closest('.track-change-comment') &&
+            !e.target.closest('.comment-marker') &&
+            !e.target.closest('.comment-bubble')) {
+            closeAllCommentBubbles();
+        }
+    });
+
+    // =====================================================
+    // Load Existing Comments When Page Loads
+    // =====================================================
+    async function loadExistingComments() {
+        try {
+            console.log('📝 Loading comments for contract:', contractId);
+
+            const response = await fetch(`/api/contracts/comments/${contractId}`);
+            const data = await response.json();
+
+            if (!data.success || !data.comments.length) {
+                console.log('No comments to load');
+                return;
+            }
+
+            console.log(`✅ Found ${data.comments.length} comments`);
+
+            // For each comment, find or create marker and attach bubble
+            data.comments.forEach(comment => {
+                let marker = document.querySelector(`[data-comment-db-id="${comment.id}"]`);
+
+                if (!marker) {
+                    // Marker doesn't exist, try to recreate
+                    marker = findAndWrapText(comment.selected_text, comment.id);
+                }
+
+                if (marker) {
+                    // Attach bubble to marker
+                    createCommentBubble(marker, {
+                        id: comment.id,
+                        user_name: comment.author,
+                        comment_text: comment.comment_text,
+                        selected_text: comment.selected_text,
+                        created_at: comment.created_at
+                    });
+                }
+            });
+
+            updateCommentCount(data.comments.length);
+
+        } catch (error) {
+            console.error('❌ Error loading comments:', error);
+        }
+    }
+
+
+
+    function findAndWrapText(searchText, commentId) {
+        if (!searchText) return null;
+
+        const content = document.getElementById('contractContent');
+        if (!content) return null;
+
+        const text = searchText.trim();
+        const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+
+        let node;
+        while (node = walker.nextNode()) {
+            const index = node.textContent.indexOf(text);
+
+            if (index !== -1) {
+                try {
+                    const range = document.createRange();
+                    range.setStart(node, index);
+                    range.setEnd(node, index + text.length);
+
+                    const span = document.createElement('span');
+                    span.className = 'track-change-comment';
+                    span.setAttribute('data-comment-db-id', commentId);
+                    span.setAttribute('data-comment-id', 'comment_' + commentId);
+                    span.style.cssText = `
+                    background: rgba(255, 193, 7, 0.25);
+                    border-bottom: 2px solid #ffc107;
+                    cursor: pointer;
+                    position: relative;
+                    padding: 2px 0;
+                `;
+
+                    range.surroundContents(span);
+                    console.log(`✅ Recreated marker for comment ${commentId}`);
+                    return span;
+
+                } catch (e) {
+                    console.warn('Could not wrap text:', e);
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+
+    // Also try on window load (as backup)
+    window.addEventListener('load', function () {
+        const markers = document.querySelectorAll('[data-comment-db-id]');
+        const bubbles = document.querySelectorAll('.comment-bubble');
+
+        if (markers.length > 0 && bubbles.length === 0) {
+            console.log('🔄 Found markers but no bubbles, reloading...');
+            loadExistingComments();
+        }
+    });
+    // =====================================================
+    // Display Comments List (Optional Sidebar)
+    // =====================================================
+    function displayCommentsList(comments) {
+        // Optional: Create a comments sidebar or panel
+        console.log('Comments loaded:', comments);
+
+        // You can add a badge showing comment count
+        updateCommentCount(comments.length);
+    }
+
+    // =====================================================
+    // Update Comment Count Badge
+    // =====================================================
+    function updateCommentCount(count) {
+        // Find or create comment count badge
+        let badge = document.getElementById('commentCountBadge');
+        if (!badge && count > 0) {
+            badge = document.createElement('span');
+            badge.id = 'commentCountBadge';
+            badge.className = 'comment-count-badge';
+            badge.style.cssText = `
+            background: #fff3cd;
+            color: #856404;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        `;
+
+            // Add to toolbar (adjust selector as needed)
+            const toolbar = document.querySelector('.toolbar-right, .editor-toolbar');
+            if (toolbar) {
+                toolbar.insertBefore(badge, toolbar.firstChild);
+            }
+        }
+
+        if (badge) {
+            badge.innerHTML = `<i class="ti ti-message-circle"></i> ${count} Comment${count !== 1 ? 's' : ''}`;
+            badge.style.display = count > 0 ? 'inline-flex' : 'none';
+        }
+    }
+
+    // =====================================================
+    // Initialize When Document is Ready
+    // =====================================================
+   
 
     // Auto-save functionality
     function startAutoSave() {
@@ -5874,6 +6431,9 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         const tbody = document.getElementById('contractWorkflowSteps');
         const newRow = document.createElement('tr');
 
+        const uniqueId = `emailInput_${Date.now()}_${contractWorkflowStepCount}`;
+        const suggestionsId = `suggestions_${Date.now()}_${contractWorkflowStepCount}`;
+
         newRow.innerHTML = `
         <td style="padding: 0.75rem;">
             <span style="width: 28px; height: 28px; background: var(--primary-color); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600;">${contractWorkflowStepCount}</span>
@@ -5887,10 +6447,14 @@ ${(riskAnalysisData.risk_items || []).map(item => `
                 <option value="counter-party">Counter-Party</option>
             </select>
         </td>
-        <td style="padding: 0.75rem;">
+        <td style="padding: 0.75rem; position: relative;">
             <input type="email" 
-                placeholder="Enter email address" 
+                id="${uniqueId}"
+                placeholder="Type to search users..." 
+                oninput="searchWorkflowUsers(this, '${suggestionsId}')"
+                onfocus="searchWorkflowUsers(this, '${suggestionsId}')"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+            <div id="${suggestionsId}" class="email-suggestions" style="display: none;"></div>
         </td>
         <td style="padding: 0.75rem;">
             <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
@@ -5904,7 +6468,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
             </select>
         </td>
         <td style="padding: 0.75rem; text-align: center;">
-            <button onclick="removeWorkflowStepRow(this)" 
+            <button onclick="removeContractWorkflowStep(this)" 
                 style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 0.25rem 0.5rem;">
                 <i class="ti ti-trash" style="font-size: 1.125rem;"></i>
             </button>
@@ -5916,7 +6480,10 @@ ${(riskAnalysisData.risk_items || []).map(item => `
 
 
     function removeContractWorkflowStep(button) {
-        if (contractWorkflowStepCount > 1) {
+        const tbody = document.getElementById('contractWorkflowSteps');
+        const rows = tbody.querySelectorAll('tr');
+
+        if (rows.length > 1) {
             button.closest('tr').remove();
             updateContractStepNumbers();
         } else {
@@ -5925,14 +6492,17 @@ ${(riskAnalysisData.risk_items || []).map(item => `
     }
 
     function updateContractStepNumbers() {
-        const steps = document.querySelectorAll('#contractWorkflowSteps tr');
-        steps.forEach((step, index) => {
-            const stepNumber = step.querySelector('span');
-            if (stepNumber) {
-                stepNumber.textContent = index + 1;
+        const tbody = document.getElementById('contractWorkflowSteps');
+        const rows = tbody.querySelectorAll('tr');
+
+        rows.forEach((row, index) => {
+            const stepSpan = row.querySelector('span');
+            if (stepSpan) {
+                stepSpan.textContent = index + 1;
             }
         });
-        contractWorkflowStepCount = steps.length;
+
+        contractWorkflowStepCount = rows.length;
     }
 
 
@@ -6079,65 +6649,65 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         console.log('✅ Master workflow preview updated');
     }
 
-    // STEP 5: ADD this NEW function (populateCustomWorkflowSteps)
-    function populateCustomWorkflowSteps(steps) {
-        console.log('📋 Populating custom workflow steps:', steps);
 
+
+    function populateCustomWorkflowSteps(steps) {
         const tbody = document.getElementById('contractWorkflowSteps');
         if (!tbody) {
-            console.error('❌ tbody not found: contractWorkflowSteps');
+            console.error('❌ contractWorkflowSteps tbody not found');
             return;
         }
 
-        // ✅ SAFETY: Clear existing rows (in case called directly)
+        // Clear existing rows
         tbody.innerHTML = '';
         contractWorkflowStepCount = 0;
 
-        console.log(`🔄 Processing ${steps.length} steps`);
+        console.log(`🔄 Populating ${steps.length} workflow steps`);
 
-        // Add each step
         steps.forEach((step, stepIndex) => {
-            console.log(`Step ${stepIndex + 1}:`, {
-                role: step.assignee_role,
-                department: step.department,
-                users: step.users ? step.users.length : 0
-            });
+            console.log(`Step ${stepIndex + 1}:`, step);
 
             if (step.users && step.users.length > 0) {
-                // Create row for each user
+                // Create a row for each user in this step
                 step.users.forEach((user, userIndex) => {
                     contractWorkflowStepCount++;
-                    console.log(`  User ${userIndex + 1}: ${user.email}`);
-                    addWorkflowStepRow(step, user);
+                    console.log(`  📧 User ${userIndex + 1}: ${user.email}`);
+                    addWorkflowStepRow(step, user, contractWorkflowStepCount);
                 });
             } else {
-                // No users, create empty row
+                // No users assigned, create empty row
                 contractWorkflowStepCount++;
-                addWorkflowStepRow(step, null);
+                console.log(`  ⚠️ No users for step ${stepIndex + 1}`);
+                addWorkflowStepRow(step, null, contractWorkflowStepCount);
             }
         });
 
-        // Show the custom workflow config section
+        // Show custom workflow config
         document.getElementById('customWorkflowConfig').style.display = 'block';
         console.log(`✅ Populated ${contractWorkflowStepCount} workflow rows`);
     }
 
-
-
-    // STEP 6: ADD this NEW function (addWorkflowStepRow)
-    function addWorkflowStepRow(step, user) {
+    function addWorkflowStepRow(step, user, rowNumber) {
         const tbody = document.getElementById('contractWorkflowSteps');
         const newRow = document.createElement('tr');
 
+        // Extract values
         const stepType = step.step_type || step.assignee_role || '';
         const userEmail = user ? user.email : '';
         const department = step.department || '';
 
-        console.log(`  ➕ Adding row: role=${stepType}, email=${userEmail}, dept=${department}`);
+        console.log(`➕ Adding row ${rowNumber}:`, {
+            stepType: stepType,
+            userEmail: userEmail,
+            department: department
+        });
+
+        const uniqueId = `emailInput_${Date.now()}_${rowNumber}`;
+        const suggestionsId = `suggestions_${Date.now()}_${rowNumber}`;
 
         newRow.innerHTML = `
         <td style="padding: 0.75rem;">
-            <span style="width: 28px; height: 28px; background: var(--primary-color); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600;">${contractWorkflowStepCount}</span>
+            <span style="width: 28px; height: 28px; background: var(--primary-color); color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 600;">${rowNumber}</span>
         </td>
         <td style="padding: 0.75rem;">
             <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
@@ -6148,11 +6718,15 @@ ${(riskAnalysisData.risk_items || []).map(item => `
                 <option value="counter-party" ${stepType === 'counter-party' ? 'selected' : ''}>Counter-Party</option>
             </select>
         </td>
-        <td style="padding: 0.75rem;">
+        <td style="padding: 0.75rem; position: relative;">
             <input type="email" 
-                placeholder="Enter email address" 
+                id="${uniqueId}"
+                placeholder="Type to search users..." 
                 value="${userEmail}"
+                oninput="searchWorkflowUsers(this, '${suggestionsId}')"
+                onfocus="searchWorkflowUsers(this, '${suggestionsId}')"
                 style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
+            <div id="${suggestionsId}" class="email-suggestions" style="display: none;"></div>
         </td>
         <td style="padding: 0.75rem;">
             <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
@@ -6166,17 +6740,17 @@ ${(riskAnalysisData.risk_items || []).map(item => `
             </select>
         </td>
         <td style="padding: 0.75rem; text-align: center;">
-            <button onclick="removeWorkflowStepRow(this)" 
-                style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 0.25rem 0.5rem;"
-                title="Remove this step">
+            <button onclick="removeContractWorkflowStep(this)" 
+                style="background: none; border: none; color: var(--danger-color); cursor: pointer; padding: 0.25rem 0.5rem;">
                 <i class="ti ti-trash" style="font-size: 1.125rem;"></i>
             </button>
         </td>
     `;
 
         tbody.appendChild(newRow);
-    }
 
+        console.log(`✅ Row ${rowNumber} added with email="${userEmail}" dept="${department}"`);
+    }
     // STEP 7: ADD this NEW function (removeWorkflowStepRow)
     function removeWorkflowStepRow(button) {
         const tbody = document.getElementById('contractWorkflowSteps');
@@ -6201,6 +6775,103 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         console.log('✅ Step numbers updated, total:', contractWorkflowStepCount);
     }
 
+
+
+
+    // Search users function
+    async function searchWorkflowUsers(input, suggestionsId) {
+        const query = input.value.trim();
+        const suggestionsDiv = document.getElementById(suggestionsId);
+
+        currentSearchInput = input;
+
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+
+        if (!query) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                suggestionsDiv.innerHTML = `
+                <div style="padding: 0.75rem; text-align: center; color: var(--text-muted);">
+                    <i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Searching...
+                </div>
+            `;
+                suggestionsDiv.style.display = 'block';
+
+                const response = await fetch(`/api/users/company?search=${encodeURIComponent(query)}&limit=10`);
+
+                if (!response.ok) {
+                    throw new Error('Search failed');
+                }
+
+                const data = await response.json();
+                const users = data.users || [];
+
+                if (users.length === 0) {
+                    suggestionsDiv.innerHTML = `
+                    <div style="padding: 0.75rem; text-align: center; color: var(--text-muted);">
+                        <i class="ti ti-user-x"></i> No users found
+                    </div>
+                `;
+                } else {
+                    suggestionsDiv.innerHTML = users.map(user => {
+                        const fullName = `${user.first_name} ${user.last_name}`.trim();
+                        const badge = user.user_type ? `<span style="font-size: 0.75rem; padding: 0.125rem 0.375rem; background: var(--primary-color); color: white; border-radius: 4px; margin-left: 0.25rem;">${user.user_type}</span>` : '';
+
+                        return `
+                        <div onclick="selectWorkflowUser('${user.email}', '${input.id}', '${suggestionsId}')" 
+                            style="padding: 0.75rem; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background 0.2s;"
+                            onmouseover="this.style.background='var(--background-light)'"
+                            onmouseout="this.style.background='white'">
+                            <div style="font-weight: 600; color: var(--text-color);">
+                                ${fullName} ${badge}
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                ${user.email}
+                            </div>
+                        </div>
+                    `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                suggestionsDiv.innerHTML = `
+                <div style="padding: 0.75rem; text-align: center; color: var(--danger-color);">
+                    <i class="ti ti-alert-circle"></i> Search failed
+                </div>
+            `;
+            }
+        }, 300);
+    }
+
+    // Select user from suggestions
+    function selectWorkflowUser(email, inputId, suggestionsId) {
+        const input = document.getElementById(inputId);
+        const suggestionsDiv = document.getElementById(suggestionsId);
+
+        if (input) {
+            input.value = email;
+        }
+
+        if (suggestionsDiv) {
+            suggestionsDiv.style.display = 'none';
+        }
+    }
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function (e) {
+        const suggestions = document.querySelectorAll('.email-suggestions');
+        suggestions.forEach(div => {
+            if (!div.contains(e.target) && !e.target.classList.contains('email-search-input')) {
+                div.style.display = 'none';
+            }
+        });
+    });
 
 
     // Update master workflow preview with actual steps
@@ -6917,8 +7588,27 @@ ${(riskAnalysisData.risk_items || []).map(item => `
             setTimeout(() => {
                 verifyContract(contractId);
             }, 1000);
+
+
+             if (typeof contractId !== 'undefined' && contractId) {
+            // Wait a bit for content to load
+            setTimeout(() => {
+                loadExistingComments();
+            }, 500);
+        }
         }
     });
+
+
+    window.refreshComments = function() {
+    console.log('🔄 Manually refreshing comments...');
+    
+    // Remove old bubbles
+    document.querySelectorAll('.comment-bubble').forEach(b => b.remove());
+    
+    // Reload
+    loadExistingComments();
+};
 
     // Wrapper function for verify button
     function verifyContractNow() {

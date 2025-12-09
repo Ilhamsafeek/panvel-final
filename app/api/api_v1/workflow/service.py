@@ -9,6 +9,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 import json
 import logging
+from sqlalchemy import or_, and_
 
 from app.models.workflow import Workflow, WorkflowStep
 from app.models.user import User
@@ -288,27 +289,35 @@ class WorkflowService:
             {"id": 6, "name": "IT"},
             {"id": 7, "name": "Procurement"}
         ]
-    
+
+        
     def search_users(
         self,
         company_id: int,
-        query: str
+        query: str,
+        department: Optional[str] = None
     ) -> List[Dict[str, Any]]:
-        """Search users by name or email"""
+        """Search users by name or email, optionally filter by department"""
         try:
+            # Base query
+            base_query = self.db.query(User).filter(
+                User.company_id == company_id,
+                User.is_active == True
+            )
+            
+            # Apply department filter if provided
+            if department:
+                base_query = base_query.filter(User.department == department)
+            
+            # Apply search query
             if not query or query.strip() == '':
-                users = self.db.query(User).filter(
-                    User.company_id == company_id
-                ).limit(20).all()
+                users = base_query.limit(20).all()
             else:
-                users = self.db.query(User).filter(
-                    and_(
-                        User.company_id == company_id,
-                        or_(
-                            User.first_name.ilike(f"%{query}%"),
-                            User.last_name.ilike(f"%{query}%"),
-                            User.email.ilike(f"%{query}%")
-                        )
+                users = base_query.filter(
+                    or_(
+                        User.first_name.ilike(f"%{query}%"),
+                        User.last_name.ilike(f"%{query}%"),
+                        User.email.ilike(f"%{query}%")
                     )
                 ).limit(10).all()
             
@@ -317,7 +326,8 @@ class WorkflowService:
                     "id": user.id,
                     "name": f"{user.first_name} {user.last_name}",
                     "email": user.email,
-                    "user_type": user.user_type
+                    "user_type": user.user_type,
+                    "department": getattr(user, 'department', None)
                 }
                 for user in users
             ]

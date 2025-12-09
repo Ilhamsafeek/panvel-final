@@ -1827,9 +1827,6 @@ function updateSubTabs(module) {
             <button class="sub-tab" onclick="switchSubTab('executed')" data-subtab="executed">
                 <i class="ti ti-file-check"></i> Executed Contracts
             </button>
-            <button class="sub-tab" onclick="switchSubTab('obligations')" data-subtab="obligations">
-                <i class="ti ti-checklist"></i> With Obligations
-            </button>
             <button class="sub-tab" onclick="switchSubTab('renewals')" data-subtab="renewals">
                 <i class="ti ti-refresh-alert"></i> Up for Renewal
             </button>
@@ -2106,7 +2103,7 @@ function renderContracts() {
                 </button>
             `;
                 break;
-            case 'signed':
+            case 'executed':
                 actions = `
                 <button class="quick-action-btn" onclick="event.stopPropagation(); downloadContract('${contract.id}')">
                     <i class="ti ti-download"></i> Download

@@ -1038,7 +1038,6 @@ async def update_contract(
 # =====================================================
 # CONTRACT EDITOR ENDPOINTS
 # =====================================================
-
 @router.get("/edit/{contract_id}")
 async def get_contract_editor_data(
     contract_id: int,
@@ -1080,8 +1079,8 @@ async def get_contract_editor_data(
         if not result:
             raise HTTPException(status_code=404, detail="Contract not found")
         
-
         is_initiator = current_user.id == result.created_by_id
+        
         # Check if current user belongs to counterparty company
         counterparty_query = text("""
             SELECT company_id 
@@ -1101,6 +1100,8 @@ async def get_contract_editor_data(
         # Get workflow instance
         workflow_query = text("""
             SELECT 
+                wi.id as workflow_instance_id,
+                wi.workflow_id,
                 wi.status as workflow_status,
                 wi.current_step,
                 w.workflow_name as template_name
@@ -1114,22 +1115,84 @@ async def get_contract_editor_data(
         
         workflow = db.execute(workflow_query, {"contract_id": contract_id}).fetchone()
         
-        # Get total workflow steps
-        if workflow:
+        # Get workflow steps with assignee information
+        workflow_steps = []
+        total_steps = 0
+        
+        if workflow and workflow.workflow_id:
             steps_query = text("""
-                SELECT COUNT(*) as total_steps
-                FROM workflow_steps
-                WHERE workflow_id = (
-                    SELECT workflow_id 
-                    FROM workflow_instances 
-                    WHERE contract_id = :contract_id 
-                    LIMIT 1
-                )
+                SELECT 
+                    ws.id as step_id,
+                    ws.step_number,
+                    ws.step_name,
+                    ws.step_type,
+                    ws.assignee_user_id,
+                    ws.assignee_role_id,
+                    ws.department_id,
+                    ws.approval_required,
+                    ws.sequence_order,
+                    CONCAT(u.first_name, ' ', u.last_name) as assignee_name,
+                    u.email as assignee_email,
+                    r.role_name,
+                    d.department_name,
+                    wsi.status as step_status,
+                    wsi.completed_at,
+                    wsi.comments
+                FROM workflow_steps ws
+                LEFT JOIN users u ON ws.assignee_user_id = u.id
+                LEFT JOIN roles r ON ws.assignee_role_id = r.id
+                LEFT JOIN departments d ON ws.department_id = d.id
+                LEFT JOIN workflow_step_instances wsi ON wsi.workflow_step_id = ws.id 
+                    AND wsi.workflow_instance_id = :workflow_instance_id
+                WHERE ws.workflow_id = :workflow_id
+                ORDER BY ws.sequence_order ASC, ws.step_number ASC
             """)
-            steps_result = db.execute(steps_query, {"contract_id": contract_id}).fetchone()
-            total_steps = steps_result.total_steps if steps_result else 6
-        else:
-            total_steps = 6
+            
+            steps_result = db.execute(steps_query, {
+                "workflow_id": workflow.workflow_id,
+                "workflow_instance_id": workflow.workflow_instance_id
+            }).fetchall()
+            
+            total_steps = len(steps_result)
+            
+            workflow_steps = [
+                {
+                    "step_id": step.step_id,
+                    "step_number": step.step_number,
+                    "step_name": step.step_name,
+                    "step_type": step.step_type,
+                    "assignee_user_id": step.assignee_user_id,
+                    "assignee_name": step.assignee_name,
+                    "assignee_email": step.assignee_email,
+                    "assignee_role_id": step.assignee_role_id,
+                    "role_name": step.role_name,
+                    "department_id": step.department_id,
+                    "department_name": step.department_name,
+                    "approval_required": bool(step.approval_required),
+                    "sequence_order": step.sequence_order,
+                    "status": step.step_status if step.step_status else "pending",
+                    "completed_at": step.completed_at.isoformat() if step.completed_at else None,
+                    "comments": step.comments,
+                    "is_current": workflow.current_step == step.step_number
+                }
+                for step in steps_result
+            ]
+        
+        # Check if it's current user's turn in workflow
+        is_my_workflow_turn = False
+        if workflow and workflow_steps:
+            for step in workflow_steps:
+                if step["is_current"]:
+                    # Check if assigned to current user directly
+                    if step["assignee_user_id"] == current_user.id:
+                        is_my_workflow_turn = True
+                    # Check if assigned to current user's role
+                    elif step["assignee_role_id"] == current_user.role_id:
+                        is_my_workflow_turn = True
+                    # Check if assigned to current user's department
+                    elif step["department_id"] == current_user.department_id:
+                        is_my_workflow_turn = True
+                    break
         
         # Get version history
         version_query = text("""
@@ -1171,7 +1234,9 @@ async def get_contract_editor_data(
                 "status": workflow.workflow_status if workflow else "not_configured",
                 "current_stage": workflow.current_step if workflow else 0,
                 "total_stages": total_steps,
-                "template_name": workflow.template_name if workflow else None
+                "template_name": workflow.template_name if workflow else None,
+                "steps": workflow_steps,
+                "is_my_workflow_turn": is_my_workflow_turn
             } if workflow else None,
             "versions": [
                 {
@@ -1182,7 +1247,6 @@ async def get_contract_editor_data(
                 }
                 for v in versions
             ]
-        
         }
         
     except HTTPException:
@@ -1190,7 +1254,7 @@ async def get_contract_editor_data(
     except Exception as e:
         logger.error(f"Error fetching contract editor data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
+        
 
 @router.post("/save-draft/{contract_id}")
 async def save_contract_draft(
@@ -1753,6 +1817,13 @@ async def get_execution_certificate(
 
 
 
+# ===================================================================
+# FILE: app/api/api_v1/contracts/contracts.py
+# COMPLETE FIXED VERSION - Replace the entire function
+# ===================================================================
+
+import json
+from sqlalchemy import text
 
 @router.post("/workflow/setup")
 async def setup_contract_workflow(
@@ -1760,61 +1831,59 @@ async def setup_contract_workflow(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Setup workflow for contract"""
+    """Setup workflow for a specific contract"""
     try:
+        # ✅ EXTRACT ALL VARIABLES FIRST
         contract_id = workflow_data.get("contract_id")
-        workflow_type = workflow_data.get("workflow_type")
+        workflow_type = workflow_data.get("workflow_type", "custom")
+        steps = workflow_data.get("steps", [])  # ← THIS WAS MISSING!
+        
+        logger.info(f"Setting up {workflow_type} workflow for contract {contract_id}")
+        logger.info(f"Received {len(steps)} workflow steps")
         
         if workflow_type == "master":
             # Use master workflow
-            workflow_query = text("""
-                SELECT id, workflow_name
-                FROM workflows
-                WHERE company_id = :company_id
-                AND is_master = 1
+            logger.info("Using master workflow")
+            
+            # Get company's master workflow
+            master_query = text("""
+                SELECT id FROM workflows 
+                WHERE company_id = :company_id 
+                AND is_master = 1 
                 AND is_active = 1
                 ORDER BY created_at DESC
                 LIMIT 1
             """)
             
-            workflow = db.execute(workflow_query, {
-                "company_id": current_user.company_id if current_user.company_id else None
+            master_workflow = db.execute(master_query, {
+                "company_id": current_user.company_id
             }).fetchone()
             
-            if not workflow:
-                # Create default master workflow
-                create_workflow = text("""
-                    INSERT INTO workflows 
-                    (company_id, workflow_name, workflow_type, is_master, is_active, created_at, updated_at)
-                    VALUES (:company_id, 'Default Master Workflow', 'contract_approval', 1, 1, NOW(), NOW())
+            if master_workflow:
+                # Create workflow instance pointing to master workflow
+                instance_query = text("""
+                    INSERT INTO workflow_instances 
+                    (workflow_id, contract_id, current_step, status, started_at)
+                    VALUES (:workflow_id, :contract_id, 1, 'pending', NOW())
                 """)
                 
-                result = db.execute(create_workflow, {
-                    "company_id": current_user.company_id if current_user.company_id else None
+                db.execute(instance_query, {
+                    "workflow_id": master_workflow.id,
+                    "contract_id": contract_id
                 })
                 
-                workflow_id = result.lastrowid
+                logger.info(f"Created workflow instance using master workflow {master_workflow.id}")
             else:
-                workflow_id = workflow.id
-            
-            # Create workflow instance
-            instance_query = text("""
-                INSERT INTO workflow_instances 
-                (workflow_id, contract_id, current_step, status, started_at)
-                VALUES (:workflow_id, :contract_id, 1, 'pending', NOW())
-            """)
-            
-            db.execute(instance_query, {
-                "workflow_id": workflow_id,
-                "contract_id": contract_id
-            })
-            
+                logger.warning("No master workflow found")
+                raise HTTPException(status_code=404, detail="Master workflow not found")
+                
         else:
-            # Custom workflow
-            steps = workflow_data.get("steps", [])
+            # ✅ CUSTOM WORKFLOW - FIXED VERSION
+            logger.info("Creating custom workflow")
             
+            # Create workflow record
             workflow_insert = text("""
-                INSERT INTO workflows 
+                INSERT INTO workflows
                 (company_id, workflow_name, workflow_type, is_master, is_active, created_at, updated_at)
                 VALUES (:company_id, :workflow_name, 'contract_approval', 0, 1, NOW(), NOW())
             """)
@@ -1825,23 +1894,79 @@ async def setup_contract_workflow(
             })
             
             workflow_id = result.lastrowid
+            logger.info(f"✅ Created workflow with ID: {workflow_id}")
             
-            # Create workflow steps
+            # Store departments mapping
+            departments_map = {}
+            
+            # Create workflow steps WITH user lookup
             if steps:
+                logger.info(f"Processing {len(steps)} workflow steps")
+                
                 for step in steps:
+                    step_order = step.get("step_order", 1)
+                    step_label = step.get("step_label", "Review")
+                    assigned_email = step.get("assigned_email", "")
+                    department = step.get("department", "")
+                    
+                    logger.info(f"📝 Step {step_order}: role={step_label}, email={assigned_email}, dept={department}")
+                    
+                    # Store department in mapping
+                    if department:
+                        departments_map[str(step_order)] = department
+                    
+                    # ✅ Look up user by email
+                    assignee_user_id = None
+                    if assigned_email:
+                        user_query = text("""
+                            SELECT id FROM users 
+                            WHERE email = :email 
+                            AND is_active = 1
+                            LIMIT 1
+                        """)
+                        user_result = db.execute(user_query, {"email": assigned_email}).fetchone()
+                        
+                        if user_result:
+                            assignee_user_id = user_result.id
+                            logger.info(f"✅ Found user ID {assignee_user_id} for email {assigned_email}")
+                        else:
+                            logger.warning(f"⚠️ User not found for email: {assigned_email}")
+                    
+                    # ✅ Insert step with assignee_user_id
                     step_insert = text("""
                         INSERT INTO workflow_steps
-                        (workflow_id, step_number, step_name, step_type, assignee_role, sla_hours, is_mandatory, created_at)
-                        VALUES (:workflow_id, :step_number, :step_name, :step_type, :assignee_role, 24, 1, NOW())
+                        (workflow_id, step_number, step_name, step_type, assignee_role, assignee_user_id, sla_hours, is_mandatory, created_at)
+                        VALUES (:workflow_id, :step_number, :step_name, :step_type, :assignee_role, :assignee_user_id, 24, 1, NOW())
                     """)
                     
                     db.execute(step_insert, {
                         "workflow_id": workflow_id,
-                        "step_number": step.get("step_order", 1),
-                        "step_name": step.get("step_label", "Review"),
-                        "step_type": step.get("step_label", "review"),
-                        "assignee_role": step.get("step_label", "reviewer")
+                        "step_number": step_order,
+                        "step_name": step_label,
+                        "step_type": step_label.lower(),
+                        "assignee_role": step_label,
+                        "assignee_user_id": assignee_user_id
                     })
+                    
+                    logger.info(f"✅ Inserted step {step_order} with user_id={assignee_user_id}")
+            else:
+                logger.warning("No workflow steps provided")
+            
+            # ✅ Update workflow with departments JSON
+            if departments_map:
+                update_workflow = text("""
+                    UPDATE workflows 
+                    SET workflow_json = :workflow_json
+                    WHERE id = :workflow_id
+                """)
+                
+                workflow_config = json.dumps({"departments": departments_map})
+                db.execute(update_workflow, {
+                    "workflow_id": workflow_id,
+                    "workflow_json": workflow_config
+                })
+                
+                logger.info(f"✅ Stored departments mapping: {departments_map}")
             
             # Create workflow instance
             instance_query = text("""
@@ -1854,17 +1979,25 @@ async def setup_contract_workflow(
                 "workflow_id": workflow_id,
                 "contract_id": contract_id
             })
+            
+            logger.info(f"✅ Created workflow instance for contract {contract_id}")
         
         db.commit()
+        logger.info("🎉 Workflow setup completed successfully")
+        
         return {"success": True, "message": "Workflow configured successfully"}
         
+    except HTTPException:
+        # Re-raise HTTP exceptions
+        db.rollback()
+        raise
     except Exception as e:
         db.rollback()
-        logger.error(f"Error setting up workflow: {str(e)}")
+        logger.error(f"❌ Error setting up workflow: {str(e)}")
+        logger.error(f"Traceback: ", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
+        
 @router.get("/workflow/{contract_id}")
 async def get_contract_workflow(
     contract_id: int,

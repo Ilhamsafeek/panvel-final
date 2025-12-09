@@ -12,6 +12,9 @@ from datetime import datetime
 from pathlib import Path as FilePath
 import logging
 from app.core.config import settings
+from uuid import uuid4
+from sqlalchemy import text
+from pydantic import BaseModel
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -35,6 +38,202 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/contracts", tags=["Contract Drafting"])
 
 
+
+# Add this schema with your other schemas
+class CommentCreateRequest(BaseModel):
+    contract_id: int
+    comment_text: str
+    selected_text: Optional[str] = None
+
+class CommentResponse(BaseModel):
+    success: bool
+    message: str
+    comment_id: int
+    comment: dict
+
+
+@router.post("/comments/add", response_model=CommentResponse)
+async def add_comment_to_contract(
+    request: CommentCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Add a comment to a contract"""
+    try:
+        logger.info(f"💬 Adding comment to contract {request.contract_id}")
+        
+        # Verify contract exists and user has access
+        contract = db.query(Contract).filter(
+            Contract.id == request.contract_id
+        ).first()
+        
+        if not contract:
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        if contract.company_id != current_user.company_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # ✅ FIXED: Use contract_comments table with INT IDs
+        query = text("""
+            INSERT INTO contract_comments 
+            (contract_id, user_id, comment_text, selected_text, created_at)
+            VALUES 
+            (:contract_id, :user_id, :comment_text, :selected_text, NOW())
+        """)
+        
+        result = db.execute(query, {
+            'contract_id': request.contract_id,
+            'user_id': current_user.id,
+            'comment_text': request.comment_text,
+            'selected_text': request.selected_text
+        })
+        
+        db.commit()
+        
+        # Get the inserted comment ID
+        comment_id = result.lastrowid
+        
+        logger.info(f"✅ Comment {comment_id} added successfully")
+        
+        return {
+            "success": True,
+            "message": "Comment added successfully",
+            "comment_id": comment_id,
+            "comment": {
+                "id": comment_id,
+                "user_name": f"{current_user.first_name} {current_user.last_name}",
+                "comment_text": request.comment_text,
+                "selected_text": request.selected_text,
+                "created_at": datetime.utcnow().isoformat()
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error adding comment: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to add comment: {str(e)}"
+        )
+
+
+# =====================================================
+# Get Comments - Using contract_comments table
+# =====================================================
+
+@router.get("/comments/{contract_id}")
+async def get_contract_comments(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get all comments for a contract"""
+    try:
+        logger.info(f"📖 Getting comments for contract {contract_id}")
+        
+        # Verify access
+        contract = db.query(Contract).filter(Contract.id == contract_id).first()
+        if not contract:
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        if contract.company_id != current_user.company_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # ✅ FIXED: Query contract_comments with correct column name
+        query = text("""
+            SELECT 
+                cc.id,
+                cc.comment_text,
+                cc.selected_text,
+                cc.created_at,
+                u.first_name,
+                u.last_name,
+                u.profile_picture_url
+            FROM contract_comments cc
+            INNER JOIN users u ON u.id = cc.user_id
+            WHERE cc.contract_id = :contract_id
+            ORDER BY cc.created_at DESC
+        """)
+        
+        result = db.execute(query, {'contract_id': contract_id})
+        rows = result.fetchall()
+        
+        comments = []
+        for row in rows:
+            comments.append({
+                'id': row.id,
+                'comment_text': row.comment_text,
+                'selected_text': row.selected_text or "",
+                'author': f"{row.first_name} {row.last_name}",
+                'author_picture': row.profile_picture_url,
+                'created_at': row.created_at.isoformat() if row.created_at else None
+            })
+        
+        logger.info(f"✅ Found {len(comments)} comments")
+        
+        return {
+            'success': True,
+            'comments': comments,
+            'total': len(comments)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error getting comments: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =====================================================
+# DELETE Comment (Optional - for future enhancement)
+# =====================================================
+
+@router.delete("/comments/{comment_id}")
+async def delete_comment(
+    comment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Delete a comment (only by author or admin)"""
+    try:
+        # Check if comment exists and user owns it
+        query = text("""
+            SELECT cc.id, cc.contract_id, cc.user_id, c.company_id
+            FROM contract_comments cc
+            INNER JOIN contracts c ON c.id = cc.contract_id
+            WHERE cc.id = :comment_id
+        """)
+        
+        result = db.execute(query, {'comment_id': comment_id})
+        comment = result.fetchone()
+        
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment not found")
+        
+        # Check if user is the author or from same company
+        if comment.user_id != current_user.id and comment.company_id != current_user.company_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Delete comment
+        delete_query = text("DELETE FROM contract_comments WHERE id = :comment_id")
+        db.execute(delete_query, {'comment_id': comment_id})
+        db.commit()
+        
+        return {"success": True, "message": "Comment deleted successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error deleting comment: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+        
 # =====================================================
 # Contract Creation & Basic Operations
 # =====================================================

@@ -966,7 +966,7 @@ async function saveWorkflow() {
         
         if (response.ok) {
             alert('Master workflow saved successfully!');
-            window.location.href = '/';
+            window.location.href = '/dashboard';
         } else {
             const error = await response.json();
             alert('Error: ' + (error.detail || 'Failed to save workflow'));

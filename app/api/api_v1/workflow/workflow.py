@@ -182,6 +182,8 @@ async def create_master_workflow(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+        
 @router.get("/master")
 async def get_master_workflow(
     current_user: User = Depends(get_current_user),
