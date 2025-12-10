@@ -2087,7 +2087,7 @@
                     <div>
                         <span
                             style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); text-decoration: underline;">
-                            USE WORKFLOW
+                            USE MASTER WORKFLOW
                         </span>
                         <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
                             Automatically send to predefined reviewers in sequence
@@ -2098,7 +2098,7 @@
                 </label>
             </div>
 
-            <!-- <div style="margin-bottom: 1.5rem;">
+            <div style="margin-bottom: 1.5rem;">
                 <label
                     style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.3s ease;"
                     onmouseover="this.style.borderColor='var(--primary-color)'; this.style.background='var(--background-light)'"
@@ -2117,7 +2117,7 @@
 
 
                 </label>
-            </div> -->
+            </div>
 
             <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
                 <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Additional
@@ -3420,11 +3420,11 @@
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <div
                             style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--warning-color), #ffc107); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="ti ti-alert-triangle" style="font-size: 24px;"></i>
+                            <i class="ti ti-video" style="font-size: 24px;"></i>
                         </div>
                         <div>
-                            <div class="action-btn-title" style="font-size: 1rem;">Generate Risk Summary</div>
-                            <div class="action-btn-desc">AI-powered analysis of contract risks and recommendations</div>
+                            <div class="action-btn-title" style="font-size: 1rem;">Live Negotiation within Counter-party Team</div>
+                            <div class="action-btn-desc">Real-time discussion with the team</div>
                         </div>
                     </div>
                 </button>
@@ -3445,7 +3445,7 @@
                             <i class="ti ti-video" style="font-size: 24px;"></i>
                         </div>
                         <div>
-                            <div class="action-btn-title" style="font-size: 1rem;">Initiate Live Negotiation</div>
+                            <div class="action-btn-title" style="font-size: 1rem;">Live Negotiation with Initiator</div>
                             <div class="action-btn-desc">Real-time discussion with the initiator</div>
                         </div>
                     </div>
@@ -3753,8 +3753,8 @@
             if (contract.is_counterparty === true) {
                 // Negotiation stage
                 actionButtons = `
-            <button class="btn btn-success" onclick="quickApprove()">
-                <i class="ti ti-check-circle"></i> Quick Approve
+            <button class="btn btn-default" onclick="quickApprove()">
+                <i class="ti ti-check-circle"></i> Skip Negotiation
             </button>
             <button class="btn btn-primary" onclick="openNegotiationModal()">
                 <i class="ti ti-message-circle"></i> Initiate Negotiation
@@ -5420,7 +5420,7 @@ ${contract.content && contract.content.trim() !== '' ?
             console.log('📥 Response data:', data);
 
             if (data.success) {
-                showNotification('✓ Workflow configured successfully', 'success');
+                showNotification('Workflow configured successfully', 'success');
                 closeModal('contractWorkflowModal');
 
                 // Update status text
@@ -8097,9 +8097,7 @@ How it works:
                         </div>
                         
                         <div style="display: flex; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
-                            // <button class="btn btn-sm btn-primary" onclick="applyMitigation(${index})" style="padding: 0.5rem 1rem; border-radius: 6px;">
-                            //     <i class="ti ti-check"></i> Apply Mitigation
-                            // </button>
+                           
                             <button class="btn btn-sm btn-outline-secondary" onclick="viewClause('${risk.clause_reference}')" style="padding: 0.5rem 1rem; border-radius: 6px;">
                                 <i class="ti ti-file-text"></i> View Clause
                             </button>

@@ -35,10 +35,12 @@ async def approve_reject_workflow(
             SELECT wi.id, wi.current_step, wi.workflow_id
             FROM workflow_instances wi
             WHERE wi.contract_id = :contract_id
-            AND wi.status IN ('active', 'in_progress')
+            AND wi.status IN ('active', 'in_progress','pending')
             LIMIT 1
         """)
         workflow = db.execute(workflow_query, {"contract_id": request.contract_id}).first()
+        db.commit()
+        
         
         if not workflow:
             raise HTTPException(status_code=404, detail="No active workflow found for this contract")

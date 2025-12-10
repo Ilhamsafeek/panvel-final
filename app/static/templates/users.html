@@ -927,7 +927,7 @@
                             <th>Type</th>
                             <th>Department</th>
                             <th>Status</th>
-                            <th>Last Active</th>
+                            <!-- <th>Last Active</th> -->
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -953,7 +953,7 @@
     <div class="modal-container">
         <div class="modal-header">
             <h2 class="modal-title">
-                <i class="ti ti-user-plus"></i>
+               
                 <span id="modalTitle">Add New User</span>
             </h2>
             <button class="modal-close" id="closeModalBtn">
@@ -1424,7 +1424,7 @@ function renderUsers(users) {
             <td>
                 ${renderStatusBadge(user)}
             </td>
-            <td>${formatLastActive(user.last_login_at)}</td>
+            
             <td>
                 <div class="action-buttons">
                     <button class="btn-icon" onclick="editUser(${user.id})" title="Edit">
