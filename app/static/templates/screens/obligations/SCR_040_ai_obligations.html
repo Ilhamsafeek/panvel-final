@@ -1,146 +1,309 @@
-<!-- SCR-039 - Contract Obligations Management -->
-<!-- File: app/static/templates/screens/operations/SCR_039_obligations_management.html -->
+<!-- File: app/static/templates/screens/obligations/SCR_039_obligations_dashboard.html -->
 {% extends "base.html" %}
 
-{% block title %}Manage Obligations - Contract #{{ contract_id }}{% endblock %}
+{% block title %}Obligations Dashboard{% endblock %}
 
 {% block head %}
 <style>
-    .obligations-header {
+    /* Obligations Dashboard Specific Styles */
+    .page-content {
+        padding: 1.5rem;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    /* Page Header */
+    .page-header {
         background: white;
         border-radius: 12px;
-        padding: 2rem;
+        padding: 1.5rem 2rem;
         margin-bottom: 2rem;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         border: 1px solid var(--border-color);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
     }
 
-    .status-initiated { background: var(--info-bg); color: var(--info-color); }
-    .status-in-progress { background: #fff3cd; color: #856404; }
-    .status-pending-details { background: #ffeaa7; color: #6c5ce7; }
-    .status-awaiting-approval { background: #a29bfe; color: white; }
-    .status-approved { background: var(--success-bg); color: var(--success-color); }
-    .status-rejected { background: #fee2e2; color: var(--danger-color); }
-    .status-completed { background: var(--success-bg); color: var(--success-color); }
-
-    .obligation-row.new-row {
-        background: rgba(34, 197, 94, 0.1) !important;
-        border-left: 4px solid #10b981;
-        animation: highlightFade 3s ease-out;
+    .page-header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1.5rem;
     }
 
-    @keyframes highlightFade {
-        0% { background: rgba(34, 197, 94, 0.2) !important; }
-        100% { background: rgba(34, 197, 94, 0) !important; }
+    .page-title-section {
+        flex: 1;
+        min-width: 300px;
     }
 
-    .contract-info {
+    .page-title {
         display: flex;
         align-items: center;
-        gap: 1rem;
-        margin-bottom: 1.5rem;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
     }
 
-    .contract-icon {
-        width: 48px;
-        height: 48px;
-        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 20px;
-    }
-
-    .contract-details h1 {
-        font-size: 1.5rem;
-        font-weight: 600;
+    .page-title h1 {
+        font-size: 1.75rem;
+        font-weight: 700;
         color: var(--text-color);
         margin: 0;
     }
 
-    .contract-details p {
-        color: var(--text-muted);
-        margin: 0.25rem 0 0 0;
-        font-size: 0.875rem;
+    .page-title i {
+        font-size: 1.75rem;
+        color: var(--primary-color);
     }
 
+    .page-subtitle {
+        color: var(--text-muted);
+        font-size: 0.925rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    /* Action Buttons */
     .action-buttons {
         display: flex;
         gap: 1rem;
         flex-wrap: wrap;
     }
 
-    .btn-ai {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
+    .btn {
+        padding: 0.625rem 1.25rem;
         border-radius: 8px;
         font-weight: 500;
-        display: flex;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
         align-items: center;
         gap: 0.5rem;
         transition: var(--transition);
-        cursor: pointer;
+        font-size: 0.875rem;
     }
 
-    .btn-ai:hover {
+    .btn i {
+        font-size: 16px;
+    }
+
+    .btn-ai {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    }
+
+    .btn-ai:hover:not(:disabled) {
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
     }
 
     .btn-ai:disabled {
         opacity: 0.6;
         cursor: not-allowed;
-        transform: none;
     }
 
-    .btn-add {
+    .btn-success {
         background: var(--success-color);
         color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: var(--transition);
-        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
     }
 
-    .btn-add:hover {
-        background: #218838;
+    .btn-success:hover {
+        background: #059669;
         transform: translateY(-1px);
     }
 
-    .btn-new {
+    .btn-info {
         background: var(--info-color);
         color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
+        box-shadow: 0 2px 8px rgba(12, 105, 125, 0.25);
+    }
+
+    .btn-info:hover {
+        background: #0a4f5c;
+        transform: translateY(-1px);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(39, 98, 203, 0.25);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        background: var(--background-light);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
         transition: var(--transition);
         cursor: pointer;
     }
 
-    .btn-new:hover {
-        background: #0a4049;
-        transform: translateY(-1px);
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
-    .obligations-content {
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .stat-icon.total {
+        background: rgba(39, 98, 203, 0.1);
+        color: var(--primary-color);
+    }
+
+    .stat-icon.pending {
+        background: var(--warning-bg);
+        color: var(--warning-color);
+    }
+
+    .stat-icon.completed {
+        background: var(--success-bg);
+        color: var(--success-color);
+    }
+
+    .stat-icon.overdue {
+        background: rgba(220, 53, 69, 0.1);
+        color: var(--danger-color);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-color);
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-top: 0.5rem;
+    }
+
+    /* Table Container */
+    .table-container {
         background: white;
         border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         border: 1px solid var(--border-color);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
         overflow: hidden;
+        width: 100%;
+    }
+
+    .table-header {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        background: var(--background-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .table-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .table-controls {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        position: relative;
+        min-width: 250px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 0.5rem 1rem 0.5rem 2.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(39, 98, 203, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.875rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: white;
+        color: var(--text-color);
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(39, 98, 203, 0.1);
+    }
+
+    /* Responsive Table */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto;
     }
 
     .obligations-table {
@@ -148,308 +311,334 @@
         border-collapse: collapse;
     }
 
-    .obligations-table th {
+    .obligations-table thead {
         background: var(--background-light);
-        padding: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .obligations-table th {
         text-align: left;
+        padding: 0.875rem 1rem;
         font-weight: 600;
-        color: var(--text-color);
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
         border-bottom: 1px solid var(--border-color);
-        font-size: 0.875rem;
         white-space: nowrap;
+    }
+
+    .obligations-table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+        transition: var(--transition);
+    }
+
+    .obligations-table tbody tr:hover {
+        background: rgba(39, 98, 203, 0.02);
     }
 
     .obligations-table td {
         padding: 1rem;
-        border-bottom: 1px solid var(--border-color);
-        vertical-align: top;
-    }
-
-    .obligations-table tr:hover {
-        background: var(--background-light);
-    }
-
-    .obligation-row {
-        transition: var(--transition);
-    }
-
-    .obligation-no {
-        font-weight: 600;
-        color: var(--primary-color);
         font-size: 0.875rem;
-        width: 60px;
+        vertical-align: middle;
+    }
+
+    .obligation-number {
+        background: var(--primary-color);
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .obligation-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
     }
 
     .obligation-title {
         font-weight: 600;
         color: var(--text-color);
-        margin-bottom: 0.25rem;
         font-size: 0.875rem;
     }
 
-    .obligation-desc {
+    .obligation-description {
         color: var(--text-muted);
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         line-height: 1.4;
-        max-width: 300px;
     }
 
-    .owner-select, .escalation-input, .threshold-input, .due-date-input {
-        width: 100%;
-        padding: 0.5rem;
-        border: 1px solid var(--border-color);
-        border-radius: 6px;
-        font-size: 0.875rem;
-        background: white;
-        transition: var(--transition);
-    }
-
-    .owner-select:focus, .escalation-input:focus, .threshold-input:focus, .due-date-input:focus {
-        outline: none;
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(39, 98, 203, 0.1);
-    }
-
-    .status-badge {
+    .source-badge {
         display: inline-flex;
         align-items: center;
         gap: 0.25rem;
-        padding: 0.25rem 0.75rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        margin-top: 0.25rem;
+    }
+
+    .badge-ai { background: #f0f4ff; color: #667eea; }
+    .badge-manual { background: #ecfdf5; color: #10b981; }
+    .badge-preset { background: #fef3c7; color: #f59e0b; }
+
+    .priority-badge {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+
+    .priority-high { background: var(--danger-color); }
+    .priority-medium { background: var(--warning-color); }
+    .priority-low { background: var(--success-color); }
+
+    .owner-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .owner-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .owner-name {
+        font-size: 0.875rem;
+        color: var(--text-color);
+        font-weight: 500;
+    }
+
+    .status-badge {
+        padding: 0.375rem 0.75rem;
         border-radius: 20px;
         font-size: 0.75rem;
         font-weight: 500;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .action-buttons-bottom {
-        padding: 1.5rem;
-        border-top: 1px solid var(--border-color);
-        background: var(--background-light);
-        display: flex;
-        justify-content: space-between;
+        display: inline-flex;
         align-items: center;
+        gap: 0.25rem;
     }
 
-    .btn-secondary {
-        background: #6c757d;
-        color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+    .status-badge.completed { background: var(--success-bg); color: var(--success-color); }
+    .status-badge.in-progress { background: var(--info-bg); color: var(--info-color); }
+    .status-badge.pending { background: var(--warning-bg); color: var(--warning-color); }
+    .status-badge.initiated { background: var(--info-bg); color: var(--info-color); }
+    .status-badge.overdue { background: rgba(220, 53, 69, 0.1); color: var(--danger-color); }
+
+    .date-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.125rem;
+    }
+
+    .date-value {
         font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition);
+        font-size: 0.875rem;
+        color: var(--text-color);
     }
 
-    .btn-secondary:hover {
-        background: #5a6268;
-    }
-
-    .btn-primary {
-        background: var(--primary-color);
-        color: white;
-        border: none;
-        padding: 0.75rem 2rem;
-        border-radius: 8px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .btn-primary:hover {
-        background: #1e4b9b;
-        transform: translateY(-1px);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 3rem 2rem;
+    .date-label {
+        font-size: 0.75rem;
         color: var(--text-muted);
     }
 
-    .empty-state i {
-        font-size: 3rem;
-        color: var(--border-color);
-        margin-bottom: 1rem;
-    }
+    .date-value.warning { color: var(--warning-color); }
+    .date-value.danger { color: var(--danger-color); }
 
-    .obligation-actions {
+    .table-actions {
         display: flex;
         gap: 0.5rem;
-        align-items: center;
     }
 
-    .btn-icon {
+    .action-btn {
         width: 32px;
         height: 32px;
         border-radius: 6px;
         border: 1px solid var(--border-color);
         background: white;
+        color: var(--text-muted);
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        cursor: pointer;
         transition: var(--transition);
-        color: var(--text-muted);
     }
 
-    .btn-icon:hover {
-        background: var(--background-light);
-        color: var(--primary-color);
+    .action-btn:hover {
         border-color: var(--primary-color);
+        color: var(--primary-color);
+        background: rgba(39, 98, 203, 0.05);
     }
 
-    .btn-icon.danger:hover {
-        background: #fee2e2;
-        color: var(--danger-color);
+    .action-btn.delete:hover {
         border-color: var(--danger-color);
+        color: var(--danger-color);
+        background: rgba(220, 53, 69, 0.05);
     }
 
-    /* Modal Styles */
+    /* Modals */
     .modal {
-        display: none;
         position: fixed;
-        z-index: 1000;
-        left: 0;
         top: 0;
-        width: 100%;
-        height: 100%;
+        left: 0;
+        right: 0;
+        bottom: 0;
         background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
         backdrop-filter: blur(4px);
     }
 
-    .modal.show {
+    .modal.active {
         display: flex;
-        align-items: center;
-        justify-content: center;
     }
 
     .modal-content {
         background: white;
-        border-radius: 12px;
-        padding: 2rem;
+        border-radius: 16px;
         width: 90%;
         max-width: 600px;
         max-height: 90vh;
         overflow-y: auto;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
-        animation: modalSlideIn 0.3s ease-out;
     }
 
-    @keyframes modalSlideIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9) translateY(-20px);
-        }
-        to {
-            opacity: 1;
-            transform: scale(1) translateY(0);
-        }
+    .ai-modal-content {
+        max-width: 1000px;
     }
 
     .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 1px solid var(--border-color);
     }
 
     .modal-title {
         font-size: 1.25rem;
         font-weight: 600;
         color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .modal-close {
-        background: none;
-        border: none;
-        font-size: 1.5rem;
-        color: var(--text-muted);
-        cursor: pointer;
-        padding: 0;
         width: 32px;
         height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-muted);
+        cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 6px;
         transition: var(--transition);
     }
 
     .modal-close:hover {
-        background: var(--background-light);
-        color: var(--text-color);
+        border-color: var(--danger-color);
+        color: var(--danger-color);
+        background: rgba(220, 53, 69, 0.05);
     }
 
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+    }
+
+    /* Form Styles */
     .form-group {
         margin-bottom: 1.5rem;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
     }
 
     .form-label {
         display: block;
         margin-bottom: 0.5rem;
+        font-size: 0.875rem;
         font-weight: 600;
         color: var(--text-color);
-        font-size: 0.9rem;
     }
 
     .form-control {
         width: 100%;
-        padding: 0.875rem;
-        border: 2px solid var(--border-color);
+        padding: 0.625rem;
+        border: 1px solid var(--border-color);
         border-radius: 8px;
-        font-size: 0.9rem;
+        font-size: 0.875rem;
         transition: var(--transition);
-        font-weight: 500;
     }
 
     .form-control:focus {
         outline: none;
         border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px rgba(39, 98, 203, 0.15);
+        box-shadow: 0 0 0 3px rgba(39, 98, 203, 0.1);
     }
 
-    .form-actions {
-        display: flex;
-        justify-content: flex-end;
+    .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
-        margin-top: 2rem;
-        padding-top: 1.5rem;
-        border-top: 2px solid var(--border-color);
     }
 
     .required {
         color: var(--danger-color);
-        font-weight: 700;
     }
 
-    /* AI Obligations List */
+    /* AI Obligation Card */
     .ai-obligation-item {
         border: 2px solid var(--border-color);
-        border-radius: 12px;
-        padding: 1.5rem;
+        border-radius: 10px;
+        padding: 1.25rem;
         margin-bottom: 1rem;
         transition: var(--transition);
         cursor: pointer;
+        background: white;
     }
 
     .ai-obligation-item:hover {
         border-color: var(--primary-color);
-        box-shadow: 0 4px 12px rgba(39, 98, 203, 0.15);
+        box-shadow: 0 4px 16px rgba(39, 98, 203, 0.12);
     }
 
     .ai-obligation-item.selected {
         border-color: var(--primary-color);
-        background: rgba(39, 98, 203, 0.05);
+        background: rgba(39, 98, 203, 0.04);
     }
 
     .ai-obligation-header {
@@ -480,33 +669,33 @@
         color: var(--text-muted);
         margin-bottom: 1rem;
         line-height: 1.6;
-    }
-
-    .ai-confidence-badge {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 15px;
-        font-size: 0.75rem;
-        font-weight: 700;
+        font-size: 0.875rem;
     }
 
     .ai-obligation-meta {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         margin-top: 1rem;
         align-items: center;
         flex-wrap: wrap;
     }
 
+    .category-badge, .ai-confidence-badge {
+        padding: 0.3rem 0.7rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+
     .category-badge {
         background: var(--info-bg);
         color: var(--info-color);
-        padding: 0.25rem 0.75rem;
-        border-radius: 15px;
-        font-size: 0.75rem;
-        font-weight: 700;
         text-transform: uppercase;
+    }
+
+    .ai-confidence-badge {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
     }
 
     .clause-reference {
@@ -516,13 +705,13 @@
     }
 
     .edit-ai-btn {
-        background: var(--warning-bg);
+        background: white;
         color: var(--warning-color);
-        border: 1px solid var(--warning-color);
-        padding: 0.5rem 1rem;
+        border: 2px solid var(--warning-color);
+        padding: 0.4rem 0.85rem;
         border-radius: 6px;
         font-size: 0.8rem;
-        font-weight: 600;
+        font-weight: 700;
         cursor: pointer;
         transition: var(--transition);
     }
@@ -532,22 +721,7 @@
         color: white;
     }
 
-    /* Loading States */
-    .loading-spinner {
-        display: inline-block;
-        width: 18px;
-        height: 18px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 50%;
-        border-top-color: white;
-        animation: spin 1s ease-in-out infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    /* Toast Notification */
+    /* Toast */
     .toast {
         position: fixed;
         top: 20px;
@@ -558,154 +732,237 @@
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         border-left: 4px solid;
         z-index: 10000;
-        animation: slideInRight 0.4s ease-out;
+        display: none;
         max-width: 400px;
-        font-weight: 500;
     }
 
-    .toast-success { border-left-color: var(--success-color); }
-    .toast-error { border-left-color: var(--danger-color); }
-    .toast-warning { border-left-color: var(--warning-color); }
-    .toast-info { border-left-color: var(--info-color); }
+    .toast.show {
+        display: block;
+        animation: slideInRight 0.4s ease;
+    }
+
+    .toast.success { border-left-color: var(--success-color); }
+    .toast.error { border-left-color: var(--danger-color); }
+    .toast.warning { border-left-color: var(--warning-color); }
+    .toast.info { border-left-color: var(--info-color); }
+
+    .toast-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .toast-icon {
+        font-size: 1.25rem;
+    }
+
+    /* Loading */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid var(--border-color);
+        border-top-color: var(--primary-color);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
 
     @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translateX(100%);
-        }
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
 
-    /* Responsive Design */
+    /* Mobile Responsive */
     @media (max-width: 768px) {
-        .page-content {
-            padding: 1rem;
-        }
-
-        .obligations-header {
-            padding: 1.5rem;
-        }
-
-        .action-buttons {
-            flex-direction: column;
-        }
-
-        .action-buttons button {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .obligations-table {
-            font-size: 0.8rem;
-        }
-
-        .obligations-table th,
-        .obligations-table td {
-            padding: 0.75rem 0.5rem;
-        }
-
-        .form-row {
-            grid-template-columns: 1fr;
-        }
+        .page-content { padding: 1rem; }
+        .stats-grid { grid-template-columns: 1fr; }
+        .page-header-content { flex-direction: column; align-items: flex-start; }
+        .action-buttons { width: 100%; }
+        .btn { flex: 1; justify-content: center; }
+        .table-controls { flex-direction: column; width: 100%; }
+        .search-box { width: 100%; }
+        .form-row { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="page-content">
-    <!-- Header Section -->
-    <div class="obligations-header">
-        <div class="contract-info">
-            <div class="contract-icon">
-                <i class="ti ti-checklist"></i>
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="page-header-content">
+            <div class="page-title-section">
+                <div class="page-title">
+                    <i class="ti ti-checklist"></i>
+                    <h1>Obligations Dashboard</h1>
+                </div>
+                <div class="page-subtitle">
+                    Manage and track all contractual obligations
+                </div>
             </div>
-            <div class="contract-details">
-                <h1>MANAGE OBLIGATIONS</h1>
-                <p>Contract #<span id="contractIdDisplay">{{ contract_id or '36' }}</span> • <span id="contractTitleDisplay">{{ contract_title or 'Main Power Services Agreement' }}</span> • <span id="contractTypeDisplay">{{ contract_type or 'Service Contract' }}</span></p>
+            
+            <div class="action-buttons">
+                <button class="btn btn-ai" onclick="generateObligationsAI()" id="generateAIBtn">
+                    <i class="ti ti-sparkles"></i>
+                    <span>Generate (AI)</span>
+                </button>
+                <button class="btn btn-success" onclick="addObligationFromPreset()">
+                    <i class="ti ti-plus"></i>
+                    <span>Add Preset</span>
+                </button>
+                <button class="btn btn-info" onclick="openNewObligationModal()">
+                    <i class="ti ti-file-plus"></i>
+                    <span>New Custom</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card" onclick="filterByStatus('all')">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Total Obligations</div>
+                </div>
+                <div class="stat-icon total">
+                    <i class="ti ti-clipboard-list"></i>
+                </div>
             </div>
         </div>
 
-        <div class="action-buttons">
-            <button class="btn-ai" onclick="generateObligationsAI()" id="generateAIBtn">
-                <i class="ti ti-sparkles"></i>
-                <span>Generate Obligations (AI)</span>
-            </button>
-            <button class="btn-add" onclick="addObligationRow()">
-                <i class="ti ti-plus"></i>
-                Add to Table
-            </button>
-            <button class="btn-new" onclick="openNewObligationModal()">
-                <i class="ti ti-file-plus"></i>
-                New Obligation
-            </button>
+        <div class="stat-card" onclick="filterByStatus('in-progress')">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="statInProgress">0</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-icon pending">
+                    <i class="ti ti-clock"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card" onclick="filterByStatus('completed')">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="statCompleted">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-icon completed">
+                    <i class="ti ti-circle-check"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card" onclick="filterByStatus('overdue')">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="statOverdue">0</div>
+                    <div class="stat-label">Overdue</div>
+                </div>
+                <div class="stat-icon overdue">
+                    <i class="ti ti-alert-circle"></i>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Obligations Table -->
-    <div class="obligations-content">
-        <table class="obligations-table" id="obligationsTable">
-            <thead>
-                <tr>
-                    <th>No</th>
-                    <th>Obligation</th>
-                    <th>Description</th>
-                    <th>Owner</th>
-                    <th>Escalation</th>
-                    <th>Status</th>
-                    <th>Threshold Date</th>
-                    <th>Due Date</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody id="obligationsTableBody">
-                <!-- Obligations will be loaded here -->
-            </tbody>
-        </table>
-
-        <!-- Empty State -->
-        <div class="empty-state" id="emptyState" style="display: none;">
-            <i class="ti ti-checklist"></i>
-            <h3>No Obligations Found</h3>
-            <p>Click "Generate Obligations (AI)" to automatically extract obligations from the contract, or add them manually using the "New Obligation" button.</p>
+    <div class="table-container">
+        <div class="table-header">
+            <div class="table-title">
+                <i class="ti ti-list-details"></i>
+                <span id="tableTitle">Obligations List</span>
+            </div>
+            <div class="table-controls">
+                <div class="search-box">
+                    <i class="ti ti-search search-icon"></i>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search obligations...">
+                </div>
+                <select class="filter-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="completed">Completed</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="pending">Pending</option>
+                    <option value="initiated">Initiated</option>
+                    <option value="overdue">Overdue</option>
+                </select>
+                <select class="filter-select" id="priorityFilter">
+                    <option value="all">All Priorities</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="action-buttons-bottom">
-            <button class="btn-secondary" onclick="closeObligationsManager()">
-                <i class="ti ti-x"></i>
-                Close
-            </button>
-            <button class="btn-primary" onclick="submitObligations()" id="submitBtn">
-                <i class="ti ti-check"></i>
-                Submit
-            </button>
+        <div class="table-responsive">
+            <table class="obligations-table">
+                <thead>
+                    <tr>
+                        <th>No.</th>
+                        <th>Obligation</th>
+                        <th>Owner</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Due Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="obligationsTableBody">
+                    <!-- Table rows populated by JavaScript -->
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
 
-<!-- Add/Edit Obligation Modal -->
-<div class="modal" id="obligationModal">
+<!-- New Custom Obligation Modal -->
+<div class="modal" id="obligationModal" onclick="if(event.target === this) closeObligationModal()">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 class="modal-title" id="modalTitle">New Obligation</h3>
+            <h3 class="modal-title">
+                <i class="ti ti-file-plus"></i>
+                <span>New Custom Obligation</span>
+            </h3>
             <button class="modal-close" onclick="closeObligationModal()">
                 <i class="ti ti-x"></i>
             </button>
         </div>
         <div class="modal-body">
-            <form id="obligationForm" onsubmit="saveObligation(event)">
-                <input type="hidden" id="editObligationId">
+            <form id="obligationForm" onsubmit="saveCustomObligation(event)">
                 <div class="form-group">
                     <label class="form-label">Obligation Title <span class="required">*</span></label>
                     <input type="text" class="form-control" id="obligationTitle" required placeholder="Enter obligation title">
                 </div>
+
                 <div class="form-group">
                     <label class="form-label">Description <span class="required">*</span></label>
-                    <textarea class="form-control" id="obligationDescription" rows="4" required placeholder="Describe the obligation in detail"></textarea>
+                    <textarea class="form-control form-textarea" id="obligationDescription" required placeholder="Describe the obligation in detail"></textarea>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Category</label>
@@ -730,36 +987,43 @@
                         </select>
                     </div>
                 </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeObligationModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Obligation</button>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeObligationModal()">
+                        <i class="ti ti-x"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-check"></i> Save & Add
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<!-- AI Generated Obligations Modal -->
-<div class="modal" id="aiObligationsModal">
-    <div class="modal-content" style="max-width: 1000px;">
+<!-- AI Obligations Modal -->
+<div class="modal" id="aiObligationsModal" onclick="if(event.target === this) closeAIModal()">
+    <div class="modal-content ai-modal-content">
         <div class="modal-header">
-            <h3 class="modal-title">AI OBLIGATIONS SUMMARY</h3>
+            <h3 class="modal-title">
+                <i class="ti ti-sparkles"></i>
+                <span>AI Obligations Summary</span>
+            </h3>
             <button class="modal-close" onclick="closeAIModal()">
                 <i class="ti ti-x"></i>
             </button>
         </div>
         <div class="modal-body">
-            <p class="text-muted" style="margin-bottom: 1.5rem;">
-                Our AI has analyzed the contract and extracted the following obligations. Review, edit if needed, and select which ones to add to your obligations database.
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                Review and select obligations extracted by AI. Edit if needed before adding.
             </p>
-            <div id="aiObligationsList">
-                <!-- AI generated obligations will be loaded here -->
-            </div>
-            <div class="form-actions" style="margin-top: 2rem;">
-                <button type="button" class="btn-secondary" onclick="closeAIModal()">Close</button>
-                <button type="button" class="btn-primary" onclick="addSelectedObligations()">
-                    <i class="ti ti-check"></i>
-                    Add Selected to Database
+            <div id="aiObligationsList"></div>
+            <div class="modal-footer" style="margin-top: 2rem;">
+                <button type="button" class="btn btn-secondary" onclick="closeAIModal()">
+                    <i class="ti ti-x"></i> Close
+                </button>
+                <button type="button" class="btn btn-primary" onclick="addSelectedObligations()">
+                    <i class="ti ti-check"></i> Add Selected
                 </button>
             </div>
         </div>
@@ -767,10 +1031,13 @@
 </div>
 
 <!-- Edit AI Obligation Modal -->
-<div class="modal" id="editAIObligationModal">
+<div class="modal" id="editAIObligationModal" onclick="if(event.target === this) closeEditAIModal()">
     <div class="modal-content">
         <div class="modal-header">
-            <h3 class="modal-title">Edit AI Generated Obligation</h3>
+            <h3 class="modal-title">
+                <i class="ti ti-edit"></i>
+                <span>Edit AI Obligation</span>
+            </h3>
             <button class="modal-close" onclick="closeEditAIModal()">
                 <i class="ti ti-x"></i>
             </button>
@@ -778,14 +1045,17 @@
         <div class="modal-body">
             <form id="editAIObligationForm" onsubmit="saveEditedAIObligation(event)">
                 <input type="hidden" id="editAIObligationIndex">
+                
                 <div class="form-group">
                     <label class="form-label">Obligation Title <span class="required">*</span></label>
                     <input type="text" class="form-control" id="editAIObligationTitle" required>
                 </div>
+
                 <div class="form-group">
                     <label class="form-label">Description <span class="required">*</span></label>
-                    <textarea class="form-control" id="editAIObligationDescription" rows="4" required></textarea>
+                    <textarea class="form-control form-textarea" id="editAIObligationDescription" required></textarea>
                 </div>
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Category</label>
@@ -810,741 +1080,40 @@
                         </select>
                     </div>
                 </div>
+
                 <div class="form-group">
-                    <label class="form-label">Extracted From Clause</label>
-                    <input type="text" class="form-control" id="editAIObligationClause" readonly 
-                           style="background: var(--background-light);">
-                    <small style="color: var(--text-muted); font-size: 0.8rem;">This shows where the AI found this obligation in the contract</small>
+                    <label class="form-label">Source Clause</label>
+                    <input type="text" class="form-control" id="editAIObligationClause" disabled>
                 </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-secondary" onclick="closeEditAIModal()">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Changes</button>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditAIModal()">
+                        <i class="ti ti-x"></i> Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="ti ti-check"></i> Save Changes
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<script>
-// =============================================
-// GLOBAL VARIABLES
-// =============================================
-let currentObligations = [];
-let currentEditingId = null;
-let aiGeneratedObligations = [];
-let hasGeneratedAI = false;
+<!-- Preset Modal Container -->
+<div id="presetModalContainer"></div>
 
-// Get current contract ID
-function getCurrentContractId() {
-    try {
-        const templateContractId = {{ contract_id | default(36) }};
-        if (templateContractId) return templateContractId;
-    } catch (e) {
-        console.log('Template variable not available');
-    }
-    
-    const contractText = document.querySelector('.contract-details p')?.textContent || '';
-    const contractMatch = contractText.match(/Contract #(\d+)/);
-    if (contractMatch) {
-        return parseInt(contractMatch[1]);
-    }
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlContractId = urlParams.get('contract_id');
-    if (urlContractId) {
-        return parseInt(urlContractId);
-    }
-    
-    return 36;
-}
+<!-- Toast -->
+<div class="toast" id="toast">
+    <div class="toast-content">
+        <i class="toast-icon ti ti-check-circle"></i>
+        <div class="toast-message" id="toastMessage">Operation successful!</div>
+    </div>
+</div>
 
-const currentContractId = getCurrentContractId();
-const API_BASE = '/api/obligations';
+<!-- Loading -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
 
-console.log('📋 Initializing obligations management for contract:', currentContractId);
-
-// =============================================
-// INITIALIZATION
-// =============================================
-document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 Page loaded, initializing...');
-    await loadObligationsFromDatabase();
-});
-
-// =============================================
-// DATABASE OPERATIONS
-// =============================================
-
-// Load obligations from database
-async function loadObligationsFromDatabase() {
-    try {
-        showLoading(true);
-        console.log('📥 Loading obligations for contract:', currentContractId);
-        
-        const response = await fetch(`${API_BASE}/contract/${currentContractId}`);
-        
-        if (response.ok) {
-            const obligations = await response.json();
-            console.log('✅ Loaded obligations:', obligations);
-            
-            currentObligations = processObligationsData(obligations);
-            renderObligationsTable();
-            
-            if (currentObligations.length > 0) {
-                showToast(`Loaded ${currentObligations.length} obligation(s)`, 'success');
-            }
-        } else {
-            console.warn('⚠️ No obligations found or API error');
-            currentObligations = [];
-            renderObligationsTable();
-        }
-        
-    } catch (error) {
-        console.error('❌ Load error:', error);
-        showToast('Error loading obligations', 'error');
-        currentObligations = [];
-        renderObligationsTable();
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Process obligations data
-function processObligationsData(obligations) {
-    if (!Array.isArray(obligations)) {
-        return [];
-    }
-    
-    return obligations.map(obligation => ({
-        id: obligation.id || 0,
-        title: obligation.obligation_title || obligation.title || 'No Title',
-        description: obligation.description || 'No description',
-        owner: obligation.owner_user_id ? obligation.owner_user_id.toString() : "",
-        escalation: obligation.escalation_user_id ? obligation.escalation_user_id.toString() : "",
-        status: obligation.status || "initiated",
-        thresholdDate: obligation.threshold_date ? new Date(obligation.threshold_date).toISOString().split('T')[0] : "",
-        dueDate: obligation.due_date ? new Date(obligation.due_date).toISOString().split('T')[0] : "",
-        category: obligation.obligation_type || obligation.category || "other",
-        priority: obligation.priority || "medium",
-        is_ai_generated: obligation.is_ai_generated || false
-    }));
-}
-
-// Save obligation to database
-async function saveObligation(event) {
-    event.preventDefault();
-    
-    const title = document.getElementById('obligationTitle').value.trim();
-    const description = document.getElementById('obligationDescription').value.trim();
-    const category = document.getElementById('obligationCategory').value;
-    const priority = document.getElementById('obligationPriority').value;
-    const editId = document.getElementById('editObligationId').value;
-    
-    if (!title || !description) {
-        showToast('Please fill in all required fields', 'error');
-        return;
-    }
-    
-    closeObligationModal();
-    
-    try {
-        showLoading(true);
-        
-        const obligationData = {
-            contract_id: parseInt(currentContractId),
-            obligation_title: title,
-            description: description,
-            obligation_type: category,
-            priority: priority,
-            owner_user_id: null,
-            escalation_user_id: null,
-            threshold_date: null,
-            due_date: null,
-            status: "initiated",
-            is_ai_generated: false
-        };
-        
-        let response;
-        
-        if (editId) {
-            // Update existing obligation
-            console.log('📝 Updating obligation:', editId);
-            response = await fetch(`${API_BASE}/${editId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(obligationData)
-            });
-        } else {
-            // Create new obligation
-            console.log('📝 Creating new obligation');
-            response = await fetch(`${API_BASE}/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(obligationData)
-            });
-        }
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        console.log('✅ Save successful:', result);
-        
-        showToast(editId ? 'Obligation updated successfully!' : 'Obligation created successfully!', 'success');
-        
-        // Reload obligations
-        await loadObligationsFromDatabase();
-        
-    } catch (error) {
-        console.error('❌ Save error:', error);
-        showToast(`Error saving obligation: ${error.message}`, 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// Update obligation field in database
-async function updateObligationInDatabase(obligationId, field, value) {
-    try {
-        const updateData = {};
-        
-        const fieldMap = {
-            'owner_user_id': 'owner_user_id',
-            'escalation_user_id': 'escalation_user_id',
-            'status': 'status',
-            'threshold_date': 'threshold_date',
-            'due_date': 'due_date'
-        };
-        
-        const dbField = fieldMap[field];
-        if (!dbField) {
-            console.error('Unknown field:', field);
-            return;
-        }
-        
-        updateData[dbField] = value === '' ? null : value;
-        
-        if (field === 'threshold_date' || field === 'due_date') {
-            updateData[dbField] = value ? new Date(value).toISOString() : null;
-        }
-        
-        const response = await fetch(`${API_BASE}/${obligationId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updateData)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const obligationIndex = currentObligations.findIndex(o => o.id === obligationId);
-        if (obligationIndex !== -1) {
-            currentObligations[obligationIndex][field] = value;
-        }
-        
-        showToast('Obligation updated successfully', 'success');
-        
-    } catch (error) {
-        console.error('Error updating obligation:', error);
-        showToast('Error updating obligation', 'error');
-    }
-}
-
-// Delete obligation from database
-async function deleteObligationFromDatabase(id) {
-    if (!confirm('Are you sure you want to delete this obligation?')) {
-        return;
-    }
-    
-    try {
-        showLoading(true);
-        
-        const response = await fetch(`${API_BASE}/${id}`, {
-            method: 'DELETE'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        currentObligations = currentObligations.filter(o => o.id !== id);
-        renderObligationsTable();
-        
-        showToast('Obligation deleted successfully', 'success');
-        
-    } catch (error) {
-        console.error('Error deleting obligation:', error);
-        showToast('Error deleting obligation', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// =============================================
-// AI GENERATION
-// =============================================
-
-// Generate obligations using AI
-async function generateObligationsAI() {
-    try {
-        const generateBtn = document.getElementById('generateAIBtn');
-        generateBtn.disabled = true;
-        generateBtn.innerHTML = '<div class="loading-spinner"></div><span>Analyzing Contract...</span>';
-        
-        console.log('🤖 Generating AI obligations for contract:', currentContractId);
-        
-        const response = await fetch(`${API_BASE}/generate-ai/${currentContractId}`, {
-            method: 'POST'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        aiGeneratedObligations = await response.json();
-        console.log('✅ AI generated obligations:', aiGeneratedObligations);
-        
-        if (aiGeneratedObligations.length === 0) {
-            showToast('No obligations were extracted by AI', 'warning');
-            return;
-        }
-        
-        hasGeneratedAI = true;
-        displayAIObligations();
-        
-        showToast(`AI extracted ${aiGeneratedObligations.length} obligations`, 'success');
-        
-    } catch (error) {
-        console.error('❌ AI generation error:', error);
-        showToast('Error generating AI obligations: ' + error.message, 'error');
-    } finally {
-        const generateBtn = document.getElementById('generateAIBtn');
-        generateBtn.disabled = false;
-        generateBtn.innerHTML = '<i class="ti ti-sparkles"></i><span>Generate Obligations (AI)</span>';
-    }
-}
-
-// Display AI generated obligations
-function displayAIObligations() {
-    const aiList = document.getElementById('aiObligationsList');
-    
-    aiList.innerHTML = aiGeneratedObligations.map((obligation, index) => `
-        <div class="ai-obligation-item" onclick="toggleAIObligationSelection(${index})">
-            <div class="ai-obligation-header">
-                <input type="checkbox" class="ai-obligation-checkbox" id="ai-checkbox-${index}" 
-                       onclick="event.stopPropagation(); toggleAIObligationSelection(${index})">
-                <div class="ai-obligation-content">
-                    <h4 class="ai-obligation-title">${obligation.title}</h4>
-                    <div class="ai-obligation-desc">${obligation.description}</div>
-                    <div class="ai-obligation-meta">
-                        <span class="category-badge">${obligation.category}</span>
-                        <span class="ai-confidence-badge">${Math.round(obligation.confidence * 100)}% Confidence</span>
-                        ${obligation.clause_reference ? `<span class="clause-reference">Clause: ${obligation.clause_reference}</span>` : ''}
-                        <button class="edit-ai-btn" onclick="event.stopPropagation(); editAIObligation(${index})">
-                            <i class="ti ti-edit"></i> Edit
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `).join('');
-    
-    document.getElementById('aiObligationsModal').classList.add('show');
-}
-
-// Toggle AI obligation selection
-function toggleAIObligationSelection(index) {
-    const checkbox = document.getElementById(`ai-checkbox-${index}`);
-    checkbox.checked = !checkbox.checked;
-    
-    const item = checkbox.closest('.ai-obligation-item');
-    if (checkbox.checked) {
-        item.classList.add('selected');
-    } else {
-        item.classList.remove('selected');
-    }
-}
-
-// Edit AI obligation
-function editAIObligation(index) {
-    const obligation = aiGeneratedObligations[index];
-    
-    document.getElementById('editAIObligationIndex').value = index;
-    document.getElementById('editAIObligationTitle').value = obligation.title;
-    document.getElementById('editAIObligationDescription').value = obligation.description;
-    document.getElementById('editAIObligationCategory').value = obligation.category;
-    document.getElementById('editAIObligationPriority').value = obligation.priority || 'medium';
-    document.getElementById('editAIObligationClause').value = obligation.clause_reference || 'N/A';
-    
-    document.getElementById('editAIObligationModal').classList.add('show');
-}
-
-// Save edited AI obligation
-function saveEditedAIObligation(event) {
-    event.preventDefault();
-    
-    const index = parseInt(document.getElementById('editAIObligationIndex').value);
-    const title = document.getElementById('editAIObligationTitle').value.trim();
-    const description = document.getElementById('editAIObligationDescription').value.trim();
-    const category = document.getElementById('editAIObligationCategory').value;
-    const priority = document.getElementById('editAIObligationPriority').value;
-    
-    if (!title || !description) {
-        showToast('Please fill in all required fields', 'error');
-        return;
-    }
-    
-    aiGeneratedObligations[index].title = title;
-    aiGeneratedObligations[index].description = description;
-    aiGeneratedObligations[index].category = category;
-    aiGeneratedObligations[index].priority = priority;
-    
-    closeEditAIModal();
-    displayAIObligations();
-    
-    // Restore checkbox state
-    setTimeout(() => {
-        const checkbox = document.getElementById(`ai-checkbox-${index}`);
-        if (checkbox) {
-            const item = checkbox.closest('.ai-obligation-item');
-            if (item.classList.contains('selected')) {
-                checkbox.checked = true;
-            }
-        }
-    }, 100);
-    
-    showToast('AI obligation updated', 'success');
-}
-
-// Add selected AI obligations to database
-async function addSelectedObligations() {
-    const selectedObligations = aiGeneratedObligations.filter((_, index) => {
-        const checkbox = document.getElementById(`ai-checkbox-${index}`);
-        return checkbox && checkbox.checked;
-    });
-    
-    if (selectedObligations.length === 0) {
-        showToast('Please select at least one obligation to add', 'warning');
-        return;
-    }
-    
-    closeAIModal();
-    
-    try {
-        showLoading(true);
-        
-        let successCount = 0;
-        let errorCount = 0;
-        
-        for (const obligation of selectedObligations) {
-            try {
-                const obligationData = {
-                    contract_id: parseInt(currentContractId),
-                    obligation_title: obligation.title,
-                    description: obligation.description,
-                    obligation_type: obligation.category,
-                    priority: obligation.priority || 'medium',
-                    owner_user_id: null,
-                    escalation_user_id: null,
-                    threshold_date: null,
-                    due_date: null,
-                    status: "initiated",
-                    is_ai_generated: true
-                };
-                
-                const response = await fetch(`${API_BASE}/`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(obligationData)
-                });
-                
-                if (response.ok) {
-                    successCount++;
-                } else {
-                    errorCount++;
-                }
-                
-            } catch (error) {
-                console.error('Error adding obligation:', error);
-                errorCount++;
-            }
-        }
-        
-        if (successCount > 0) {
-            showToast(`Successfully added ${successCount} obligation(s)`, 'success');
-            await loadObligationsFromDatabase();
-        }
-        
-        if (errorCount > 0) {
-            showToast(`${errorCount} obligation(s) failed to add`, 'error');
-        }
-        
-    } catch (error) {
-        console.error('Error adding obligations:', error);
-        showToast('Error adding obligations', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// =============================================
-// UI RENDERING
-// =============================================
-
-// Render obligations table
-function renderObligationsTable() {
-    const tbody = document.getElementById('obligationsTableBody');
-    const emptyState = document.getElementById('emptyState');
-    
-    if (currentObligations.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.style.display = 'block';
-        return;
-    }
-    
-    emptyState.style.display = 'none';
-    
-    tbody.innerHTML = currentObligations.map((obligation, index) => `
-        <tr class="obligation-row" data-id="${obligation.id}">
-            <td class="obligation-no">${index + 1}</td>
-            <td>
-                <div class="obligation-title">${obligation.title}</div>
-                ${obligation.is_ai_generated ? 
-                    '<span style="color: #667eea; font-size: 0.7rem; background: #f0f4ff; padding: 2px 6px; border-radius: 10px;">🤖 AI</span>' : 
-                    '<span style="color: #10b981; font-size: 0.7rem; background: #ecfdf5; padding: 2px 6px; border-radius: 10px;">👤 Manual</span>'
-                }
-            </td>
-            <td>
-                <div class="obligation-desc">${obligation.description}</div>
-            </td>
-            <td>
-                <select class="owner-select" onchange="updateObligationInDatabase(${obligation.id}, 'owner_user_id', this.value)">
-                    <option value="">Select Owner</option>
-                    <option value="1" ${obligation.owner === '1' ? 'selected' : ''}>Project Manager</option>
-                    <option value="2" ${obligation.owner === '2' ? 'selected' : ''}>Legal Team</option>
-                    <option value="3" ${obligation.owner === '3' ? 'selected' : ''}>Finance Team</option>
-                    <option value="4" ${obligation.owner === '4' ? 'selected' : ''}>Operations</option>
-                </select>
-            </td>
-            <td>
-                <select class="escalation-input" onchange="updateObligationInDatabase(${obligation.id}, 'escalation_user_id', this.value)">
-                    <option value="">Select Level</option>
-                    <option value="1" ${obligation.escalation === '1' ? 'selected' : ''}>Level 1 - Team Lead</option>
-                    <option value="2" ${obligation.escalation === '2' ? 'selected' : ''}>Level 2 - Manager</option>
-                    <option value="3" ${obligation.escalation === '3' ? 'selected' : ''}>Level 3 - Director</option>
-                    <option value="4" ${obligation.escalation === '4' ? 'selected' : ''}>Level 4 - VP</option>
-                </select>
-            </td>
-            <td>
-                <select class="owner-select" onchange="updateObligationInDatabase(${obligation.id}, 'status', this.value)">
-                    <option value="initiated" ${obligation.status === 'initiated' ? 'selected' : ''}>Initiated</option>
-                    <option value="in-progress" ${obligation.status === 'in-progress' ? 'selected' : ''}>In Progress</option>
-                    <option value="pending-details" ${obligation.status === 'pending-details' ? 'selected' : ''}>Pending Details</option>
-                    <option value="awaiting-approval" ${obligation.status === 'awaiting-approval' ? 'selected' : ''}>Awaiting Approval</option>
-                    <option value="approved" ${obligation.status === 'approved' ? 'selected' : ''}>Approved</option>
-                    <option value="rejected" ${obligation.status === 'rejected' ? 'selected' : ''}>Rejected</option>
-                    <option value="completed" ${obligation.status === 'completed' ? 'selected' : ''}>Completed</option>
-                </select>
-            </td>
-            <td>
-                <input type="date" class="threshold-input" value="${obligation.thresholdDate}" 
-                       onchange="updateObligationInDatabase(${obligation.id}, 'threshold_date', this.value)">
-            </td>
-            <td>
-                <input type="date" class="due-date-input" value="${obligation.dueDate}" 
-                       onchange="updateObligationInDatabase(${obligation.id}, 'due_date', this.value)">
-            </td>
-            <td>
-                <div class="obligation-actions">
-                    <button class="btn-icon" onclick="editObligation(${obligation.id})" title="Edit">
-                        <i class="ti ti-edit"></i>
-                    </button>
-                    <button class="btn-icon danger" onclick="deleteObligationFromDatabase(${obligation.id})" title="Delete">
-                        <i class="ti ti-trash"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-
-// Add new obligation row to table
-function addObligationRow() {
-    const newObligation = {
-        id: 'temp_' + Date.now(),
-        title: "New Obligation",
-        description: "Click edit to add details",
-        owner: "",
-        escalation: "",
-        status: "initiated",
-        thresholdDate: "",
-        dueDate: "",
-        category: "other",
-        priority: "medium",
-        is_ai_generated: false
-    };
-    
-    currentObligations.unshift(newObligation);
-    renderObligationsTable();
-    
-    setTimeout(() => {
-        const newRow = document.querySelector(`[data-id="${newObligation.id}"]`);
-        if (newRow) {
-            newRow.classList.add('new-row');
-            newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }, 100);
-    
-    showToast('New row added. Click Edit to save to database.', 'info');
-}
-
-// Edit obligation
-function editObligation(id) {
-    const obligation = currentObligations.find(o => o.id === id);
-    if (!obligation) return;
-    
-    document.getElementById('editObligationId').value = id;
-    document.getElementById('modalTitle').textContent = 'Edit Obligation';
-    document.getElementById('obligationTitle').value = obligation.title;
-    document.getElementById('obligationDescription').value = obligation.description;
-    document.getElementById('obligationCategory').value = obligation.category || 'other';
-    document.getElementById('obligationPriority').value = obligation.priority || 'medium';
-    
-    document.getElementById('obligationModal').classList.add('show');
-}
-
-// =============================================
-// MODAL FUNCTIONS
-// =============================================
-
-function openNewObligationModal() {
-    document.getElementById('editObligationId').value = '';
-    document.getElementById('modalTitle').textContent = 'New Obligation';
-    document.getElementById('obligationForm').reset();
-    document.getElementById('obligationModal').classList.add('show');
-}
-
-function closeObligationModal() {
-    document.getElementById('obligationModal').classList.remove('show');
-    document.getElementById('obligationForm').reset();
-    document.getElementById('editObligationId').value = '';
-}
-
-function closeAIModal() {
-    document.getElementById('aiObligationsModal').classList.remove('show');
-}
-
-function closeEditAIModal() {
-    document.getElementById('editAIObligationModal').classList.remove('show');
-}
-
-// =============================================
-// UTILITY FUNCTIONS
-// =============================================
-
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    const iconMap = {
-        success: 'check',
-        error: 'x',
-        warning: 'alert-triangle',
-        info: 'info-circle'
-    };
-    
-    toast.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <i class="ti ti-${iconMap[type]}" style="font-size: 1.25rem;"></i>
-            <span>${message}</span>
-        </div>
-    `;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 5000);
-}
-
-function showLoading(show) {
-    let overlay = document.getElementById('loadingOverlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.id = 'loadingOverlay';
-        overlay.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.9);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999;
-        `;
-        overlay.innerHTML = `
-            <div style="text-align: center;">
-                <div class="loading-spinner" style="width: 40px; height: 40px; border-width: 4px; border-color: var(--primary-color); border-top-color: transparent;"></div>
-                <p style="margin-top: 1rem; color: var(--text-color); font-weight: 600;">Processing...</p>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-    }
-    
-    overlay.style.display = show ? 'flex' : 'none';
-}
-
-function submitObligations() {
-    if (currentObligations.length === 0) {
-        showToast('No obligations to submit', 'warning');
-        return;
-    }
-    
-    const unapprovedCount = currentObligations.filter(o => o.status !== 'approved' && o.status !== 'completed').length;
-    
-    if (unapprovedCount > 0) {
-        const message = `${unapprovedCount} obligation(s) are not yet approved. Submit anyway?`;
-        if (!confirm(message)) {
-            return;
-        }
-    }
-    
-    showToast(`Successfully submitted ${currentObligations.length} obligation(s)`, 'success');
-    
-    setTimeout(() => {
-        closeObligationsManager();
-    }, 1500);
-}
-
-function closeObligationsManager() {
-    if (confirm('Are you sure you want to close? Any unsaved changes will be lost.')) {
-        window.history.back();
-    }
-}
-
-// Close modals on outside click
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('modal')) {
-        if (e.target.id === 'obligationModal') closeObligationModal();
-        if (e.target.id === 'aiObligationsModal') closeAIModal();
-        if (e.target.id === 'editAIObligationModal') closeEditAIModal();
-    }
-});
-
-// Keyboard shortcuts
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeObligationModal();
-        closeAIModal();
-        closeEditAIModal();
-    }
-});
-
-console.log('✅ Obligations management system initialized');
-</script>
+<script src="{{ url_for('static', path='/js/obligations_dashboard.js') }}"></script>
 {% endblock %}

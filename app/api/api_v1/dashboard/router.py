@@ -18,7 +18,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
-
 @router.get("/statistics")
 async def get_dashboard_statistics(
     current_user: User = Depends(get_current_user),
@@ -26,31 +25,39 @@ async def get_dashboard_statistics(
 ):
     """
     Get comprehensive dashboard statistics with real-time data
+    Includes contracts where company is either primary party or party B
     """
     try:
         company_id = current_user.company_id
         today = datetime.now()
         
-        # Total Contracts
+        # Total Contracts - including party_b_id
         total_contracts_result = db.execute(
-            text("SELECT COUNT(*) as count FROM contracts WHERE company_id = :company_id"),
+            text("""
+                SELECT COUNT(*) as count FROM contracts 
+                WHERE company_id = :company_id OR party_b_id = :company_id
+            """),
             {"company_id": company_id}
         ).fetchone()
         total_contracts = total_contracts_result.count if total_contracts_result else 0
         
-        # Active Contracts
+        # Active Contracts - including party_b_id
         active_contracts_result = db.execute(
-            text("SELECT COUNT(*) as count FROM contracts WHERE company_id = :company_id AND status = 'active'"),
+            text("""
+                SELECT COUNT(*) as count FROM contracts 
+                WHERE (company_id = :company_id OR party_b_id = :company_id) 
+                AND status = 'active'
+            """),
             {"company_id": company_id}
         ).fetchone()
         active_contracts = active_contracts_result.count if active_contracts_result else 0
         
-        # Expiring Soon (within 30 days)
+        # Expiring Soon (within 30 days) - including party_b_id
         thirty_days_from_now = today + timedelta(days=30)
         expiring_soon_result = db.execute(
             text("""
                 SELECT COUNT(*) as count FROM contracts 
-                WHERE company_id = :company_id 
+                WHERE (company_id = :company_id OR party_b_id = :company_id)
                 AND status = 'active'
                 AND end_date BETWEEN :today AND :end_date
             """),
@@ -62,25 +69,25 @@ async def get_dashboard_statistics(
         ).fetchone()
         expiring_soon = expiring_soon_result.count if expiring_soon_result else 0
         
-        # Pending Approvals - Get from workflow_instances via contracts
+        # Pending Approvals - including party_b_id
         pending_approvals_result = db.execute(
             text("""
                 SELECT COUNT(DISTINCT wi.id) as count 
                 FROM workflow_instances wi
                 JOIN contracts c ON wi.contract_id = c.id
-                WHERE c.company_id = :company_id 
+                WHERE (c.company_id = :company_id OR c.party_b_id = :company_id)
                 AND wi.status IN ('pending', 'in_progress')
             """),
             {"company_id": company_id}
         ).fetchone()
         pending_approvals = pending_approvals_result.count if pending_approvals_result else 0
         
-        # Contracts by Status
+        # Contracts by Status - including party_b_id
         status_breakdown_result = db.execute(
             text("""
                 SELECT status, COUNT(*) as count 
                 FROM contracts 
-                WHERE company_id = :company_id 
+                WHERE company_id = :company_id OR party_b_id = :company_id
                 GROUP BY status
             """),
             {"company_id": company_id}
@@ -88,13 +95,13 @@ async def get_dashboard_statistics(
         
         status_breakdown = {row.status: row.count for row in status_breakdown_result}
         
-        # Obligations Statistics - Use description instead of title
+        # Obligations Statistics - including party_b_id
         total_obligations_result = db.execute(
             text("""
                 SELECT COUNT(o.id) as count
                 FROM obligations o
                 JOIN contracts c ON o.contract_id = c.id
-                WHERE c.company_id = :company_id
+                WHERE c.company_id = :company_id OR c.party_b_id = :company_id
             """),
             {"company_id": company_id}
         ).fetchone()
@@ -105,7 +112,7 @@ async def get_dashboard_statistics(
                 SELECT COUNT(o.id) as count
                 FROM obligations o
                 JOIN contracts c ON o.contract_id = c.id
-                WHERE c.company_id = :company_id
+                WHERE (c.company_id = :company_id OR c.party_b_id = :company_id)
                 AND o.status IN ('pending', 'in_progress')
                 AND o.due_date < :today
             """),
@@ -118,7 +125,7 @@ async def get_dashboard_statistics(
                 SELECT COUNT(o.id) as count
                 FROM obligations o
                 JOIN contracts c ON o.contract_id = c.id
-                WHERE c.company_id = :company_id
+                WHERE (c.company_id = :company_id OR c.party_b_id = :company_id)
                 AND o.status IN ('pending', 'in_progress')
                 AND o.due_date BETWEEN :today AND :end_date
             """),
@@ -142,19 +149,19 @@ async def get_dashboard_statistics(
         ).fetchone()
         total_documents = total_documents_result.count if total_documents_result else 0
         
-        # Recent Activity (last 7 days)
+        # Recent Activity (last 7 days) - including party_b_id
         seven_days_ago = today - timedelta(days=7)
         recent_contracts_result = db.execute(
             text("""
                 SELECT COUNT(*) as count FROM contracts 
-                WHERE company_id = :company_id 
+                WHERE (company_id = :company_id OR party_b_id = :company_id)
                 AND created_at >= :seven_days_ago
             """),
             {"company_id": company_id, "seven_days_ago": seven_days_ago}
         ).fetchone()
         recent_contracts = recent_contracts_result.count if recent_contracts_result else 0
         
-        # Contract Value Statistics
+        # Contract Value Statistics - including party_b_id
         contract_values_result = db.execute(
             text("""
                 SELECT 
@@ -162,19 +169,19 @@ async def get_dashboard_statistics(
                     COALESCE(AVG(contract_value), 0) as avg_value,
                     COUNT(*) as count
                 FROM contracts 
-                WHERE company_id = :company_id 
+                WHERE (company_id = :company_id OR party_b_id = :company_id)
                 AND contract_value IS NOT NULL
             """),
             {"company_id": company_id}
         ).fetchone()
         
-        # Workflow Statistics - Get from workflow_instances via contracts
+        # Workflow Statistics - including party_b_id
         workflows_stats_result = db.execute(
             text("""
                 SELECT wi.status, COUNT(*) as count 
                 FROM workflow_instances wi
                 JOIN contracts c ON wi.contract_id = c.id
-                WHERE c.company_id = :company_id 
+                WHERE c.company_id = :company_id OR c.party_b_id = :company_id
                 GROUP BY wi.status
             """),
             {"company_id": company_id}
@@ -222,8 +229,6 @@ async def get_dashboard_statistics(
     except Exception as e:
         logger.error(f"Error fetching dashboard statistics: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.get("/expiring-contracts")
 async def get_expiring_contracts(
     days: int = 30,

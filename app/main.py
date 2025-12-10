@@ -28,7 +28,7 @@ from app.core.database import engine, get_db, init_db, test_connection
 from app.models import Base
 from app.models.user import User
 from app.api.api_v1.chatbot.routes import router as chatbot_router
-
+from app.api.api_v1.workflow import approval_router
 
 
 # Configure logging FIRST
@@ -342,7 +342,11 @@ if audit_middleware:
 app.include_router(registration_router)
 app.include_router(login_router)
 app.include_router(logout_router)
-
+app.include_router(
+    approval_router.router,
+    prefix="/api/v1/workflow",
+    tags=["workflow"]
+)
 
 logger.info("✅ Auth routers registered")
 
