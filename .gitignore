@@ -3,3 +3,4 @@ __pycache__/
 fabric-network
 kubernetes
 .vscode
+.env
