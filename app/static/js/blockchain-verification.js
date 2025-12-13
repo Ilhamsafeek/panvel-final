@@ -2,17 +2,24 @@
 // Blockchain Verification UI Functions
 // =====================================================
 
+
+function getContractId() {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('contract_id') || 
+           document.querySelector('[name="contract_id"]')?.value;
+}
+
+
 // Get auth token from cookie
 function getAuthToken() {
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
         const [name, value] = cookie.trim().split('=');
-        if (name === 'session_token') {
-            return value;
-        }
+        if (name === 'session_token') return value;
     }
     return null;
 }
+
 
 // Show blockchain verification status
 async function verifyContract(contractId) {

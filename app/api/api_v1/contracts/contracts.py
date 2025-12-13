@@ -1203,6 +1203,22 @@ async def get_contract_editor_data(
         
         versions = db.execute(version_query, {"contract_id": contract_id}).fetchall()
         
+
+                # Get current approver
+        current_approver_query = text("""
+            SELECT u.first_name, u.last_name, u.email, ws.step_type
+            FROM workflow_instances wi
+            JOIN workflow_steps ws ON wi.workflow_id = ws.workflow_id 
+                AND wi.current_step = ws.step_number
+            LEFT JOIN users u ON ws.assignee_user_id = u.id
+            WHERE wi.contract_id = :contract_id AND wi.status = 'active'
+            LIMIT 1
+        """)
+        current_approver = db.execute(current_approver_query, {"contract_id": contract_id}).fetchone()
+
+        
+
+
         return {
             "success": True,
             "contract": {
@@ -1238,7 +1254,12 @@ async def get_contract_editor_data(
                     "created_by": v.created_by_name if v.created_by_name else "Unknown"
                 }
                 for v in versions
-            ]
+            ],
+            "current_approver" : {
+            "name": f"{current_approver.first_name} {current_approver.last_name}".strip() if current_approver else None,
+            "email": current_approver.email if current_approver else None,
+            "step_type": current_approver.step_type if current_approver else None
+        } if current_approver else None
         }
         
     except HTTPException:
@@ -3448,6 +3469,29 @@ Fixed Clause Analysis API Endpoint - app/api/api_v1/contracts/contracts.py
 
 Add this endpoint to your contracts.py file to properly analyze all clauses
 """
+def sanitize_for_json(text: str) -> str:
+    """Sanitize text to be safely included in JSON responses"""
+    if not text:
+        return ""
+    
+    # Replace problematic characters
+    text = text.replace('\n', ' ')  # Remove newlines
+    text = text.replace('\r', ' ')  # Remove carriage returns
+    text = text.replace('\t', ' ')  # Remove tabs
+    text = text.replace('"', "'")   # Replace double quotes with single quotes
+    text = text.replace('\\', '/')  # Replace backslashes
+    
+    # Limit length to prevent oversized responses
+    if len(text) > 1000:
+        text = text[:997] + "..."
+    
+    # Remove multiple spaces
+    import re
+    text = re.sub(r'\s+', ' ', text).strip()
+    
+    return text
+
+
 @router.post("/analyze-full-contract")
 async def analyze_full_contract(
     request: dict,
@@ -3484,7 +3528,7 @@ async def analyze_full_contract(
             logger.warning("Claude client not available, using fallback analysis")
             return get_fallback_clause_analysis(contract_text)
         
-        # Prepare comprehensive prompt for Claude
+        # Prepare comprehensive prompt for Claude with strict JSON formatting rules
         prompt = f"""You are an expert contract analyst specializing in Qatar jurisdiction. Analyze the following complete contract and identify ALL major clauses.
 
 CONTRACT TEXT:
@@ -3508,55 +3552,69 @@ Your task:
 
 2. For EACH clause identified, provide:
    - The exact clause name/title
-   - The actual clause text from the contract (extract verbatim if possible)
+   - A CONCISE SUMMARY of the clause content (max 300 characters)
    - A risk assessment: "low", "medium", or "high"
    - 2-4 specific, actionable suggestions for improvement
    - Compliance notes specific to Qatar Civil and Commercial Law
    - A legal protection score from 1-5
-   - An improved version of the clause text
+   - An improved version summary (max 300 characters)
 
 3. Also identify:
    - Important clauses that are MISSING from the contract
    - Overall assessment of the contract quality
    - Total number of clauses analyzed
 
-CRITICAL: Respond in VALID JSON format ONLY. No markdown, no code blocks, no extra text.
+CRITICAL JSON FORMATTING RULES:
+- Respond in VALID JSON format ONLY
+- NO markdown, NO code blocks, NO extra text
+- For clause_text: Use SUMMARY only (max 300 chars, single line)
+- For improved_version: Use SUMMARY only (max 300 chars, single line)
+- REPLACE all double quotes in text with single quotes
+- NO newlines, tabs, or special characters in text fields
+- Keep all text fields on single lines
+- Properly escape any special characters
 
 Expected JSON structure:
 {{
     "clauses_identified": [
         {{
             "clause_name": "Governing Law and Jurisdiction",
-            "clause_text": "This Agreement shall be governed by and construed in accordance with the laws of...",
+            "clause_text": "Agreement governed by Qatar laws with disputes subject to Qatar Courts jurisdiction",
             "risk_level": "medium",
             "current_score": 3,
             "suggestions": [
-                "Specify Qatar Courts or QICCA arbitration for dispute venue",
-                "Add choice of law provision explicitly referencing Qatar Civil Code Articles",
-                "Include language regarding bilingual contract interpretation"
+                "Specify Qatar Courts or QICCA arbitration explicitly",
+                "Add reference to Qatar Civil Code Articles",
+                "Include bilingual interpretation clause"
             ],
-            "compliance_note": "Complies with Qatar Civil Code Article 1 on governing law. Consider adding specific reference to Qatar Courts jurisdiction under Law No. 13 of 1990.",
-            "improved_version": "This Agreement shall be governed by and construed in accordance with the laws of the State of Qatar. Any dispute arising out of or in connection with this Agreement shall be subject to the exclusive jurisdiction of the Qatar Courts, or alternatively shall be referred to and finally resolved by arbitration under the Qatar International Centre for Conciliation and Arbitration (QICCA) Rules."
+            "compliance_note": "Complies with Qatar Civil Code Article 1. Consider Qatar Courts jurisdiction reference per Law No. 13 of 1990",
+            "improved_version": "Governed by Qatar laws. Disputes subject to Qatar Courts exclusive jurisdiction or QICCA arbitration per parties agreement"
         }}
     ],
-    "overall_assessment": "This contract demonstrates moderate legal protection with clear commercial terms. Key areas requiring attention include dispute resolution mechanisms and liability limitations. The contract would benefit from enhanced termination provisions and more specific performance obligations.",
+    "overall_assessment": "Contract shows moderate legal protection with clear commercial terms. Needs enhanced dispute resolution and liability provisions",
     "missing_clauses": [
-        "Force Majeure provisions compliant with Qatar Civil Code Article 215",
+        "Force Majeure provisions per Qatar Civil Code Article 215",
         "Insurance requirements and coverage specifications",
-        "Intellectual Property rights assignment or licensing terms",
-        "Data protection and privacy compliance with Qatar Law"
+        "IP rights assignment terms",
+        "Data protection compliance with Qatar Law"
     ],
     "total_clauses": 8
 }}
 
-Begin your analysis now. Respond with ONLY the JSON object."""
+IMPORTANT REMINDERS:
+- Keep clause_text and improved_version BRIEF (max 300 chars each)
+- Use apostrophes (') instead of quotes (") in all text
+- Single line text only - no line breaks
+- Valid JSON syntax - proper commas and brackets
+
+Begin your analysis now. Respond with ONLY the valid JSON object."""
 
         try:
             # Call Claude API
             response = claude_service.client.messages.create(
                 model=claude_service.model,
-                max_tokens=4000,
-                temperature=0.3,
+                max_tokens=8000,  # Increased for comprehensive analysis
+                temperature=0.2,  # Lower temperature for more consistent JSON
                 messages=[
                     {
                         "role": "user",
@@ -3569,19 +3627,44 @@ Begin your analysis now. Respond with ONLY the JSON object."""
             response_text = response.content[0].text.strip()
             logger.info(f"📥 Received response from Claude ({len(response_text)} characters)")
             
-            # Remove markdown code blocks if present
-            if response_text.startswith("```json"):
-                response_text = response_text.replace("```json", "").replace("```", "").strip()
-            elif response_text.startswith("```"):
-                response_text = response_text.replace("```", "").strip()
+            # Clean up response - remove markdown formatting
+            cleaned_text = response_text
             
-            # Try to extract JSON if there's any preamble
-            json_match = re.search(r'\{[\s\S]*\}', response_text)
+            # Remove markdown code blocks
+            if "```json" in cleaned_text:
+                cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in cleaned_text:
+                # Try to extract content between first ``` and last ```
+                parts = cleaned_text.split("```")
+                if len(parts) >= 3:
+                    cleaned_text = parts[1].strip()
+                else:
+                    cleaned_text = cleaned_text.replace("```", "").strip()
+            
+            # Extract JSON object using regex
+            json_match = re.search(r'\{[\s\S]*\}', cleaned_text)
             if json_match:
-                response_text = json_match.group()
+                cleaned_text = json_match.group()
+            
+            logger.info(f"🧹 Cleaned response ready for parsing ({len(cleaned_text)} chars)")
             
             # Parse JSON response
-            result = json.loads(response_text)
+            try:
+                result = json.loads(cleaned_text)
+            except json.JSONDecodeError as json_err:
+                logger.error(f"❌ Initial JSON parse failed: {str(json_err)}")
+                logger.error(f"📄 Error at line {json_err.lineno}, column {json_err.colno}")
+                logger.error(f"📄 Problematic section: {cleaned_text[max(0, json_err.pos-100):json_err.pos+100]}")
+                
+                # Try additional cleanup
+                # Replace common problematic patterns
+                cleaned_text = cleaned_text.replace('\\"', "'")  # Replace escaped quotes
+                cleaned_text = re.sub(r'[\n\r\t]', ' ', cleaned_text)  # Remove all whitespace chars
+                cleaned_text = re.sub(r'\s+', ' ', cleaned_text)  # Collapse multiple spaces
+                
+                # Try parsing again
+                result = json.loads(cleaned_text)
+                logger.info("✅ Successfully parsed after additional cleanup")
             
             # Validate response structure
             if "clauses_identified" not in result:
@@ -3596,23 +3679,64 @@ Begin your analysis now. Respond with ONLY the JSON object."""
             
             logger.info(f"✅ Successfully identified {len(clauses)} clauses")
             
-            # Ensure all required fields are present in each clause
+            # Sanitize all text fields to ensure JSON safety
             for idx, clause in enumerate(clauses):
-                # Set defaults for missing fields
-                if "clause_name" not in clause:
+                # Set defaults and sanitize for missing/invalid fields
+                if "clause_name" not in clause or not clause["clause_name"]:
                     clause["clause_name"] = f"Clause {idx + 1}"
-                if "clause_text" not in clause:
-                    clause["clause_text"] = "Text not extracted"
-                if "risk_level" not in clause:
+                else:
+                    clause["clause_name"] = sanitize_for_json(str(clause["clause_name"]))
+                
+                if "clause_text" not in clause or not clause["clause_text"]:
+                    clause["clause_text"] = "Summary not available"
+                else:
+                    clause["clause_text"] = sanitize_for_json(str(clause["clause_text"]))
+                
+                # Validate risk level
+                if "risk_level" not in clause or clause["risk_level"] not in ["low", "medium", "high"]:
                     clause["risk_level"] = "medium"
+                
+                # Validate score
                 if "current_score" not in clause:
                     clause["current_score"] = 3
-                if "suggestions" not in clause:
+                else:
+                    try:
+                        clause["current_score"] = int(clause["current_score"])
+                        if clause["current_score"] < 1 or clause["current_score"] > 5:
+                            clause["current_score"] = 3
+                    except (ValueError, TypeError):
+                        clause["current_score"] = 3
+                
+                # Sanitize suggestions array
+                if "suggestions" not in clause or not isinstance(clause["suggestions"], list):
                     clause["suggestions"] = ["Review clause for completeness"]
-                if "compliance_note" not in clause:
+                else:
+                    clause["suggestions"] = [
+                        sanitize_for_json(str(s)) for s in clause["suggestions"] if s
+                    ][:6]  # Limit to 6 suggestions max
+                    if not clause["suggestions"]:
+                        clause["suggestions"] = ["Review clause for completeness"]
+                
+                if "compliance_note" not in clause or not clause["compliance_note"]:
                     clause["compliance_note"] = "Legal review recommended"
-                if "improved_version" not in clause:
+                else:
+                    clause["compliance_note"] = sanitize_for_json(str(clause["compliance_note"]))
+                
+                if "improved_version" not in clause or not clause["improved_version"]:
                     clause["improved_version"] = "Improved version not available"
+                else:
+                    clause["improved_version"] = sanitize_for_json(str(clause["improved_version"]))
+            
+            # Sanitize overall assessment and missing clauses
+            overall_assessment = sanitize_for_json(
+                str(result.get("overall_assessment", "Contract analyzed successfully"))
+            )
+            
+            missing_clauses = result.get("missing_clauses", [])
+            if isinstance(missing_clauses, list):
+                missing_clauses = [sanitize_for_json(str(mc)) for mc in missing_clauses if mc][:10]
+            else:
+                missing_clauses = []
             
             # Log the analysis to audit trail
             try:
@@ -3640,30 +3764,33 @@ Begin your analysis now. Respond with ONLY the JSON object."""
                 logger.error(f"Failed to log audit trail: {str(audit_error)}")
                 # Continue even if audit logging fails
             
+            logger.info(f"🎉 Analysis complete: {len(clauses)} clauses, {len(missing_clauses)} missing")
+            
             return {
                 "success": True,
                 "clauses_identified": clauses,
-                "overall_assessment": result.get("overall_assessment", "Contract analyzed successfully"),
-                "missing_clauses": result.get("missing_clauses", []),
+                "overall_assessment": overall_assessment,
+                "missing_clauses": missing_clauses,
                 "total_clauses": len(clauses),
                 "ai_powered": True
             }
             
         except json.JSONDecodeError as e:
-            logger.error(f"JSON parsing error: {str(e)}")
-            logger.error(f"Response text (first 500 chars): {response_text[:500]}")
-            logger.warning("Falling back to pattern matching analysis")
+            logger.error(f"❌ JSON parsing error after all attempts: {str(e)}")
+            logger.error(f"📄 Response text (first 1000 chars): {cleaned_text[:1000]}")
+            logger.error(f"📍 Error location: line {e.lineno}, column {e.colno}, position {e.pos}")
+            logger.warning("⚠️ Falling back to pattern matching analysis")
             return get_fallback_clause_analysis(contract_text)
             
         except Exception as e:
-            logger.error(f"Claude API error: {str(e)}")
-            logger.warning("Falling back to pattern matching analysis")
+            logger.error(f"❌ Claude API error: {str(e)}")
+            logger.warning("⚠️ Falling back to pattern matching analysis")
             return get_fallback_clause_analysis(contract_text)
     
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error in full contract analysis: {str(e)}")
+        logger.error(f"❌ Error in full contract analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 

@@ -1498,6 +1498,110 @@
 
 
 <style>
+/* Blockchain Monitor Button */
+.blockchain-btn-info {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: white;
+    border: none;
+}
+
+.blockchain-btn-info:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+    transform: translateY(-2px);
+}
+
+/* Live Indicator Animation */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Modal Overlay */
+#blockchainMonitorModal.show {
+    display: flex !important;
+}
+
+/* Activity Item Styles */
+.activity-item {
+    padding: 1rem;
+    border-left: 3px solid #3b82f6;
+    background: #f8fafc;
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+    background: #eff6ff;
+    border-left-color: #2563eb;
+    transform: translateX(4px);
+}
+
+.activity-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.activity-item-type {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 0.875rem;
+}
+
+.activity-item-time {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.activity-item-details {
+    font-size: 0.8125rem;
+    color: #475569;
+    margin-left: 1.75rem;
+}
+
+.activity-item-hash {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: #6366f1;
+    background: #eef2ff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    display: inline-block;
+}
+
+/* Scrollbar Styling */
+.activity-stream-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-stream-modal::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.activity-stream-modal::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.activity-stream-modal::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+</style>
+
+
+
+<style>
     /* Blockchain Activity Panel Styles */
     .blockchain-evidence-panel {
         background: white;
@@ -1848,6 +1952,10 @@
                 <i data-lucide="info"></i>
                 What is this?
             </button>
+            <button type="button" class="blockchain-btn blockchain-btn-info" onclick="openBlockchainMonitor()">
+    <i class="ti ti-activity"></i>
+    Blockchain Operations Monitor
+</button>
         </div>
 
         <!-- Info Text -->
@@ -1862,52 +1970,139 @@
 <!-- END BLOCKCHAIN VERIFICATION SECTION -->
 
 
-<!-- Blockchain Evidence Panel HTML -->
-<div class="blockchain-evidence-panel" id="blockchainEvidencePanel">
-    <div class="evidence-panel-header">
-        <div class="evidence-panel-title">
-            <i class="ti ti-shield-lock"></i>
-            Blockchain Operations Monitor
-        </div>
-        <div class="live-indicator">
-            <span class="live-dot"></span>
-            <span>LIVE</span>
-        </div>
-    </div>
-
-    <div class="evidence-panel-body">
-        <!-- Network Status Bar -->
-        <div class="network-status-bar" id="networkStatusBar">
-            <div class="status-item">
-                <i class="ti ti-network" style="color: #0066cc;"></i>
-                <span class="status-label">Network:</span>
-                <span class="status-value">calim360-network</span>
+<!-- Blockchain Operations Monitor Modal -->
+<div class="modal" id="blockchainMonitorModal">
+    <div class="modal-content modal-xl" style="max-width: 1100px;">
+        <!-- Modal Header -->
+        <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0;">
+            <div style="display: flex; align-items: center; gap: 1rem; width: 100%;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
+                    <i class="ti ti-shield-lock" style="font-size: 1.5rem;"></i>
+                    <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Blockchain Operations Monitor</h3>
+                </div>
+                <div class="live-indicator-modal" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 20px;">
+                    <span class="live-dot-modal" style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></span>
+                    <span style="font-size: 0.875rem; font-weight: 600;">LIVE</span>
+                </div>
             </div>
-            <div class="status-item">
-                <i class="ti ti-circle-check" style="color: #10b981;"></i>
-                <span class="status-label">Status:</span>
-                <span class="status-value" id="networkStatusValue">Operational</span>
-            </div>
-            <div class="status-item">
-                <i class="ti ti-server" style="color: #0066cc;"></i>
-                <span class="status-label">Peers:</span>
-                <span class="status-value" id="peersCount">3</span>
-            </div>
+            <button class="modal-close" onclick="closeBlockchainMonitor()" style="background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0.25rem;">&times;</button>
         </div>
 
-        <!-- Activity Stream -->
-        <div class="activity-stream" id="activityStream">
-            <div class="empty-activity-state">
-                <i class="ti ti-clock-hour-4"></i>
-                <p>Waiting for blockchain operations...</p>
-                <p style="font-size: 0.875rem; margin-top: 0.5rem;">
-                    Save or update the contract to see blockchain activity
-                </p>
+        <!-- Modal Body -->
+        <div class="modal-body" style="padding: 1.5rem; max-height: 70vh; overflow-y: auto;">
+            <!-- Network Status Bar -->
+            <div class="network-status-bar-modal" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div class="status-item-modal" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ti ti-network" style="color: #0066cc; font-size: 1.25rem;"></i>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Network</div>
+                        <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;">calim360-network</div>
+                    </div>
+                </div>
+                <div class="status-item-modal" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ti ti-circle-check" style="color: #10b981; font-size: 1.25rem;"></i>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Status</div>
+                        <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;" id="networkStatusValueModal">Operational</div>
+                    </div>
+                </div>
+                <div class="status-item-modal" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ti ti-server" style="color: #0066cc; font-size: 1.25rem;"></i>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Peers Active</div>
+                        <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;" id="peersCountModal">3</div>
+                    </div>
+                </div>
+                <div class="status-item-modal" style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ti ti-database" style="color: #8b5cf6; font-size: 1.25rem;"></i>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Channel</div>
+                        <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;">contract-channel</div>
+                    </div>
+                </div>
             </div>
+
+            <!-- Activity Stream Header -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                <h4 style="margin: 0; font-size: 1rem; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ti ti-timeline"></i>
+                    Activity Timeline
+                </h4>
+                <button onclick="refreshBlockchainActivity()" style="padding: 0.5rem 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #475569;">
+                    <i class="ti ti-refresh"></i>
+                    Refresh
+                </button>
+            </div>
+
+            <!-- Activity Stream -->
+            <div class="activity-stream-modal" id="activityStreamModal" style="min-height: 300px; max-height: 400px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                <div class="empty-activity-state" id="emptyActivityState" style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+                    <i class="ti ti-clock-hour-4" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <p style="margin: 0; font-size: 1rem; font-weight: 500;">Waiting for blockchain operations...</p>
+                    <p style="font-size: 0.875rem; margin-top: 0.5rem; opacity: 0.7;">
+                        Save or update the contract to see blockchain activity
+                    </p>
+                </div>
+            </div>
+
+            <!-- Blockchain Statistics -->
+            <div style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h4 style="margin: 0 0 1rem 0; font-size: 0.875rem; font-weight: 600; color: #1e293b; text-transform: uppercase; letter-spacing: 0.05em;">
+                    Blockchain Statistics
+                </h4>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+                    <div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Total Transactions</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #1e293b;" id="totalTransactions">0</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Last Block Hash</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #1e293b; font-family: monospace; overflow: hidden; text-overflow: ellipsis;" id="lastBlockHash">N/A</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Verification Status</div>
+                        <div style="font-size: 0.875rem; font-weight: 600; color: #10b981;" id="verificationStatus">
+                            <i class="ti ti-circle-check"></i> Verified
+                        </div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Last Activity</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #1e293b;" id="lastActivityTime">Just now</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Trail Quick Access -->
+            <div style="margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 8px; border: 1px solid #bfdbfe;">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div>
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 0.875rem; font-weight: 600; color: #1e40af;">
+                            <i class="ti ti-file-certificate"></i>
+                            Full Audit Trail Available
+                        </h4>
+                        <p style="margin: 0; font-size: 0.75rem; color: #1e40af; opacity: 0.8;">
+                            View complete blockchain-verified audit logs with timestamps and user actions
+                        </p>
+                    </div>
+                    <button onclick="viewFullAuditTrail()" style="padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500; white-space: nowrap;">
+                        View Full Trail
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer" style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.75rem; color: #64748b;">
+                <i class="ti ti-info-circle" style="font-size: 0.875rem;"></i>
+                Powered by Hyperledger Fabric & Qatar National Blockchain Framework
+            </div>
+            <button onclick="closeBlockchainMonitor()" style="padding: 0.5rem 1.5rem; background: #e2e8f0; color: #475569; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                Close
+            </button>
         </div>
     </div>
 </div>
-
 
 <!-- MOD-027/028: Contract Workflow Setup Modal -->
 <div class="modal" id="contractWorkflowModal">
@@ -3106,7 +3301,7 @@
             style="background: linear-gradient(135deg, var(--warning-color), #ffc107); color: white;">
             <h3 class="modal-title" style="color: white; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ti ti-alert-triangle"></i>
-                AI Risk Analysis Report
+                AI Review Analysis Report
                 <span id="aiPoweredBadge" class="badge"
                     style="background: rgba(255,255,255,0.2); font-size: 0.7rem; padding: 0.25rem 0.5rem; border-radius: 4px; display: none;">
                     <i class="ti ti-sparkles"></i> AI Powered
@@ -3664,11 +3859,12 @@
     // RENDERING FUNCTIONS
     // =====================================================
     function renderContractEditor(data) {
-        const { contract, workflow, versions } = data;
+        const { contract, workflow, versions, current_approver} = data;
 
         console.log('Rendering contract:', contract);
         console.log('Contract content length:', contract.content ? contract.content.length : 0);
         console.log('Contract status:', contract.status);
+        // console.log('Contract status:', current_approver);
 
         const signature_block = `
         <div style="margin-top: 3rem;">
@@ -3715,7 +3911,7 @@
             // Review stage
 
             if ((contract.is_initiator === true)) {
-              actionButtons = ``;
+              actionButtons = getApprovalBadge(current_approver, workflow);
             } else {
 
                 if ((workflow && workflow.is_my_workflow_turn === true) && (workflow && workflow.status != 'completed')) {
@@ -3727,6 +3923,8 @@
         <button class="btn btn-danger" onclick="rejectWorkflow(${contract.id})">
             <i class="ti ti-x"></i> Reject
         </button>`;
+                }else{
+                    
                 }
 
             }
@@ -3782,7 +3980,6 @@
         </button>`;
                 } else {
 
-
                     if ((contract.is_initiator === true)) {
 
                         if ((workflow && workflow.status === 'completed')) {
@@ -3798,15 +3995,10 @@
                 <i class="ti ti-writing-sign"></i> Initiate Approval Workflow
             </button>`;
                         } else {
-
-                            actionButtons = `
-            <span class="comment-count-badge" style="background: rgb(255, 243, 205); color: rgb(133, 100, 4); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; display: inline-flex;">Waiting for Workflow Approval</span>`;
-
-
+                          actionButtons = getApprovalBadge(contract, workflow);
                         }
                     }
                 }
-
             }
         } else if (contract.status === 'signature') {
             // Signature stage
@@ -3833,7 +4025,6 @@
                 <i class="ti ti-download"></i> Download Contract
             </button>`;
         }
-
 
         document.getElementById('contractEditor').innerHTML = `
         <!-- Page Header -->
@@ -3863,8 +4054,8 @@ ${renderWorkflowStepper(contract.status)}
                     <i class="ti ti-settings-automation"></i> Setup Custom Workflow
                 </button>
                 ${!contract.is_counterparty ? `
-                <button class="ai-toolbar-btn" onclick="openRiskAnalysisModal()">
-                    <i class="ti ti-alert-triangle"></i> Risk Analysis
+                <button class="ai-toolbar-btn" onclick="openRiviewisModal()">
+                    <i class="ti ti-alert-triangle"></i> Review Analysis
                 </button>
                 <button class="ai-toolbar-btn" onclick="openClauseAnalysisModal()">
                     <i class="ti ti-file-text"></i> Clause Analysis
@@ -3893,13 +4084,15 @@ ${contract.content && contract.content.trim() !== '' ?
     `;
 
     }
-function renderWorkflowStepper(status) {
+
+
+    function renderWorkflowStepper(status) {
     const steps = [
         {
             key: 'draft', 
             icon: 'file-text', 
             label: 'Draft',
-            status: 'completed'
+            status: 'completed' // Draft is always completed if viewing the contract
         },
         {
             key: 'review',
@@ -3908,48 +4101,58 @@ function renderWorkflowStepper(status) {
             status: status === 'draft' ? 'pending' :
                     status === 'review' ? 'active' :
                     status === 'review_completed' ? 'completed' :
+                    // If any later stage, internal review must be completed
+                    ['counterparty_internal_review', 'counterparty_review_completed', 
+                     'negotiation', 'negotiation_completed', 'approval', 'approved', 
+                     'signing', 'signed', 'executed'].includes(status) ? 'completed' :
                     'pending'
         },
         {
             key: 'counterparty_internal_review', 
             icon: 'building', 
             label: 'Counterparty Review',
-            status: ['draft', 'review', 'review_completed'].includes(status) ? 'pending' :
+            status: ['draft', 'review'].includes(status) ? 'pending' :
+                    status === 'review_completed' ? 'pending' :
                     status === 'counterparty_internal_review' ? 'active' :
                     status === 'counterparty_review_completed' ? 'completed' :
-                    (status === 'negotiation' || status === 'negotiation_completed' || 
-                     status === 'approval' || status === 'approved' || 
-                     status === 'signing' || status === 'signed' || 
-                     status === 'executed') ? 'completed' :
+                    // If negotiation or later stages, counterparty review must be completed
+                    ['negotiation', 'negotiation_completed', 'approval', 'approved', 
+                     'signing', 'signed', 'executed'].includes(status) ? 'completed' :
                     'pending'
         },
         {
             key: 'negotiation', 
             icon: 'message-circle', 
             label: 'Negotiation',
-            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review', 'counterparty_review_completed'].includes(status) ? 'pending' :
+            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review'].includes(status) ? 'pending' :
+                    status === 'counterparty_review_completed' ? 'pending' :
                     status === 'negotiation' ? 'active' :
                     status === 'negotiation_completed' ? 'completed' :
-                    (status === 'approval' || status === 'approved' || 
-                     status === 'signing' || status === 'signed' || 
-                     status === 'executed') ? 'completed' :
+                    // If approval or later stages, negotiation must be completed
+                    ['approval', 'approved', 'signing', 'signed', 'executed'].includes(status) ? 'completed' :
                     'pending'
         },
         {
             key: 'approval', 
             icon: 'circle-check', 
             label: 'Approval',
-            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review', 'counterparty_review_completed', 'negotiation', 'negotiation_completed'].includes(status) ? 'pending' :
+            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review', 
+                     'counterparty_review_completed', 'negotiation'].includes(status) ? 'pending' :
+                    status === 'negotiation_completed' ? 'pending' :
                     status === 'approval' ? 'active' :
                     status === 'approved' ? 'completed' :
-                    (status === 'signing' || status === 'signed' || status === 'executed') ? 'completed' :
+                    // If signing or later stages, approval must be completed
+                    ['signing', 'signed', 'executed'].includes(status) ? 'completed' :
                     'pending'
         },
         {
             key: 'signature', 
             icon: 'writing-sign', 
             label: 'Signature',
-            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review', 'counterparty_review_completed', 'negotiation', 'negotiation_completed', 'approval', 'approved'].includes(status) ? 'pending' :
+            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review', 
+                     'counterparty_review_completed', 'negotiation', 'negotiation_completed', 
+                     'approval'].includes(status) ? 'pending' :
+                    status === 'approved' ? 'pending' :
                     status === 'signing' ? 'active' :
                     status === 'signed' ? 'completed' :
                     status === 'executed' ? 'completed' :
@@ -3959,9 +4162,12 @@ function renderWorkflowStepper(status) {
             key: 'executed', 
             icon: 'file-check', 
             label: 'Executed',
-            status: status === 'executed' ? 'completed' : 'pending'
+            status: status === 'executed' ? 'completed' : 
+                    status === 'signed' ? 'pending' :
+                    'pending'
         }
     ];
+
 
     return `
         <div class="workflow-stepper">
@@ -4284,7 +4490,7 @@ function renderWorkflowStepper(status) {
     }
 
     // Risk Analysis - CONNECTED TO AI BACKEND
-    async function openRiskAnalysisModal() {
+    async function openRiviewisModal() {
         openModal('riskAnalysisModal');
 
         // Fetch risk analysis from backend
@@ -4523,9 +4729,7 @@ function renderWorkflowStepper(status) {
         const container = document.getElementById('clauseSuggestionContent');
         container.innerHTML = `
         <div style="text-align: center; padding: 3rem;">
-            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+            <div class="ai-loader"></div>
             <p style="margin-top: 1.5rem; color: var(--text-muted); font-size: 1.1rem;">
                 <i class="ti ti-sparkles"></i> AI is analyzing all clauses in your contract...
             </p>
@@ -5630,9 +5834,6 @@ function renderWorkflowStepper(status) {
             <p style="font-size: 0.8rem; margin: 0;">Modified by: ${version.created_by || 'Unknown'}</p>
             ${index > 0 ? `
                 <div style="margin-top: 0.5rem;">
-                    <button class="btn btn-sm btn-outline-primary" onclick="compareWithVersion(${version.version})">
-                        Compare with Current
-                    </button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="restoreVersion(${version.id})">
                         Restore This Version
                     </button>
@@ -8030,12 +8231,22 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         }
     }
 
-    function showLoader() {
-        const loader = document.getElementById('loadingOverlay');
-        if (loader) {
-            loader.classList.add('show');
-        }
+   function showLoader(message) {
+    let loader = document.getElementById('loader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'loader';
+        loader.className = 'loader-overlay';
+        loader.innerHTML = `
+            <div class="loader">
+                <div class="spinner"></div>
+                <p>${message}</p>
+            </div>
+        `;
+        document.body.appendChild(loader);
     }
+    loader.style.display = 'flex';
+}
 
     function hideLoader() {
         const loader = document.getElementById('loadingOverlay');
@@ -9833,6 +10044,293 @@ Generated by CALIM 360 Smart CLM
         const urlParams = new URLSearchParams(window.location.search);
         return parseInt(urlParams.get('id'));
     }
+</script>
+
+
+<script>
+// Open Blockchain Operations Monitor Modal
+function openBlockchainMonitor() {
+    const modal = document.getElementById('blockchainMonitorModal');
+    if (modal) {
+        modal.classList.add('show');
+        // Load blockchain activity when modal opens
+        loadBlockchainActivity();
+        // Auto-refresh every 10 seconds
+        startBlockchainMonitoring();
+    }
+}
+
+// Close Blockchain Operations Monitor Modal
+function closeBlockchainMonitor() {
+    const modal = document.getElementById('blockchainMonitorModal');
+    if (modal) {
+        modal.classList.remove('show');
+        // Stop auto-refresh
+        stopBlockchainMonitoring();
+    }
+}
+
+// Auto-refresh interval ID
+let blockchainMonitorInterval = null;
+
+// Start monitoring (auto-refresh)
+function startBlockchainMonitoring() {
+    if (blockchainMonitorInterval) {
+        clearInterval(blockchainMonitorInterval);
+    }
+    // Refresh every 10 seconds
+    blockchainMonitorInterval = setInterval(() => {
+        loadBlockchainActivity();
+    }, 10000);
+}
+
+// Stop monitoring
+function stopBlockchainMonitoring() {
+    if (blockchainMonitorInterval) {
+        clearInterval(blockchainMonitorInterval);
+        blockchainMonitorInterval = null;
+    }
+}
+
+// Load blockchain activity from API
+async function loadBlockchainActivity() {
+    try {
+       
+        // Get auth token
+        const token = getAuthToken();
+        
+        // Fetch blockchain activity
+        const response = await fetch(`/api/blockchain/activity/${contractId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch blockchain activity');
+        }
+
+        const data = await response.json();
+        
+        // Update network status
+        if (data.network_status) {
+            updateNetworkStatus(data.network_status);
+        }
+
+        // Update activity stream
+        if (data.activities && data.activities.length > 0) {
+            displayActivities(data.activities);
+            updateStatistics(data.statistics);
+        } else {
+            // Show empty state
+            showEmptyActivityState();
+        }
+
+    } catch (error) {
+        console.error('Error loading blockchain activity:', error);
+        showErrorState();
+    }
+}
+
+// Update network status display
+function updateNetworkStatus(status) {
+    const statusValue = document.getElementById('networkStatusValueModal');
+    const peersCount = document.getElementById('peersCountModal');
+    
+    if (statusValue) {
+        statusValue.textContent = status.status || 'Operational';
+        statusValue.style.color = status.status === 'Operational' ? '#10b981' : '#ef4444';
+    }
+    
+    if (peersCount) {
+        peersCount.textContent = status.peers_count || '3';
+    }
+}
+
+// Display blockchain activities
+function displayActivities(activities) {
+    const streamContainer = document.getElementById('activityStreamModal');
+    const emptyState = document.getElementById('emptyActivityState');
+    
+    if (emptyState) {
+        emptyState.style.display = 'none';
+    }
+    
+    if (!streamContainer) return;
+    
+    // Clear existing activities (except empty state)
+    const existingActivities = streamContainer.querySelectorAll('.activity-item');
+    existingActivities.forEach(item => item.remove());
+    
+    // Add new activities
+    activities.forEach(activity => {
+        const activityElement = createActivityElement(activity);
+        streamContainer.insertBefore(activityElement, streamContainer.firstChild);
+    });
+}
+
+// Create activity element
+function createActivityElement(activity) {
+    const div = document.createElement('div');
+    div.className = 'activity-item';
+    
+    const icon = getActivityIcon(activity.action);
+    const timestamp = formatTimestamp(activity.timestamp);
+    
+    div.innerHTML = `
+        <div class="activity-item-header">
+            <div class="activity-item-type">
+                <i class="ti ${icon}" style="font-size: 1.25rem; color: #3b82f6;"></i>
+                <span>${getActivityTitle(activity.action)}</span>
+            </div>
+            <div class="activity-item-time">${timestamp}</div>
+        </div>
+        <div class="activity-item-details">
+            ${activity.details?.details || 'Blockchain operation completed successfully'}
+        </div>
+        ${activity.details?.transaction_hash ? `
+            <div class="activity-item-hash">
+                TX: ${activity.details.transaction_hash.substring(0, 20)}...
+            </div>
+        ` : ''}
+    `;
+    
+    return div;
+}
+
+// Get activity icon based on action type
+function getActivityIcon(action) {
+    const icons = {
+        'blockchain_storage': 'ti-database-export',
+        'blockchain_verification': 'ti-shield-check',
+        'contract_created': 'ti-file-plus',
+        'contract_updated': 'ti-edit',
+        'contract_signed': 'ti-writing-sign',
+        'default': 'ti-activity'
+    };
+    return icons[action] || icons.default;
+}
+
+// Get activity title
+function getActivityTitle(action) {
+    const titles = {
+        'blockchain_storage': 'Contract Stored on Blockchain',
+        'blockchain_verification': 'Blockchain Verification',
+        'contract_created': 'Contract Created',
+        'contract_updated': 'Contract Updated',
+        'contract_signed': 'Contract Signed',
+        'default': 'Blockchain Activity'
+    };
+    return titles[action] || titles.default;
+}
+
+// Format timestamp
+function formatTimestamp(timestamp) {
+    if (!timestamp) return 'Just now';
+    
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+}
+
+// Update statistics
+function updateStatistics(stats) {
+    if (!stats) return;
+    
+    const totalTx = document.getElementById('totalTransactions');
+    const lastHash = document.getElementById('lastBlockHash');
+    const lastActivity = document.getElementById('lastActivityTime');
+    
+    if (totalTx) totalTx.textContent = stats.total_transactions || '0';
+    if (lastHash) lastHash.textContent = stats.last_block_hash ? `${stats.last_block_hash.substring(0, 16)}...` : 'N/A';
+    if (lastActivity) lastActivity.textContent = stats.last_activity_time || 'Just now';
+}
+
+// Show empty activity state
+function showEmptyActivityState() {
+    const emptyState = document.getElementById('emptyActivityState');
+    if (emptyState) {
+        emptyState.style.display = 'block';
+    }
+}
+
+// Show error state
+function showErrorState() {
+    const streamContainer = document.getElementById('activityStreamModal');
+    if (!streamContainer) return;
+    
+    streamContainer.innerHTML = `
+        <div style="text-align: center; padding: 3rem 1rem; color: #ef4444;">
+            <i class="ti ti-alert-circle" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+            <p style="margin: 0; font-size: 1rem; font-weight: 500;">Failed to load blockchain activity</p>
+            <p style="font-size: 0.875rem; margin-top: 0.5rem; opacity: 0.7;">
+                Please try refreshing or contact support
+            </p>
+        </div>
+    `;
+}
+
+// Refresh blockchain activity manually
+function refreshBlockchainActivity() {
+    loadBlockchainActivity();
+}
+
+// View full audit trail
+function viewFullAuditTrail() {
+    // Redirect to audit trail page or open in new tab
+    window.open('/audit-trail', '_blank');
+}
+
+// Get contract ID from URL or form
+function getContractId() {
+    // Try to get from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    let contractId = urlParams.get('contract_id');
+    
+    // If not in URL, try to get from form
+    if (!contractId) {
+        const contractIdInput = document.querySelector('[name="contract_id"]');
+        contractId = contractIdInput ? contractIdInput.value : null;
+    }
+    
+    return contractId;
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('blockchainMonitorModal');
+    if (event.target === modal) {
+        closeBlockchainMonitor();
+    }
+});
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeBlockchainMonitor();
+    }
+});
+
+
+function getApprovalBadge(current_approver, workflow) {
+    console.log();
+    const approver = current_approver;
+    const approverName = approver?.name || 'Approver';
+    const approvalType = approver?.step_type?.includes('review') ? 'Review' : 'Approval';
+    
+    return `<span class="comment-count-badge" style="background: rgb(255, 243, 205); color: rgb(133, 100, 4); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; display: inline-flex; gap: 6px;">
+        <i class="ti ti-clock"></i> Awaiting ${approverName} ${approvalType}
+    </span>`;
+}
 </script>
 
 {% endblock %}
