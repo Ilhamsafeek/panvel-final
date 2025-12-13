@@ -12,6 +12,7 @@ import logging
 import bcrypt
 import secrets
 
+
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 from app.models.user import User, Company
@@ -389,6 +390,67 @@ async def create_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create user: {str(e)}"
         )
+
+
+@router.get("/search")
+async def search_users(
+    email: Optional[str] = Query(None),
+    name: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Search users within the same company by email or name.
+    Used for obligation owner/escalation assignment.
+    """
+    try:
+        logger.info(f"🔍 Searching users: email={email}, name={name}")
+        
+        # Base query - only active users in same company
+        query = db.query(User).filter(
+            User.company_id == current_user.company_id,
+            User.is_active == True
+        )
+        
+        # Add email filter
+        if email:
+            query = query.filter(User.email.ilike(f"%{email}%"))
+            logger.info(f"  📧 Filtering by email: {email}")
+        
+        # Add name filter
+        if name:
+            query = query.filter(
+                or_(
+                    User.first_name.ilike(f"%{name}%"),
+                    User.last_name.ilike(f"%{name}%")
+                )
+            )
+            logger.info(f"  👤 Filtering by name: {name}")
+        
+        # Get results
+        users = query.order_by(User.first_name, User.last_name).limit(10).all()
+        
+        # Format response
+        results = []
+        for user in users:
+            results.append({
+                "id": user.id,
+                "email": user.email,
+                "first_name": user.first_name or "",
+                "last_name": user.last_name or "",
+                "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip(),
+                "role": getattr(user, 'user_role', None),
+                "department": getattr(user, 'department', None),
+                "job_title": getattr(user, 'job_title', None)
+            })
+        
+        logger.info(f"✅ Found {len(results)} users")
+        return results
+        
+    except Exception as e:
+        logger.error(f"❌ Error searching users: {str(e)}")
+        return []  # Return empty list instead of error to prevent UI break
+
 
 # =====================================================
 # EXISTING: GET USERS ENDPOINT (your original code)
