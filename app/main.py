@@ -29,8 +29,7 @@ from app.models import Base
 from app.models.user import User
 from app.api.api_v1.chatbot.routes import router as chatbot_router
 from app.api.api_v1.workflow import approval_router
-
-
+from app.api.api_v1.users import license as license_router
 # Configure logging FIRST
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -203,6 +202,13 @@ except ImportError:
 from app.api.api_v1.blockchain.router import router as blockchain_router
 
 
+try:
+    from app.api.api_v1.contracts.negotiation import router as negotiation_router
+    logger.info("✅ Negotiation router imported")
+except ImportError as e:
+    negotiation_router = None
+    logger.warning(f"⚠️ Negotiation router not found: {e}")
+
 
 # =====================================================
 # CREATE REQUIRED DIRECTORIES
@@ -347,6 +353,22 @@ app.include_router(
     prefix="/api/v1/workflow",
     tags=["workflow"]
 )
+
+if negotiation_router:
+    app.include_router(
+        negotiation_router,
+        prefix="/api/negotiation",
+        tags=["negotiation"]
+    )
+    logger.info("✅ Negotiation router registered at /api/negotiation")
+
+
+app.include_router(
+    license_router.router,
+    prefix="/api/v1/users",
+    tags=["license"]
+)
+
 
 logger.info("✅ Auth routers registered")
 

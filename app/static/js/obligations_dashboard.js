@@ -46,7 +46,7 @@ const API_BASE = '/api/obligations';
 // =============================================
 // INITIALIZATION
 // =============================================
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
     console.log('🚀 Initializing Obligations Dashboard...');
     await loadObligations();
     setupEventListeners();
@@ -57,11 +57,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 // =============================================
 function setupEventListeners() {
     let searchTimeout;
-    document.getElementById('searchInput').addEventListener('input', function(e) {
+    document.getElementById('searchInput').addEventListener('input', function (e) {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => handleSearch(e), 300);
     });
-    
+
     document.getElementById('statusFilter').addEventListener('change', handleFilter);
     document.getElementById('priorityFilter').addEventListener('change', handleFilter);
 }
@@ -72,15 +72,22 @@ function setupEventListeners() {
 async function loadObligations() {
     try {
         showLoading(true);
-        
+
+        console.log('📡 Fetching obligations from API...');
+
+        // Fetch obligations and stats in parallel
         const [obligationsResponse, statsResponse] = await Promise.all([
             fetch(`${API_BASE}/all`, {
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             }),
             fetch(`${API_BASE}/stats`, {
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' }
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             })
         ]);
 
@@ -88,47 +95,83 @@ async function loadObligations() {
             throw new Error(`HTTP error! status: ${obligationsResponse.status}`);
         }
 
+        if (!statsResponse.ok) {
+            console.warn('Stats API failed, continuing with obligations only');
+        }
+
         const obligationsResult = await obligationsResponse.json();
-        const statsResult = await statsResponse.json();
+        const statsResult = statsResponse.ok ? await statsResponse.json() : {};
 
-        obligationsData = obligationsResult.data || [];
+        console.log('📦 Raw API response:', {
+            obligations: obligationsResult,
+            stats: statsResult
+        });
+
+        // FIXED: Handle both direct array and wrapped {data: [...]} formats
+        obligationsData = Array.isArray(obligationsResult)
+            ? obligationsResult
+            : (obligationsResult.data || []);
+
         filteredData = [...obligationsData];
-        currentStats = statsResult.data || {};
 
+        // FIXED: Stats are returned directly, not wrapped
+        currentStats = statsResult;
+
+        console.log('✅ Data loaded:', {
+            obligations: obligationsData.length,
+            stats: currentStats
+        });
+
+        // Update UI
         updateStats();
         renderTable();
-        
-        showToast(`Loaded ${obligationsData.length} obligations`, 'success');
+
+        showToast(`Loaded ${obligationsData.length} obligations successfully`, 'success');
 
     } catch (error) {
         console.error('❌ Error loading obligations:', error);
         showToast('Failed to load obligations: ' + error.message, 'error');
-        
+
+        // Show error in table
         const tbody = document.getElementById('obligationsTableBody');
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align: center; padding: 2rem; color: var(--danger-color);">
-                    <i class="ti ti-alert-circle" style="font-size: 2rem;"></i>
-                    <div style="margin-top: 0.5rem;">Failed to load obligations</div>
-                    <button class="btn btn-primary" style="margin-top: 1rem;" onclick="loadObligations()">
-                        <i class="ti ti-refresh"></i> Retry
-                    </button>
-                </td>
-            </tr>
-        `;
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 2rem; color: var(--danger-color);">
+                        <i class="ti ti-alert-circle" style="font-size: 2rem;"></i>
+                        <div style="margin-top: 0.5rem;">Failed to load obligations</div>
+                        <div style="font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem;">
+                            ${error.message}
+                        </div>
+                        <button class="btn btn-primary" style="margin-top: 1rem;" onclick="loadObligations()">
+                            <i class="ti ti-refresh"></i> Retry
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
     } finally {
         showLoading(false);
     }
 }
-
 // =============================================
 // UPDATE STATISTICS
 // =============================================
 function updateStats() {
-    document.getElementById('statTotal').textContent = currentStats.total || 0;
-    document.getElementById('statInProgress').textContent = currentStats.in_progress || 0;
-    document.getElementById('statCompleted').textContent = currentStats.completed || 0;
-    document.getElementById('statOverdue').textContent = currentStats.overdue || 0;
+    console.log('📊 Updating stats display:', currentStats);
+
+    // Handle both wrapped and direct stats formats
+    const stats = currentStats.data || currentStats;
+
+    const totalEl = document.getElementById('statTotal');
+    const inProgressEl = document.getElementById('statInProgress');
+    const completedEl = document.getElementById('statCompleted');
+    const overdueEl = document.getElementById('statOverdue');
+
+    if (totalEl) totalEl.textContent = stats.total || 0;
+    if (inProgressEl) inProgressEl.textContent = stats.pending || 0;
+    if (completedEl) completedEl.textContent = stats.completed || 0;
+    if (overdueEl) overdueEl.textContent = stats.overdue || 0;
 }
 
 // =============================================
@@ -136,7 +179,7 @@ function updateStats() {
 // =============================================
 function renderTable() {
     const tbody = document.getElementById('obligationsTableBody');
-    
+
     if (filteredData.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -152,15 +195,15 @@ function renderTable() {
     tbody.innerHTML = filteredData.map((obligation, index) => {
         const dueDate = obligation.due_date ? new Date(obligation.due_date) : null;
         const daysUntilDue = obligation.days_until_due;
-        
-        const dateClass = obligation.is_overdue ? 'danger' : 
-                         (daysUntilDue !== null && daysUntilDue <= 7) ? 'warning' : '';
-        
-        const dateLabel = obligation.is_overdue ? `${Math.abs(daysUntilDue)} days overdue` :
-                         daysUntilDue === 0 ? 'Due today' :
-                         daysUntilDue !== null ? `In ${daysUntilDue} days` : '';
 
-        const ownerInitials = obligation.owner_name ? 
+        const dateClass = obligation.is_overdue ? 'danger' :
+            (daysUntilDue !== null && daysUntilDue <= 7) ? 'warning' : '';
+
+        const dateLabel = obligation.is_overdue ? `${Math.abs(daysUntilDue)} days overdue` :
+            daysUntilDue === 0 ? 'Due today' :
+                daysUntilDue !== null ? `In ${daysUntilDue} days` : '';
+
+        const ownerInitials = obligation.owner_name ?
             obligation.owner_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'UN';
 
         const sourceType = obligation.is_ai_generated ? 'ai' : obligation.is_preset ? 'preset' : 'manual';
@@ -226,13 +269,13 @@ function renderTable() {
 // =============================================
 function handleSearch(e) {
     const searchTerm = e.target.value.toLowerCase();
-    
+
     filteredData = obligationsData.filter(obligation => {
         return obligation.obligation_title?.toLowerCase().includes(searchTerm) ||
-               obligation.description?.toLowerCase().includes(searchTerm) ||
-               obligation.owner_name?.toLowerCase().includes(searchTerm);
+            obligation.description?.toLowerCase().includes(searchTerm) ||
+            obligation.owner_name?.toLowerCase().includes(searchTerm);
     });
-    
+
     applyFilters();
 }
 
@@ -244,28 +287,28 @@ function applyFilters() {
     const statusFilter = document.getElementById('statusFilter').value;
     const priorityFilter = document.getElementById('priorityFilter').value;
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
+
     filteredData = obligationsData.filter(obligation => {
-        const statusMatch = statusFilter === 'all' || obligation.status === statusFilter || 
-                           (statusFilter === 'overdue' && obligation.is_overdue);
-        
+        const statusMatch = statusFilter === 'all' || obligation.status === statusFilter ||
+            (statusFilter === 'overdue' && obligation.is_overdue);
+
         const priorityMatch = priorityFilter === 'all' || obligation.priority === priorityFilter;
-        
-        const searchMatch = !searchTerm || 
-                          obligation.obligation_title?.toLowerCase().includes(searchTerm) ||
-                          obligation.description?.toLowerCase().includes(searchTerm) ||
-                          obligation.owner_name?.toLowerCase().includes(searchTerm);
-        
+
+        const searchMatch = !searchTerm ||
+            obligation.obligation_title?.toLowerCase().includes(searchTerm) ||
+            obligation.description?.toLowerCase().includes(searchTerm) ||
+            obligation.owner_name?.toLowerCase().includes(searchTerm);
+
         return statusMatch && priorityMatch && searchMatch;
     });
-    
+
     renderTable();
 }
 
 function filterByStatus(status) {
     document.getElementById('statusFilter').value = status;
     handleFilter();
-    
+
     const title = document.getElementById('tableTitle');
     if (status === 'all') {
         title.textContent = 'All Obligations';
@@ -329,23 +372,23 @@ function addObligationFromPreset() {
             </div>
         </div>
     `;
-    
+
     document.getElementById('presetModalContainer').innerHTML = modalHTML;
 }
 
-window.closePresetModal = function() {
+window.closePresetModal = function () {
     document.getElementById('presetModalContainer').innerHTML = '';
 };
 
-window.selectPreset = async function(index) {
+window.selectPreset = async function (index) {
     const allPresets = getAllPresetObligations();
     const preset = allPresets[index];
-    
+
     closePresetModal();
-    
+
     try {
         showLoading(true);
-        
+
         const payload = {
             contract_id: null,
             obligation_title: preset.title,
@@ -360,18 +403,18 @@ window.selectPreset = async function(index) {
             is_ai_generated: false,
             is_preset: true
         };
-        
+
         const response = await fetch(`${API_BASE}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
         });
-        
+
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
+
         showToast('Preset obligation added!', 'success');
         await loadObligations();
-        
+
     } catch (error) {
         console.error('❌ Save error:', error);
         showToast(`Save failed: ${error.message}`, 'error');
@@ -385,22 +428,22 @@ window.selectPreset = async function(index) {
 // =============================================
 async function saveCustomObligation(event) {
     event.preventDefault();
-    
+
     const title = document.getElementById('obligationTitle').value.trim();
     const description = document.getElementById('obligationDescription').value.trim();
     const category = document.getElementById('obligationCategory').value;
     const priority = document.getElementById('obligationPriority').value;
-    
+
     if (!title || !description) {
         showToast('Fill all required fields', 'error');
         return;
     }
-    
+
     closeObligationModal();
-    
+
     try {
         showLoading(true);
-        
+
         const obligationData = {
             contract_id: null,
             obligation_title: title,
@@ -415,21 +458,21 @@ async function saveCustomObligation(event) {
             is_ai_generated: false,
             is_preset: false
         };
-        
+
         const response = await fetch(`${API_BASE}/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(obligationData)
         });
-        
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
         }
-        
+
         showToast('Custom obligation created!', 'success');
         await loadObligations();
-        
+
     } catch (error) {
         console.error('❌ Save error:', error);
         showToast(`Save failed: ${error.message}`, 'error');
@@ -446,10 +489,10 @@ async function generateObligationsAI() {
         const generateBtn = document.getElementById('generateAIBtn');
         generateBtn.disabled = true;
         generateBtn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i><span>Analyzing...</span>';
-        
+
         // Simulate AI generation (replace with actual API call)
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         aiGeneratedObligations = [
             {
                 id: 'ai_1',
@@ -502,11 +545,11 @@ async function generateObligationsAI() {
                 selected: false
             }
         ];
-        
+
         hasGeneratedAI = true;
         displayAIObligations();
         showToast(`AI extracted ${aiGeneratedObligations.length} obligations`, 'success');
-        
+
     } catch (error) {
         console.error('❌ AI generation error:', error);
         showToast('AI generation failed: ' + error.message, 'error');
@@ -519,7 +562,7 @@ async function generateObligationsAI() {
 
 function displayAIObligations() {
     const aiList = document.getElementById('aiObligationsList');
-    
+
     aiList.innerHTML = aiGeneratedObligations.map((obligation, index) => `
         <div class="ai-obligation-item" onclick="toggleAIObligationSelection(${index})">
             <div class="ai-obligation-header">
@@ -548,14 +591,14 @@ function displayAIObligations() {
             </div>
         </div>
     `).join('');
-    
+
     document.getElementById('aiObligationsModal').classList.add('active');
 }
 
 function toggleAIObligationSelection(index) {
     const checkbox = document.getElementById(`ai-checkbox-${index}`);
     checkbox.checked = !checkbox.checked;
-    
+
     const item = checkbox.closest('.ai-obligation-item');
     if (checkbox.checked) {
         item.classList.add('selected');
@@ -568,39 +611,39 @@ function toggleAIObligationSelection(index) {
 
 function editAIObligation(index) {
     const obligation = aiGeneratedObligations[index];
-    
+
     document.getElementById('editAIObligationIndex').value = index;
     document.getElementById('editAIObligationTitle').value = obligation.title;
     document.getElementById('editAIObligationDescription').value = obligation.description;
     document.getElementById('editAIObligationCategory').value = obligation.category;
     document.getElementById('editAIObligationPriority').value = obligation.priority || 'medium';
     document.getElementById('editAIObligationClause').value = obligation.clause_reference || 'N/A';
-    
+
     document.getElementById('editAIObligationModal').classList.add('active');
 }
 
 function saveEditedAIObligation(event) {
     event.preventDefault();
-    
+
     const index = parseInt(document.getElementById('editAIObligationIndex').value);
     const title = document.getElementById('editAIObligationTitle').value.trim();
     const description = document.getElementById('editAIObligationDescription').value.trim();
     const category = document.getElementById('editAIObligationCategory').value;
     const priority = document.getElementById('editAIObligationPriority').value;
-    
+
     if (!title || !description) {
         showToast('Fill all required fields', 'error');
         return;
     }
-    
+
     aiGeneratedObligations[index].title = title;
     aiGeneratedObligations[index].description = description;
     aiGeneratedObligations[index].category = category;
     aiGeneratedObligations[index].priority = priority;
-    
+
     closeEditAIModal();
     displayAIObligations();
-    
+
     setTimeout(() => {
         const checkbox = document.getElementById(`ai-checkbox-${index}`);
         if (checkbox) {
@@ -609,25 +652,25 @@ function saveEditedAIObligation(event) {
             if (wasSelected) checkbox.checked = true;
         }
     }, 100);
-    
+
     showToast('AI obligation updated', 'success');
 }
 
 async function addSelectedObligations() {
     const selectedObligations = aiGeneratedObligations.filter(o => o.selected);
-    
+
     if (selectedObligations.length === 0) {
         showToast('Select at least one obligation', 'warning');
         return;
     }
-    
+
     closeAIModal();
-    
+
     try {
         showLoading(true);
-        
+
         let successCount = 0;
-        
+
         for (const obligation of selectedObligations) {
             try {
                 const obligationData = {
@@ -643,25 +686,25 @@ async function addSelectedObligations() {
                     status: "initiated",
                     is_ai_generated: true
                 };
-                
+
                 const response = await fetch(`${API_BASE}/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(obligationData)
                 });
-                
+
                 if (response.ok) successCount++;
-                
+
             } catch (error) {
                 console.error('Error adding obligation:', error);
             }
         }
-        
+
         if (successCount > 0) {
             showToast(`Added ${successCount} obligation(s)`, 'success');
             await loadObligations();
         }
-        
+
     } catch (error) {
         console.error('Error adding obligations:', error);
         showToast('Error adding obligations', 'error');
@@ -676,22 +719,22 @@ async function addSelectedObligations() {
 function viewObligation(id) {
     const obligation = obligationsData.find(o => o.id === id);
     if (!obligation) return;
-    
+
     alert(`View Obligation: ${obligation.obligation_title}\n\nDescription: ${obligation.description || 'N/A'}\nStatus: ${obligation.status}\nOwner: ${obligation.owner_name || 'Unassigned'}`);
 }
 
 async function deleteObligation(id) {
     if (!confirm('Delete this obligation?')) return;
-    
+
     try {
         showLoading(true);
-        
+
         const response = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        
+
         showToast('Deleted successfully', 'success');
         await loadObligations();
-        
+
     } catch (error) {
         console.error('Error deleting:', error);
         showToast('Delete failed', 'error');
@@ -734,10 +777,10 @@ function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     const toastMessage = document.getElementById('toastMessage');
     const toastIcon = toast.querySelector('.toast-icon');
-    
+
     toastMessage.textContent = message;
     toast.className = `toast ${type} show`;
-    
+
     const icons = {
         success: 'check-circle',
         error: 'alert-circle',
@@ -745,7 +788,7 @@ function showToast(message, type = 'success') {
         info: 'info-circle'
     };
     toastIcon.className = `toast-icon ti ti-${icons[type]}`;
-    
+
     setTimeout(() => toast.classList.remove('show'), 3000);
 }
 

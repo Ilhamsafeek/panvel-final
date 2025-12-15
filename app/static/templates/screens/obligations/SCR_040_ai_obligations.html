@@ -74,7 +74,6 @@
     }
 
     .btn {
-        padding: 0.75rem 1.5rem;
         border-radius: 8px;
         font-weight: 500;
         border: none;
@@ -448,7 +447,9 @@
     }
 
     @keyframes spin {
-        to { transform: rotate(360deg); }
+        to {
+            transform: rotate(360deg);
+        }
     }
 
     .info-box {
@@ -531,6 +532,7 @@
             transform: translateX(400px);
             opacity: 0;
         }
+
         to {
             transform: translateX(0);
             opacity: 1;
@@ -686,8 +688,10 @@
 
     <!-- Existing Obligations Section -->
     <div id="existingObligationsSection" style="display: none;">
-        <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);">
-            <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <div
+            style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);">
+            <h3
+                style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
                 <i class="ti ti-list-check"></i>
                 Existing Obligations
             </h3>
@@ -708,12 +712,14 @@
 <!-- AI Obligations Modal -->
 <div class="modal" id="aiObligationsModal">
     <div class="modal-content" style="max-width: 1200px;">
-        <div class="modal-header" style="position: sticky; top: 0; z-index: 10; background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+        <div class="modal-header"
+            style="position: sticky; top: 0; z-index: 10; background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
             <h3 class="modal-title" style="color: white;">
                 <i class="ti ti-sparkles"></i>
                 AI-Generated Obligations
             </h3>
-            <button class="modal-close" style="color: white; border-color: rgba(255,255,255,0.3);" onclick="closeAIModal()">
+            <button class="modal-close" style="color: white; border-color: rgba(255,255,255,0.3);"
+                onclick="closeAIModal()">
                 <i class="ti ti-x"></i>
             </button>
         </div>
@@ -723,13 +729,14 @@
                 <div>
                     <strong>Review AI-Generated Obligations</strong>
                     <p style="margin: 0.5rem 0 0 0; color: var(--text-muted);">
-                        Click on cards to select/deselect. Click the edit icon to assign owners, set dates, or modify details.
+                        Click on cards to select/deselect. Click the edit icon to assign owners, set dates, or modify
+                        details.
                     </p>
                 </div>
             </div>
-            
+
             <div id="aiObligationsGrid"></div>
-            
+
             <div class="summary-section">
                 <div class="summary-row">
                     <span class="summary-label">Selected Obligations:</span>
@@ -740,7 +747,8 @@
                 </div>
             </div>
         </div>
-        <div class="modal-footer" style="position: sticky; bottom: 0; background: white; border-top: 1px solid var(--border-color);">
+        <div class="modal-footer"
+            style="position: sticky; bottom: 0; background: white; border-top: 1px solid var(--border-color);">
             <button class="btn btn-secondary" onclick="closeAIModal()">
                 <i class="ti ti-x"></i> Cancel
             </button>
@@ -803,12 +811,9 @@
                 <div class="form-group">
                     <label class="form-label">Owner (Search by Email)</label>
                     <div class="user-search-container">
-                        <input type="text" 
-                               class="form-control" 
-                               id="ownerSearch" 
-                               placeholder="Type email to search users..."
-                               oninput="searchUsers('owner')"
-                               autocomplete="off">
+                        <input type="text" class="form-control" id="ownerSearch"
+                            placeholder="Type email to search users..." oninput="searchUsers('owner')"
+                            autocomplete="off">
                         <div class="user-suggestions" id="ownerSuggestions"></div>
                     </div>
                     <div id="selectedOwner" style="display: none;"></div>
@@ -817,12 +822,9 @@
                 <div class="form-group">
                     <label class="form-label">Escalation To (Search by Email)</label>
                     <div class="user-search-container">
-                        <input type="text" 
-                               class="form-control" 
-                               id="escalationSearch" 
-                               placeholder="Type email to search users..."
-                               oninput="searchUsers('escalation')"
-                               autocomplete="off">
+                        <input type="text" class="form-control" id="escalationSearch"
+                            placeholder="Type email to search users..." oninput="searchUsers('escalation')"
+                            autocomplete="off">
                         <div class="user-suggestions" id="escalationSuggestions"></div>
                     </div>
                     <div id="selectedEscalation" style="display: none;"></div>
@@ -911,12 +913,9 @@
                 <div class="form-group">
                     <label class="form-label">Owner (Search by Email)</label>
                     <div class="user-search-container">
-                        <input type="text" 
-                               class="form-control" 
-                               id="newOwnerSearch" 
-                               placeholder="Type email to search users..."
-                               oninput="searchUsersNew('owner')"
-                               autocomplete="off">
+                        <input type="text" class="form-control" id="newOwnerSearch"
+                            placeholder="Type email to search users..." oninput="searchUsersNew('owner')"
+                            autocomplete="off">
                         <div class="user-suggestions" id="newOwnerSuggestions"></div>
                     </div>
                     <div id="newSelectedOwner" style="display: none;"></div>
@@ -925,12 +924,9 @@
                 <div class="form-group">
                     <label class="form-label">Escalation To (Search by Email)</label>
                     <div class="user-search-container">
-                        <input type="text" 
-                               class="form-control" 
-                               id="newEscalationSearch" 
-                               placeholder="Type email to search users..."
-                               oninput="searchUsersNew('escalation')"
-                               autocomplete="off">
+                        <input type="text" class="form-control" id="newEscalationSearch"
+                            placeholder="Type email to search users..." oninput="searchUsersNew('escalation')"
+                            autocomplete="off">
                         <div class="user-suggestions" id="newEscalationSuggestions"></div>
                     </div>
                     <div id="newSelectedEscalation" style="display: none;"></div>
@@ -963,12 +959,14 @@
 <!-- Preset Obligations Modal -->
 <div class="modal" id="presetModal">
     <div class="modal-content" style="max-width: 1000px;">
-        <div class="modal-header" style="position: sticky; top: 0; z-index: 10; background: linear-gradient(135deg, #10b981, #059669); color: white;">
+        <div class="modal-header"
+            style="position: sticky; top: 0; z-index: 10; background: linear-gradient(135deg, #10b981, #059669); color: white;">
             <h3 class="modal-title" style="color: white;">
                 <i class="ti ti-template"></i>
                 Preset Obligations Templates
             </h3>
-            <button class="modal-close" style="color: white; border-color: rgba(255,255,255,0.3);" onclick="closePresetModal()">
+            <button class="modal-close" style="color: white; border-color: rgba(255,255,255,0.3);"
+                onclick="closePresetModal()">
                 <i class="ti ti-x"></i>
             </button>
         </div>
@@ -978,13 +976,15 @@
                 <div>
                     <strong>Select Preset Obligations</strong>
                     <p style="margin: 0.5rem 0 0 0; color: var(--text-muted);">
-                        These are common obligations based on your contract type. Select the ones you need and they'll be added to your contract.
+                        These are common obligations based on your contract type. Select the ones you need and they'll
+                        be added to your contract.
                     </p>
                 </div>
             </div>
 
             <!-- Profile Type Tabs -->
-            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-color); overflow-x: auto;">
+            <div
+                style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 2px solid var(--border-color); overflow-x: auto;">
                 <button class="preset-tab active" data-profile="client" onclick="switchPresetProfile('client')">
                     Client
                 </button>
@@ -994,7 +994,8 @@
                 <button class="preset-tab" data-profile="contractor" onclick="switchPresetProfile('contractor')">
                     Contractor
                 </button>
-                <button class="preset-tab" data-profile="sub_contractor" onclick="switchPresetProfile('sub_contractor')">
+                <button class="preset-tab" data-profile="sub_contractor"
+                    onclick="switchPresetProfile('sub_contractor')">
                     Sub-Contractor
                 </button>
             </div>
@@ -1006,7 +1007,8 @@
 
             <div class="modal-footer">
                 <div style="flex: 1;">
-                    <span id="presetSelectedCount" style="font-weight: 600; color: var(--primary-color);">0 selected</span>
+                    <span id="presetSelectedCount" style="font-weight: 600; color: var(--primary-color);">0
+                        selected</span>
                 </div>
                 <button class="btn btn-secondary" onclick="closePresetModal()">
                     <i class="ti ti-x"></i> Cancel
@@ -1015,13 +1017,19 @@
                     <i class="ti ti-check"></i> Add Selected Presets
                 </button>
             </div>
+
+
         </div>
     </div>
 </div>
 
 <!-- Loading Overlay -->
 <div class="loading-overlay" id="loadingOverlay">
-    <div class="spinner"></div>
+    <div class="loading-content">
+        <div class="spinner"></div>
+        <p id="loadingMessage">Processing...</p>
+        <small id="loadingSubtext"></small>
+    </div>
 </div>
 
 <!-- Toast Notification -->
@@ -1031,248 +1039,248 @@
 </div>
 
 <script>
-// =====================================================
-// GLOBAL VARIABLES
-// =====================================================
-const contractId = {{ contract_id }};
-let aiObligations = [];
-let selectedObligations = new Set();
-let currentEditIndex = null;
-let selectedOwner = null;
-let selectedEscalation = null;
-let newSelectedOwner = null;
-let newSelectedEscalation = null;
-let searchTimeout = null;
-let existingObligations = [];
-let currentPresetProfile = 'client';
-let selectedPresets = new Set();
+    // =====================================================
+    // GLOBAL VARIABLES
+    // =====================================================
+    const contractId = {{ contract_id }};
+    let aiObligations = [];
+    let selectedObligations = new Set();
+    let currentEditIndex = null;
+    let selectedOwner = null;
+    let selectedEscalation = null;
+    let newSelectedOwner = null;
+    let newSelectedEscalation = null;
+    let searchTimeout = null;
+    let existingObligations = [];
+    let currentPresetProfile = 'client';
+    let selectedPresets = new Set();
 
-// Preset Obligations Templates
-const presetObligations = {
-    client: [
-        {
-            id: 'client_1',
-            title: 'Payment',
-            description: 'Timely payment for the work completed as per the agreed terms.',
-            category: 'payment',
-            priority: 'high'
-        },
-        {
-            id: 'client_2',
-            title: 'Provision of Information',
-            description: 'Provide necessary information and resources for the contractor to complete the work.',
-            category: 'coordination',
-            priority: 'medium'
-        },
-        {
-            id: 'client_3',
-            title: 'Coordination',
-            description: 'Facilitate coordination with other contractors or stakeholders as needed.',
-            category: 'coordination',
-            priority: 'medium'
-        },
-        {
-            id: 'client_4',
-            title: 'Inspection and Acceptance',
-            description: 'Conduct inspections of the work and accept it according to the agreement terms.',
-            category: 'inspection',
-            priority: 'high'
-        },
-        {
-            id: 'client_5',
-            title: 'Access to Site',
-            description: 'Provide timely access to work site and necessary facilities.',
-            category: 'coordination',
-            priority: 'high'
-        }
-    ],
-    consultant: [
-        {
-            id: 'consultant_1',
-            title: 'Professional Services Delivery',
-            description: 'Deliver professional consulting services as per the scope of work.',
-            category: 'delivery',
-            priority: 'high'
-        },
-        {
-            id: 'consultant_2',
-            title: 'Progress Reporting',
-            description: 'Submit regular progress reports and updates to the client.',
-            category: 'reporting',
-            priority: 'medium'
-        },
-        {
-            id: 'consultant_3',
-            title: 'Professional Indemnity Insurance',
-            description: 'Maintain adequate professional indemnity insurance coverage.',
-            category: 'insurance',
-            priority: 'high'
-        },
-        {
-            id: 'consultant_4',
-            title: 'Quality Assurance',
-            description: 'Ensure all deliverables meet agreed quality standards.',
-            category: 'compliance',
-            priority: 'high'
-        },
-        {
-            id: 'consultant_5',
-            title: 'Confidentiality',
-            description: 'Maintain confidentiality of client information and project details.',
-            category: 'compliance',
-            priority: 'high'
-        }
-    ],
-    contractor: [
-        {
-            id: 'contractor_1',
-            title: 'Performance of Work',
-            description: 'Complete the specified work as detailed in the agreement.',
-            category: 'delivery',
-            priority: 'high'
-        },
-        {
-            id: 'contractor_2',
-            title: 'Adherence to Standards',
-            description: 'Meet industry standards and any specific quality requirements.',
-            category: 'compliance',
-            priority: 'high'
-        },
-        {
-            id: 'contractor_3',
-            title: 'Compliance with Laws',
-            description: 'Follow all applicable laws, regulations, and safety standards.',
-            category: 'compliance',
-            priority: 'high'
-        },
-        {
-            id: 'contractor_4',
-            title: 'Timely Completion',
-            description: 'Deliver work within the agreed timeline and notify of any potential delays.',
-            category: 'delivery',
-            priority: 'high'
-        },
-        {
-            id: 'contractor_5',
-            title: 'Progress Reporting',
-            description: 'Provide regular updates on progress and any issues encountered.',
-            category: 'reporting',
-            priority: 'medium'
-        },
-        {
-            id: 'contractor_6',
-            title: 'Insurance Coverage',
-            description: 'Maintain appropriate insurance coverage (liability, workers compensation, etc.).',
-            category: 'insurance',
-            priority: 'high'
-        },
-        {
-            id: 'contractor_7',
-            title: 'Performance Bond',
-            description: 'Provide and maintain performance bond as per contractual requirements.',
-            category: 'insurance',
-            priority: 'high'
-        }
-    ],
-    sub_contractor: [
-        {
-            id: 'sub_1',
-            title: 'Performance of Work',
-            description: 'Complete the specified work as detailed in the agreement.',
-            category: 'delivery',
-            priority: 'high'
-        },
-        {
-            id: 'sub_2',
-            title: 'Adherence to Standards',
-            description: 'Meet industry standards and any specific quality requirements.',
-            category: 'compliance',
-            priority: 'high'
-        },
-        {
-            id: 'sub_3',
-            title: 'Compliance with Laws',
-            description: 'Follow all applicable laws, regulations, and safety standards.',
-            category: 'compliance',
-            priority: 'high'
-        },
-        {
-            id: 'sub_4',
-            title: 'Timely Completion',
-            description: 'Deliver work within the agreed timeline and notify of any potential delays.',
-            category: 'delivery',
-            priority: 'high'
-        },
-        {
-            id: 'sub_5',
-            title: 'Reporting',
-            description: 'Provide regular updates on progress and any issues encountered.',
-            category: 'reporting',
-            priority: 'medium'
-        },
-        {
-            id: 'sub_6',
-            title: 'Subcontracting Limits',
-            description: 'Not subcontract further without the primary contractor\'s consent.',
-            category: 'compliance',
-            priority: 'high'
-        },
-        {
-            id: 'sub_7',
-            title: 'Insurance',
-            description: 'Maintain appropriate insurance coverage (liability, workers\' compensation, etc.).',
-            category: 'insurance',
-            priority: 'high'
-        },
-        {
-            id: 'sub_8',
-            title: 'Indemnification',
-            description: 'Hold the primary contractor harmless from any claims arising from the subcontractor\'s work.',
-            category: 'compliance',
-            priority: 'high'
-        },
-        {
-            id: 'sub_9',
-            title: 'Payment Terms',
-            description: 'Comply with the agreed payment terms and conditions.',
-            category: 'payment',
-            priority: 'high'
-        },
-        {
-            id: 'sub_10',
-            title: 'Compliance with Contractual Terms',
-            description: 'Ensure that the overall project complies with the terms of the main contract with client in back to back basis.',
-            category: 'compliance',
-            priority: 'high'
-        }
-    ]
-};
-
-// =====================================================
-// INITIALIZATION
-// =====================================================
-document.addEventListener('DOMContentLoaded', function() {
-    loadContractDetails();
-    loadExistingObligations();
-});
-
-// =====================================================
-// CONTRACT DETAILS
-// =====================================================
-async function loadContractDetails() {
-    try {
-        const response = await fetch(`/api/contracts/${contractId}`, {
-            headers: {
-                'Content-Type': 'application/json'
+    // Preset Obligations Templates
+    const presetObligations = {
+        client: [
+            {
+                id: 'client_1',
+                title: 'Payment',
+                description: 'Timely payment for the work completed as per the agreed terms.',
+                category: 'payment',
+                priority: 'high'
+            },
+            {
+                id: 'client_2',
+                title: 'Provision of Information',
+                description: 'Provide necessary information and resources for the contractor to complete the work.',
+                category: 'coordination',
+                priority: 'medium'
+            },
+            {
+                id: 'client_3',
+                title: 'Coordination',
+                description: 'Facilitate coordination with other contractors or stakeholders as needed.',
+                category: 'coordination',
+                priority: 'medium'
+            },
+            {
+                id: 'client_4',
+                title: 'Inspection and Acceptance',
+                description: 'Conduct inspections of the work and accept it according to the agreement terms.',
+                category: 'inspection',
+                priority: 'high'
+            },
+            {
+                id: 'client_5',
+                title: 'Access to Site',
+                description: 'Provide timely access to work site and necessary facilities.',
+                category: 'coordination',
+                priority: 'high'
             }
-        });
+        ],
+        consultant: [
+            {
+                id: 'consultant_1',
+                title: 'Professional Services Delivery',
+                description: 'Deliver professional consulting services as per the scope of work.',
+                category: 'delivery',
+                priority: 'high'
+            },
+            {
+                id: 'consultant_2',
+                title: 'Progress Reporting',
+                description: 'Submit regular progress reports and updates to the client.',
+                category: 'reporting',
+                priority: 'medium'
+            },
+            {
+                id: 'consultant_3',
+                title: 'Professional Indemnity Insurance',
+                description: 'Maintain adequate professional indemnity insurance coverage.',
+                category: 'insurance',
+                priority: 'high'
+            },
+            {
+                id: 'consultant_4',
+                title: 'Quality Assurance',
+                description: 'Ensure all deliverables meet agreed quality standards.',
+                category: 'compliance',
+                priority: 'high'
+            },
+            {
+                id: 'consultant_5',
+                title: 'Confidentiality',
+                description: 'Maintain confidentiality of client information and project details.',
+                category: 'compliance',
+                priority: 'high'
+            }
+        ],
+        contractor: [
+            {
+                id: 'contractor_1',
+                title: 'Performance of Work',
+                description: 'Complete the specified work as detailed in the agreement.',
+                category: 'delivery',
+                priority: 'high'
+            },
+            {
+                id: 'contractor_2',
+                title: 'Adherence to Standards',
+                description: 'Meet industry standards and any specific quality requirements.',
+                category: 'compliance',
+                priority: 'high'
+            },
+            {
+                id: 'contractor_3',
+                title: 'Compliance with Laws',
+                description: 'Follow all applicable laws, regulations, and safety standards.',
+                category: 'compliance',
+                priority: 'high'
+            },
+            {
+                id: 'contractor_4',
+                title: 'Timely Completion',
+                description: 'Deliver work within the agreed timeline and notify of any potential delays.',
+                category: 'delivery',
+                priority: 'high'
+            },
+            {
+                id: 'contractor_5',
+                title: 'Progress Reporting',
+                description: 'Provide regular updates on progress and any issues encountered.',
+                category: 'reporting',
+                priority: 'medium'
+            },
+            {
+                id: 'contractor_6',
+                title: 'Insurance Coverage',
+                description: 'Maintain appropriate insurance coverage (liability, workers compensation, etc.).',
+                category: 'insurance',
+                priority: 'high'
+            },
+            {
+                id: 'contractor_7',
+                title: 'Performance Bond',
+                description: 'Provide and maintain performance bond as per contractual requirements.',
+                category: 'insurance',
+                priority: 'high'
+            }
+        ],
+        sub_contractor: [
+            {
+                id: 'sub_1',
+                title: 'Performance of Work',
+                description: 'Complete the specified work as detailed in the agreement.',
+                category: 'delivery',
+                priority: 'high'
+            },
+            {
+                id: 'sub_2',
+                title: 'Adherence to Standards',
+                description: 'Meet industry standards and any specific quality requirements.',
+                category: 'compliance',
+                priority: 'high'
+            },
+            {
+                id: 'sub_3',
+                title: 'Compliance with Laws',
+                description: 'Follow all applicable laws, regulations, and safety standards.',
+                category: 'compliance',
+                priority: 'high'
+            },
+            {
+                id: 'sub_4',
+                title: 'Timely Completion',
+                description: 'Deliver work within the agreed timeline and notify of any potential delays.',
+                category: 'delivery',
+                priority: 'high'
+            },
+            {
+                id: 'sub_5',
+                title: 'Reporting',
+                description: 'Provide regular updates on progress and any issues encountered.',
+                category: 'reporting',
+                priority: 'medium'
+            },
+            {
+                id: 'sub_6',
+                title: 'Subcontracting Limits',
+                description: 'Not subcontract further without the primary contractor\'s consent.',
+                category: 'compliance',
+                priority: 'high'
+            },
+            {
+                id: 'sub_7',
+                title: 'Insurance',
+                description: 'Maintain appropriate insurance coverage (liability, workers\' compensation, etc.).',
+                category: 'insurance',
+                priority: 'high'
+            },
+            {
+                id: 'sub_8',
+                title: 'Indemnification',
+                description: 'Hold the primary contractor harmless from any claims arising from the subcontractor\'s work.',
+                category: 'compliance',
+                priority: 'high'
+            },
+            {
+                id: 'sub_9',
+                title: 'Payment Terms',
+                description: 'Comply with the agreed payment terms and conditions.',
+                category: 'payment',
+                priority: 'high'
+            },
+            {
+                id: 'sub_10',
+                title: 'Compliance with Contractual Terms',
+                description: 'Ensure that the overall project complies with the terms of the main contract with client in back to back basis.',
+                category: 'compliance',
+                priority: 'high'
+            }
+        ]
+    };
 
-        if (!response.ok) throw new Error('Failed to load contract');
+    // =====================================================
+    // INITIALIZATION
+    // =====================================================
+    document.addEventListener('DOMContentLoaded', function () {
+        loadContractDetails();
+        loadExistingObligations();
+    });
 
-        const data = await response.json();
-        const contract = data.data || data;
+    // =====================================================
+    // CONTRACT DETAILS
+    // =====================================================
+    async function loadContractDetails() {
+        try {
+            const response = await fetch(`/api/contracts/${contractId}`, {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
 
-        document.getElementById('contractInfo').innerHTML = `
+            if (!response.ok) throw new Error('Failed to load contract');
+
+            const data = await response.json();
+            const contract = data.data || data;
+
+            document.getElementById('contractInfo').innerHTML = `
             <div class="info-item">
                 <i class="ti ti-file-text"></i>
                 <span><strong>${contract.contract_number}</strong></span>
@@ -1286,81 +1294,81 @@ async function loadContractDetails() {
                 <span>${contract.contract_type || 'N/A'}</span>
             </div>
         `;
-    } catch (error) {
-        console.error('Error loading contract:', error);
-        showToast('Failed to load contract details', 'error');
+        } catch (error) {
+            console.error('Error loading contract:', error);
+            showToast('Failed to load contract details', 'error');
+        }
     }
-}
 
-// =====================================================
-// AI GENERATION
-// =====================================================
-async function generateAIObligations() {
-    const btn = document.getElementById('generateBtn');
-    const originalHTML = btn.innerHTML;
-    
-    try {
-        // Show loading
-        showLoading(true);
-        btn.disabled = true;
-        btn.innerHTML = '<i class="ti ti-loader" style="animation: spin 0.8s linear infinite;"></i> Analyzing Contract...';
+    // =====================================================
+    // AI GENERATION
+    // =====================================================
+    async function generateAIObligations() {
+        const btn = document.getElementById('generateBtn');
+        const originalHTML = btn.innerHTML;
 
-        const response = await fetch(`/api/obligations/generate-ai/${contractId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
+        try {
+            // Show loading
+            showLoading(true);
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ti ti-loader" style="animation: spin 0.8s linear infinite;"></i> Analyzing Contract...';
+
+            const response = await fetch(`/api/obligations/generate-ai/${contractId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Failed to generate obligations');
             }
-        });
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Failed to generate obligations');
+            aiObligations = await response.json();
+
+            if (aiObligations.length === 0) {
+                throw new Error('No obligations were extracted from the contract');
+            }
+
+            // Show results in modal
+            renderAIObligationsInModal();
+            document.getElementById('aiObligationsModal').classList.add('show');
+            showToast(`Successfully extracted ${aiObligations.length} obligations`, 'success');
+
+        } catch (error) {
+            console.error('Error generating obligations:', error);
+            showToast(error.message || 'Failed to generate obligations', 'error');
+        } finally {
+            showLoading(false);
+            btn.disabled = false;
+            btn.innerHTML = originalHTML;
         }
-
-        aiObligations = await response.json();
-        
-        if (aiObligations.length === 0) {
-            throw new Error('No obligations were extracted from the contract');
-        }
-
-        // Show results in modal
-        renderAIObligationsInModal();
-        document.getElementById('aiObligationsModal').classList.add('show');
-        showToast(`Successfully extracted ${aiObligations.length} obligations`, 'success');
-
-    } catch (error) {
-        console.error('Error generating obligations:', error);
-        showToast(error.message || 'Failed to generate obligations', 'error');
-    } finally {
-        showLoading(false);
-        btn.disabled = false;
-        btn.innerHTML = originalHTML;
     }
-}
 
-function closeAIModal() {
-    document.getElementById('aiObligationsModal').classList.remove('show');
-    selectedObligations.clear();
-}
+    function closeAIModal() {
+        document.getElementById('aiObligationsModal').classList.remove('show');
+        selectedObligations.clear();
+    }
 
-// =====================================================
-// RENDER AI OBLIGATIONS IN MODAL
-// =====================================================
-function renderAIObligationsInModal() {
-    const container = document.getElementById('aiObligationsGrid');
-    
-    if (aiObligations.length === 0) {
-        container.innerHTML = `
+    // =====================================================
+    // RENDER AI OBLIGATIONS IN MODAL
+    // =====================================================
+    function renderAIObligationsInModal() {
+        const container = document.getElementById('aiObligationsGrid');
+
+        if (aiObligations.length === 0) {
+            container.innerHTML = `
             <div class="empty-state">
                 <i class="ti ti-file-search"></i>
                 <h3>No obligations found</h3>
                 <p>The AI analysis did not find any obligations in this contract.</p>
             </div>
         `;
-        return;
-    }
+            return;
+        }
 
-    const html = `
+        const html = `
         <div class="obligations-grid">
             ${aiObligations.map((obl, index) => `
                 <div class="obligation-card ${selectedObligations.has(index) ? 'selected' : ''}" 
@@ -1403,288 +1411,289 @@ function renderAIObligationsInModal() {
         </div>
     `;
 
-    container.innerHTML = html;
-    updateAISelectedCount();
-}
-
-// =====================================================
-// SELECTION HANDLING FOR AI OBLIGATIONS
-// =====================================================
-function toggleAISelection(index) {
-    if (selectedObligations.has(index)) {
-        selectedObligations.delete(index);
-    } else {
-        selectedObligations.add(index);
-    }
-    
-    const card = document.querySelector(`#aiObligationsGrid [data-index="${index}"]`);
-    if (card) {
-        card.classList.toggle('selected');
-    }
-    updateAISelectedCount();
-}
-
-function updateAISelectedCount() {
-    const countEl = document.getElementById('aiSelectedCount');
-    if (countEl) {
-        countEl.textContent = `${selectedObligations.size} / ${aiObligations.length}`;
-    }
-}
-
-// =====================================================
-// EDIT OBLIGATION (for AI-generated)
-// =====================================================
-function editAIObligation(index) {
-    currentEditIndex = index;
-    const obl = aiObligations[index];
-
-    document.getElementById('editTitle').value = obl.title;
-    document.getElementById('editDescription').value = obl.description;
-    document.getElementById('editCategory').value = obl.category;
-    document.getElementById('editPriority').value = obl.priority;
-    document.getElementById('editClause').value = obl.clause_reference || '';
-    document.getElementById('editThresholdDate').value = obl.threshold_date || '';
-    document.getElementById('editDueDate').value = obl.due_date || '';
-
-    // Reset user selections
-    selectedOwner = obl.owner || null;
-    selectedEscalation = obl.escalation || null;
-
-    if (selectedOwner) {
-        showSelectedUser('owner', selectedOwner);
-    } else {
-        document.getElementById('selectedOwner').style.display = 'none';
-        document.getElementById('ownerSearch').style.display = 'block';
+        container.innerHTML = html;
+        updateAISelectedCount();
     }
 
-    if (selectedEscalation) {
-        showSelectedUser('escalation', selectedEscalation);
-    } else {
-        document.getElementById('selectedEscalation').style.display = 'none';
-        document.getElementById('escalationSearch').style.display = 'block';
-    }
-
-    document.getElementById('editModal').classList.add('show');
-}
-
-// EDIT EXISTING OBLIGATION (for table)
-async function editExistingObligation(obligationId) {
-    const obligation = existingObligations.find(o => o.id === obligationId);
-    if (!obligation) return;
-
-    // Populate the new obligation form with existing data
-    document.getElementById('newTitle').value = obligation.obligation_title;
-    document.getElementById('newDescription').value = obligation.description || '';
-    document.getElementById('newCategory').value = obligation.obligation_type || 'other';
-    document.getElementById('newStatus').value = obligation.status || 'initiated';
-    document.getElementById('newThresholdDate').value = obligation.threshold_date ? obligation.threshold_date.split('T')[0] : '';
-    document.getElementById('newDueDate').value = obligation.due_date ? obligation.due_date.split('T')[0] : '';
-
-    // Set owner if exists
-    if (obligation.owner_user_id && obligation.owner_name) {
-        newSelectedOwner = {
-            id: obligation.owner_user_id,
-            name: obligation.owner_name,
-            email: obligation.owner_email
-        };
-        showSelectedUserNew('owner', newSelectedOwner);
-    } else {
-        newSelectedOwner = null;
-        document.getElementById('newSelectedOwner').style.display = 'none';
-        document.getElementById('newOwnerSearch').style.display = 'block';
-    }
-
-    // Set escalation if exists
-    if (obligation.escalation_user_id && obligation.escalation_name) {
-        newSelectedEscalation = {
-            id: obligation.escalation_user_id,
-            name: obligation.escalation_name,
-            email: obligation.escalation_email
-        };
-        showSelectedUserNew('escalation', newSelectedEscalation);
-    } else {
-        newSelectedEscalation = null;
-        document.getElementById('newSelectedEscalation').style.display = 'none';
-        document.getElementById('newEscalationSearch').style.display = 'block';
-    }
-
-    // Change form submit to update instead of create
-    const form = document.getElementById('newObligationForm');
-    form.onsubmit = async (event) => {
-        event.preventDefault();
-        await updateExistingObligation(obligationId);
-    };
-
-    // Change button text
-    const submitBtn = form.querySelector('button[type="submit"]');
-    submitBtn.innerHTML = '<i class="ti ti-check"></i> Update Obligation';
-
-    // Open modal
-    document.getElementById('newObligationModal').classList.add('show');
-}
-
-async function updateExistingObligation(obligationId) {
-    try {
-        showLoading(true);
-
-        const obligationData = {
-            obligation_title: document.getElementById('newTitle').value,
-            description: document.getElementById('newDescription').value,
-            obligation_type: document.getElementById('newCategory').value,
-            owner_user_id: newSelectedOwner?.id,
-            escalation_user_id: newSelectedEscalation?.id,
-            threshold_date: document.getElementById('newThresholdDate').value || null,
-            due_date: document.getElementById('newDueDate').value,
-            status: document.getElementById('newStatus').value
-        };
-
-        const response = await fetch(`/api/obligations/${obligationId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(obligationData)
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Failed to update obligation');
+    // =====================================================
+    // SELECTION HANDLING FOR AI OBLIGATIONS
+    // =====================================================
+    function toggleAISelection(index) {
+        if (selectedObligations.has(index)) {
+            selectedObligations.delete(index);
+        } else {
+            selectedObligations.add(index);
         }
 
-        showToast('Obligation updated successfully', 'success');
-        closeNewObligationModal();
-        
-        // Reset form
+        const card = document.querySelector(`#aiObligationsGrid [data-index="${index}"]`);
+        if (card) {
+            card.classList.toggle('selected');
+        }
+        updateAISelectedCount();
+    }
+
+    function updateAISelectedCount() {
+        const countEl = document.getElementById('aiSelectedCount');
+        if (countEl) {
+            countEl.textContent = `${selectedObligations.size} / ${aiObligations.length}`;
+        }
+    }
+
+    // =====================================================
+    // EDIT OBLIGATION (for AI-generated)
+    // =====================================================
+    function editAIObligation(index) {
+        currentEditIndex = index;
+        const obl = aiObligations[index];
+
+        document.getElementById('editTitle').value = obl.title;
+        document.getElementById('editDescription').value = obl.description;
+        document.getElementById('editCategory').value = obl.category;
+        document.getElementById('editPriority').value = obl.priority;
+        document.getElementById('editClause').value = obl.clause_reference || '';
+        document.getElementById('editThresholdDate').value = obl.threshold_date || '';
+        document.getElementById('editDueDate').value = obl.due_date || '';
+
+        // Reset user selections
+        selectedOwner = obl.owner || null;
+        selectedEscalation = obl.escalation || null;
+
+        if (selectedOwner) {
+            showSelectedUser('owner', selectedOwner);
+        } else {
+            document.getElementById('selectedOwner').style.display = 'none';
+            document.getElementById('ownerSearch').style.display = 'block';
+        }
+
+        if (selectedEscalation) {
+            showSelectedUser('escalation', selectedEscalation);
+        } else {
+            document.getElementById('selectedEscalation').style.display = 'none';
+            document.getElementById('escalationSearch').style.display = 'block';
+        }
+
+        document.getElementById('editModal').classList.add('show');
+    }
+
+    // EDIT EXISTING OBLIGATION (for table)
+    async function editExistingObligation(obligationId) {
+        const obligation = existingObligations.find(o => o.id === obligationId);
+
+        if (!obligation) return;
+
+        // Populate the new obligation form with existing data
+        document.getElementById('newTitle').value = obligation.obligation_title;
+        document.getElementById('newDescription').value = obligation.description || '';
+        document.getElementById('newCategory').value = obligation.obligation_type || 'other';
+        document.getElementById('newStatus').value = obligation.status || 'initiated';
+        document.getElementById('newThresholdDate').value = obligation.threshold_date ? obligation.threshold_date.split('T')[0] : '';
+        document.getElementById('newDueDate').value = obligation.due_date ? obligation.due_date.split('T')[0] : '';
+
+        // Set owner if exists
+        if (obligation.owner_user_id && obligation.owner_name) {
+            newSelectedOwner = {
+                id: obligation.owner_user_id,
+                name: obligation.owner_name,
+                email: obligation.owner_email
+            };
+            showSelectedUserNew('owner', newSelectedOwner);
+        } else {
+            newSelectedOwner = null;
+            document.getElementById('newSelectedOwner').style.display = 'none';
+            document.getElementById('newOwnerSearch').style.display = 'block';
+        }
+
+        // Set escalation if exists
+        if (obligation.escalation_user_id && obligation.escalation_name) {
+            newSelectedEscalation = {
+                id: obligation.escalation_user_id,
+                name: obligation.escalation_name,
+                email: obligation.escalation_email
+            };
+            showSelectedUserNew('escalation', newSelectedEscalation);
+        } else {
+            newSelectedEscalation = null;
+            document.getElementById('newSelectedEscalation').style.display = 'none';
+            document.getElementById('newEscalationSearch').style.display = 'block';
+        }
+
+        // Change form submit to update instead of create
         const form = document.getElementById('newObligationForm');
-        form.onsubmit = saveNewObligation;
+        form.onsubmit = async (event) => {
+            event.preventDefault();
+            await updateExistingObligation(obligationId);
+        };
+
+        // Change button text
         const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.innerHTML = '<i class="ti ti-check"></i> Create Obligation';
-        
-        await loadExistingObligations();
+        submitBtn.innerHTML = '<i class="ti ti-check"></i> Update Obligation';
 
-    } catch (error) {
-        console.error('Error updating obligation:', error);
-        showToast(error.message || 'Failed to update obligation', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-function closeEditModal() {
-    document.getElementById('editModal').classList.remove('show');
-    currentEditIndex = null;
-    selectedOwner = null;
-    selectedEscalation = null;
-}
-
-function saveObligationEdit(event) {
-    event.preventDefault();
-
-    if (currentEditIndex === null) return;
-
-    aiObligations[currentEditIndex] = {
-        ...aiObligations[currentEditIndex],
-        title: document.getElementById('editTitle').value,
-        description: document.getElementById('editDescription').value,
-        category: document.getElementById('editCategory').value,
-        priority: document.getElementById('editPriority').value,
-        threshold_date: document.getElementById('editThresholdDate').value,
-        due_date: document.getElementById('editDueDate').value,
-        owner: selectedOwner,
-        escalation: selectedEscalation
-    };
-
-    renderObligations();
-    closeEditModal();
-    showToast('Obligation updated successfully', 'success');
-}
-
-// =====================================================
-// USER SEARCH
-// =====================================================
-async function searchUsers(type) {
-    const searchInput = document.getElementById(`${type}Search`);
-    const suggestionsDiv = document.getElementById(`${type}Suggestions`);
-    const query = searchInput.value.trim();
-
-    // Clear previous timeout
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
+        // Open modal
+        document.getElementById('newObligationModal').classList.add('show');
     }
 
-    // Hide suggestions if query is empty
-    if (!query) {
-        suggestionsDiv.classList.remove('show');
-        return;
-    }
-
-    // Debounce search
-    searchTimeout = setTimeout(async () => {
+    async function updateExistingObligation(obligationId) {
         try {
-            suggestionsDiv.innerHTML = `
+            showLoading(true);
+
+            const obligationData = {
+                obligation_title: document.getElementById('newTitle').value,
+                description: document.getElementById('newDescription').value,
+                obligation_type: document.getElementById('newCategory').value,
+                owner_user_id: newSelectedOwner?.id,
+                escalation_user_id: newSelectedEscalation?.id,
+                threshold_date: document.getElementById('newThresholdDate').value || null,
+                due_date: document.getElementById('newDueDate').value,
+                status: document.getElementById('newStatus').value
+            };
+
+            const response = await fetch(`/api/obligations/${obligationId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(obligationData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Failed to update obligation');
+            }
+
+            showToast('Obligation updated successfully', 'success');
+            closeNewObligationModal();
+
+            // Reset form
+            const form = document.getElementById('newObligationForm');
+            form.onsubmit = saveNewObligation;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = '<i class="ti ti-check"></i> Create Obligation';
+
+            await loadExistingObligations();
+
+        } catch (error) {
+            console.error('Error updating obligation:', error);
+            showToast(error.message || 'Failed to update obligation', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('show');
+        currentEditIndex = null;
+        selectedOwner = null;
+        selectedEscalation = null;
+    }
+
+    function saveObligationEdit(event) {
+        event.preventDefault();
+
+        if (currentEditIndex === null) return;
+
+        aiObligations[currentEditIndex] = {
+            ...aiObligations[currentEditIndex],
+            title: document.getElementById('editTitle').value,
+            description: document.getElementById('editDescription').value,
+            category: document.getElementById('editCategory').value,
+            priority: document.getElementById('editPriority').value,
+            threshold_date: document.getElementById('editThresholdDate').value,
+            due_date: document.getElementById('editDueDate').value,
+            owner: selectedOwner,
+            escalation: selectedEscalation
+        };
+
+        renderObligations();
+        closeEditModal();
+        showToast('Obligation updated successfully', 'success');
+    }
+
+    // =====================================================
+    // USER SEARCH
+    // =====================================================
+    async function searchUsers(type) {
+        const searchInput = document.getElementById(`${type}Search`);
+        const suggestionsDiv = document.getElementById(`${type}Suggestions`);
+        const query = searchInput.value.trim();
+
+        // Clear previous timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+
+        // Hide suggestions if query is empty
+        if (!query) {
+            suggestionsDiv.classList.remove('show');
+            return;
+        }
+
+        // Debounce search
+        searchTimeout = setTimeout(async () => {
+            try {
+                suggestionsDiv.innerHTML = `
                 <div class="user-suggestion-item" style="text-align: center; color: var(--text-muted);">
                     <i class="ti ti-loader" style="animation: spin 0.8s linear infinite;"></i>
                     Searching...
                 </div>
             `;
-            suggestionsDiv.classList.add('show');
+                suggestionsDiv.classList.add('show');
 
-            const response = await fetch(`/api/users/search?email=${encodeURIComponent(query)}`, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+                const response = await fetch(`/api/users/search?email=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-            if (!response.ok) throw new Error('Search failed');
+                if (!response.ok) throw new Error('Search failed');
 
-            const users = await response.json();
+                const users = await response.json();
 
-            if (users.length === 0) {
-                suggestionsDiv.innerHTML = `
+                if (users.length === 0) {
+                    suggestionsDiv.innerHTML = `
                     <div class="user-suggestion-item" style="text-align: center; color: var(--text-muted);">
                         <i class="ti ti-user-x"></i>
                         No users found
                     </div>
                 `;
-            } else {
-                suggestionsDiv.innerHTML = users.map(user => `
+                } else {
+                    suggestionsDiv.innerHTML = users.map(user => `
                     <div class="user-suggestion-item" onclick="selectUser('${type}', ${user.id}, '${user.full_name}', '${user.email}')">
                         <div class="user-name">${user.full_name}</div>
                         <div class="user-email">${user.email}</div>
                     </div>
                 `).join('');
-            }
-        } catch (error) {
-            console.error('Error searching users:', error);
-            suggestionsDiv.innerHTML = `
+                }
+            } catch (error) {
+                console.error('Error searching users:', error);
+                suggestionsDiv.innerHTML = `
                 <div class="user-suggestion-item" style="text-align: center; color: var(--danger-color);">
                     <i class="ti ti-alert-circle"></i>
                     Search failed
                 </div>
             `;
-        }
-    }, 300);
-}
-
-function selectUser(type, userId, userName, userEmail) {
-    const user = { id: userId, name: userName, email: userEmail };
-    
-    if (type === 'owner') {
-        selectedOwner = user;
-    } else {
-        selectedEscalation = user;
+            }
+        }, 300);
     }
 
-    showSelectedUser(type, user);
-    
-    // Hide suggestions
-    document.getElementById(`${type}Suggestions`).classList.remove('show');
-    document.getElementById(`${type}Search`).value = '';
-}
+    function selectUser(type, userId, userName, userEmail) {
+        const user = { id: userId, name: userName, email: userEmail };
 
-function showSelectedUser(type, user) {
-    const container = document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`);
-    container.innerHTML = `
+        if (type === 'owner') {
+            selectedOwner = user;
+        } else {
+            selectedEscalation = user;
+        }
+
+        showSelectedUser(type, user);
+
+        // Hide suggestions
+        document.getElementById(`${type}Suggestions`).classList.remove('show');
+        document.getElementById(`${type}Search`).value = '';
+    }
+
+    function showSelectedUser(type, user) {
+        const container = document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`);
+        container.innerHTML = `
         <div class="selected-user">
             <div>
                 <div class="user-name">${user.name}</div>
@@ -1695,159 +1704,149 @@ function showSelectedUser(type, user) {
             </button>
         </div>
     `;
-    container.style.display = 'block';
-    document.getElementById(`${type}Search`).style.display = 'none';
-}
-
-function removeUser(type) {
-    if (type === 'owner') {
-        selectedOwner = null;
-    } else {
-        selectedEscalation = null;
-    }
-    
-    document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`).style.display = 'none';
-    document.getElementById(`${type}Search`).style.display = 'block';
-}
-
-// =====================================================
-// ADD TO DATABASE
-// =====================================================
-async function addSelectedObligations() {
-    if (selectedObligations.size === 0) {
-        showToast('Please select at least one obligation', 'error');
-        return;
+        container.style.display = 'block';
+        document.getElementById(`${type}Search`).style.display = 'none';
     }
 
-    const obligationsToAdd = Array.from(selectedObligations).map(index => aiObligations[index]);
-    
-    // Validate that all have required fields
-    const missingDetails = obligationsToAdd.some(obl => !obl.owner || !obl.due_date);
-    if (missingDetails) {
-        showToast('Please edit obligations to assign owners and due dates before adding', 'error');
-        return;
+    function removeUser(type) {
+        if (type === 'owner') {
+            selectedOwner = null;
+        } else {
+            selectedEscalation = null;
+        }
+
+        document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`).style.display = 'none';
+        document.getElementById(`${type}Search`).style.display = 'block';
     }
 
-    try {
-        showLoading(true);
+    // =====================================================
+    // ADD TO DATABASE
+    // =====================================================
+    async function addSelectedObligations() {
+        if (selectedObligations.size === 0) {
+            showToast('Please select at least one obligation', 'error');
+            return;
+        }
 
-        const promises = obligationsToAdd.map(obl => 
-            fetch(`/api/obligations/`, {
-                method: 'POST',
+        const obligationsToAdd = Array.from(selectedObligations).map(index => aiObligations[index]);
+
+        // Validate that all have required fields
+        const missingDetails = obligationsToAdd.some(obl => !obl.owner || !obl.due_date);
+        if (missingDetails) {
+            showToast('Please edit obligations to assign owners and due dates before adding', 'error');
+            return;
+        }
+
+        try {
+            showLoading(true);
+
+            const promises = obligationsToAdd.map(obl =>
+                fetch(`/api/obligations/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contract_id: contractId,
+                        obligation_title: obl.title,
+                        description: obl.description,
+                        obligation_type: obl.category,
+                        owner_user_id: obl.owner?.id,
+                        escalation_user_id: obl.escalation?.id,
+                        threshold_date: obl.threshold_date,
+                        due_date: obl.due_date,
+                        status: 'initiated',
+                        is_ai_generated: true
+                    })
+                })
+            );
+
+            const results = await Promise.all(promises);
+            const failed = results.filter(r => !r.ok);
+
+            if (failed.length > 0) {
+                throw new Error(`Failed to add ${failed.length} obligations`);
+            }
+
+            showToast(`Successfully added ${obligationsToAdd.length} obligations`, 'success');
+
+            // Redirect to obligations dashboard
+            setTimeout(() => {
+                window.location.href = '/obligations';
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error adding obligations:', error);
+            showToast(error.message || 'Failed to add obligations', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const messageEl = document.getElementById('toastMessage');
+
+        toast.className = `toast ${type}`;
+        messageEl.textContent = message;
+        toast.classList.add('show');
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
+    }
+
+    // Close suggestions when clicking outside
+    document.addEventListener('click', function (event) {
+        if (!event.target.closest('.user-search-container')) {
+            document.querySelectorAll('.user-suggestions').forEach(el => {
+                el.classList.remove('show');
+            });
+        }
+    });
+
+    // =====================================================
+    // EXISTING OBLIGATIONS
+    // =====================================================
+    async function loadExistingObligations() {
+        try {
+            const response = await fetch(`/api/obligations/contract/${contractId}`, {
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contract_id: contractId,
-                    obligation_title: obl.title,
-                    description: obl.description,
-                    obligation_type: obl.category,
-                    owner_user_id: obl.owner?.id,
-                    escalation_user_id: obl.escalation?.id,
-                    threshold_date: obl.threshold_date,
-                    due_date: obl.due_date,
-                    status: 'initiated',
-                    is_ai_generated: true
-                })
-            })
-        );
+                }
+            });
 
-        const results = await Promise.all(promises);
-        const failed = results.filter(r => !r.ok);
+            if (!response.ok) throw new Error('Failed to load existing obligations');
 
-        if (failed.length > 0) {
-            throw new Error(`Failed to add ${failed.length} obligations`);
-        }
+            existingObligations = await response.json();
 
-        showToast(`Successfully added ${obligationsToAdd.length} obligations`, 'success');
-        
-        // Redirect to obligations dashboard
-        setTimeout(() => {
-            window.location.href = '/obligations';
-        }, 1500);
-
-    } catch (error) {
-        console.error('Error adding obligations:', error);
-        showToast(error.message || 'Failed to add obligations', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// =====================================================
-// UTILITY FUNCTIONS
-// =====================================================
-function showLoading(show) {
-    const overlay = document.getElementById('loadingOverlay');
-    if (show) {
-        overlay.classList.add('active');
-    } else {
-        overlay.classList.remove('active');
-    }
-}
-
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const messageEl = document.getElementById('toastMessage');
-    
-    toast.className = `toast ${type}`;
-    messageEl.textContent = message;
-    toast.classList.add('show');
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
-
-// Close suggestions when clicking outside
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('.user-search-container')) {
-        document.querySelectorAll('.user-suggestions').forEach(el => {
-            el.classList.remove('show');
-        });
-    }
-});
-
-// =====================================================
-// EXISTING OBLIGATIONS
-// =====================================================
-async function loadExistingObligations() {
-    try {
-        const response = await fetch(`/api/obligations/contract/${contractId}`, {
-            headers: {
-                'Content-Type': 'application/json'
+            if (existingObligations.length > 0) {
+                displayExistingObligations();
+                // Hide the empty state in obligationsContainer
+                document.getElementById('obligationsContainer').style.display = 'none';
+            } else {
+                // Show empty state
+                document.getElementById('obligationsContainer').style.display = 'block';
             }
-        });
-
-        if (!response.ok) throw new Error('Failed to load existing obligations');
-
-        existingObligations = await response.json();
-        
-        if (existingObligations.length > 0) {
-            displayExistingObligations();
-            // Hide the empty state in obligationsContainer
-            document.getElementById('obligationsContainer').style.display = 'none';
-        } else {
-            // Show empty state
-            document.getElementById('obligationsContainer').style.display = 'block';
+        } catch (error) {
+            console.error('Error loading existing obligations:', error);
         }
-    } catch (error) {
-        console.error('Error loading existing obligations:', error);
-    }
-}
-
-function displayExistingObligations() {
-    const section = document.getElementById('existingObligationsSection');
-    const list = document.getElementById('existingObligationsList');
-    
-    if (existingObligations.length === 0) {
-        section.style.display = 'none';
-        return;
     }
 
-    section.style.display = 'block';
-    
-    list.innerHTML = `
+    function displayExistingObligations() {
+        const section = document.getElementById('existingObligationsSection');
+        const list = document.getElementById('existingObligationsList');
+
+        if (existingObligations.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+
+        section.style.display = 'block';
+
+        list.innerHTML = `
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
                 <thead>
@@ -1897,207 +1896,222 @@ function displayExistingObligations() {
             </table>
         </div>
     `;
-}
-
-function formatStatus(status) {
-    if (!status) return 'N/A';
-    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
-
-function getStatusPriority(status) {
-    const highPriority = ['overdue', 'pending_details'];
-    const mediumPriority = ['in_progress', 'awaiting_approval'];
-    
-    if (highPriority.includes(status)) return 'high';
-    if (mediumPriority.includes(status)) return 'medium';
-    return 'low';
-}
-
-async function editExistingObligation(obligationId) {
-    const obligation = existingObligations.find(o => o.id === obligationId);
-    if (!obligation) return;
-
-    // This would need a separate modal or reuse the edit modal
-    // For now, let's show a toast
-    showToast('Edit existing obligations from the main Obligations Dashboard', 'info');
-}
-
-async function deleteObligation(obligationId) {
-    if (!confirm('Are you sure you want to delete this obligation? This action cannot be undone.')) return;
-
-    try {
-        showLoading(true);
-
-        const response = await fetch(`/api/obligations/${obligationId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            // Check if it's a foreign key constraint error
-            if (errorData.detail && errorData.detail.includes('foreign key constraint')) {
-                throw new Error('Cannot delete this obligation because it has related updates or tracking records. Please remove those first.');
-            }
-            throw new Error(errorData.detail || 'Failed to delete obligation');
-        }
-
-        showToast('Obligation deleted successfully', 'success');
-        await loadExistingObligations();
-
-    } catch (error) {
-        console.error('Error deleting obligation:', error);
-        showToast(error.message || 'Failed to delete obligation', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// =====================================================
-// NEW OBLIGATION MODAL
-// =====================================================
-function openNewObligationModal() {
-    document.getElementById('newObligationModal').classList.add('show');
-    // Reset form
-    document.getElementById('newObligationForm').reset();
-    newSelectedOwner = null;
-    newSelectedEscalation = null;
-    document.getElementById('newSelectedOwner').style.display = 'none';
-    document.getElementById('newSelectedEscalation').style.display = 'none';
-    document.getElementById('newOwnerSearch').style.display = 'block';
-    document.getElementById('newEscalationSearch').style.display = 'block';
-}
-
-function closeNewObligationModal() {
-    document.getElementById('newObligationModal').classList.remove('show');
-}
-
-async function saveNewObligation(event) {
-    event.preventDefault();
-
-    try {
-        showLoading(true);
-
-        const obligationData = {
-            contract_id: contractId,
-            obligation_title: document.getElementById('newTitle').value,
-            description: document.getElementById('newDescription').value,
-            obligation_type: document.getElementById('newCategory').value,
-            owner_user_id: newSelectedOwner?.id,
-            escalation_user_id: newSelectedEscalation?.id,
-            threshold_date: document.getElementById('newThresholdDate').value || null,
-            due_date: document.getElementById('newDueDate').value,
-            status: document.getElementById('newStatus').value,
-            is_ai_generated: false
-        };
-
-        const response = await fetch('/api/obligations/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(obligationData)
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Failed to create obligation');
-        }
-
-        showToast('Obligation created successfully', 'success');
-        closeNewObligationModal();
-        await loadExistingObligations();
-
-    } catch (error) {
-        console.error('Error creating obligation:', error);
-        showToast(error.message || 'Failed to create obligation', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-// User search for new obligation modal
-async function searchUsersNew(type) {
-    const searchInput = document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Search`);
-    const suggestionsDiv = document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Suggestions`);
-    const query = searchInput.value.trim();
-
-    if (searchTimeout) {
-        clearTimeout(searchTimeout);
     }
 
-    if (!query) {
-        suggestionsDiv.classList.remove('show');
-        return;
+    function formatStatus(status) {
+        if (!status) return 'N/A';
+        return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
 
-    searchTimeout = setTimeout(async () => {
+    function getStatusPriority(status) {
+        const highPriority = ['overdue', 'pending_details'];
+        const mediumPriority = ['in_progress', 'awaiting_approval'];
+
+        if (highPriority.includes(status)) return 'high';
+        if (mediumPriority.includes(status)) return 'medium';
+        return 'low';
+    }
+
+    // async function editExistingObligation(obligationId) {
+    //     const obligation = existingObligations.find(o => o.id === obligationId);
+    //     if (!obligation) return;
+
+    //     // This would need a separate modal or reuse the edit modal
+    //     // For now, let's show a toast
+    //     showToast('Edit existing obligations from the main Obligations Dashboard', 'info');
+    // }
+
+    async function deleteObligation(obligationId) {
+        if (!confirm('Are you sure you want to delete this obligation? This action cannot be undone.')) return;
+
         try {
-            suggestionsDiv.innerHTML = `
-                <div class="user-suggestion-item" style="text-align: center; color: var(--text-muted);">
-                    <i class="ti ti-loader" style="animation: spin 0.8s linear infinite;"></i>
-                    Searching...
-                </div>
-            `;
-            suggestionsDiv.classList.add('show');
+            showLoading(true);
 
-            const response = await fetch(`/api/users/search?email=${encodeURIComponent(query)}`, {
+            const response = await fetch(`/api/obligations/${obligationId}`, {
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
 
-            if (!response.ok) throw new Error('Search failed');
+            if (!response.ok) {
+                const errorData = await response.json();
+                // Check if it's a foreign key constraint error
+                if (errorData.detail && errorData.detail.includes('foreign key constraint')) {
+                    throw new Error('Cannot delete this obligation because it has related updates or tracking records. Please remove those first.');
+                }
+                throw new Error(errorData.detail || 'Failed to delete obligation');
+            }
 
-            const users = await response.json();
+            showToast('Obligation deleted successfully', 'success');
+            await loadExistingObligations();
 
-            if (users.length === 0) {
+        } catch (error) {
+            console.error('Error deleting obligation:', error);
+            showToast(error.message || 'Failed to delete obligation', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // =====================================================
+    // NEW OBLIGATION MODAL
+    // =====================================================
+    function openNewObligationModal() {
+        document.getElementById('newObligationModal').classList.add('show');
+        // Reset form
+        document.getElementById('newObligationForm').reset();
+        newSelectedOwner = null;
+        newSelectedEscalation = null;
+        document.getElementById('newSelectedOwner').style.display = 'none';
+        document.getElementById('newSelectedEscalation').style.display = 'none';
+        document.getElementById('newOwnerSearch').style.display = 'block';
+        document.getElementById('newEscalationSearch').style.display = 'block';
+    }
+
+    function closeNewObligationModal() {
+        document.getElementById('newObligationModal').classList.remove('show');
+    }
+
+
+    async function saveNewObligation(event) {
+        event.preventDefault();
+
+        const title = document.getElementById('newTitle').value.trim();
+        if (!title) {
+            showToast('Please enter obligation title', 'error');
+            return;
+        }
+
+        try {
+            // ADD LOADING INDICATORS
+            showLoading(true, 'Saving obligation...', 'Please wait...');
+            const submitBtn = document.querySelector('#newObligationForm button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.dataset.originalHtml = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<i class="ti ti-loader-2"></i> Saving...';
+                submitBtn.disabled = true;
+            }
+
+            const obligationData = {
+                contract_id: contractId,
+                obligation_title: title,
+                description: document.getElementById('newDescription').value.trim(),
+                obligation_type: document.getElementById('newCategory').value,
+                status: document.getElementById('newStatus').value,
+                threshold_date: document.getElementById('newThresholdDate').value || null,
+                due_date: document.getElementById('newDueDate').value || null,
+                is_ai_generated: false
+            };
+
+            const response = await fetch('/api/obligations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(obligationData)
+            });
+
+            if (!response.ok) throw new Error('Failed to save obligation');
+
+            showToast('Obligation saved successfully', 'success');
+            closeNewObligationModal();
+            await loadExistingObligations();
+
+        } catch (error) {
+            console.error('Error saving obligation:', error);
+            showToast(error.message || 'Failed to save obligation', 'error');
+        } finally {
+            // ADD CLEANUP
+            showLoading(false);
+            const submitBtn = document.querySelector('#newObligationForm button[type="submit"]');
+            if (submitBtn && submitBtn.dataset.originalHtml) {
+                submitBtn.innerHTML = submitBtn.dataset.originalHtml;
+                submitBtn.disabled = false;
+            }
+        }
+    }
+
+    // User search for new obligation modal
+    async function searchUsersNew(type) {
+        const searchInput = document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Search`);
+        const suggestionsDiv = document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Suggestions`);
+        const query = searchInput.value.trim();
+
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+
+        if (!query) {
+            suggestionsDiv.classList.remove('show');
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            try {
                 suggestionsDiv.innerHTML = `
+                <div class="user-suggestion-item" style="text-align: center; color: var(--text-muted);">
+                    <i class="ti ti-loader" style="animation: spin 0.8s linear infinite;"></i>
+                    Searching...
+                </div>
+            `;
+                suggestionsDiv.classList.add('show');
+
+                const response = await fetch(`/api/users/search?email=${encodeURIComponent(query)}`, {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Search failed');
+
+                const users = await response.json();
+
+                if (users.length === 0) {
+                    suggestionsDiv.innerHTML = `
                     <div class="user-suggestion-item" style="text-align: center; color: var(--text-muted);">
                         <i class="ti ti-user-x"></i>
                         No users found
                     </div>
                 `;
-            } else {
-                suggestionsDiv.innerHTML = users.map(user => `
+                } else {
+                    suggestionsDiv.innerHTML = users.map(user => `
                     <div class="user-suggestion-item" onclick="selectUserNew('${type}', ${user.id}, '${user.full_name}', '${user.email}')">
                         <div class="user-name">${user.full_name}</div>
                         <div class="user-email">${user.email}</div>
                     </div>
                 `).join('');
-            }
-        } catch (error) {
-            console.error('Error searching users:', error);
-            suggestionsDiv.innerHTML = `
+                }
+            } catch (error) {
+                console.error('Error searching users:', error);
+                suggestionsDiv.innerHTML = `
                 <div class="user-suggestion-item" style="text-align: center; color: var(--danger-color);">
                     <i class="ti ti-alert-circle"></i>
                     Search failed
                 </div>
             `;
-        }
-    }, 300);
-}
-
-function selectUserNew(type, userId, userName, userEmail) {
-    const user = { id: userId, name: userName, email: userEmail };
-    
-    if (type === 'owner') {
-        newSelectedOwner = user;
-    } else {
-        newSelectedEscalation = user;
+            }
+        }, 300);
     }
 
-    showSelectedUserNew(type, user);
-    
-    document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Suggestions`).classList.remove('show');
-    document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Search`).value = '';
-}
+    function selectUserNew(type, userId, userName, userEmail) {
+        const user = { id: userId, name: userName, email: userEmail };
 
-function showSelectedUserNew(type, user) {
-    const container = document.getElementById(`newSelected${type.charAt(0).toUpperCase() + type.slice(1)}`);
-    container.innerHTML = `
+        if (type === 'owner') {
+            newSelectedOwner = user;
+        } else {
+            newSelectedEscalation = user;
+        }
+
+        showSelectedUserNew(type, user);
+
+        document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Suggestions`).classList.remove('show');
+        document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Search`).value = '';
+    }
+
+    function showSelectedUserNew(type, user) {
+        const container = document.getElementById(`newSelected${type.charAt(0).toUpperCase() + type.slice(1)}`);
+        container.innerHTML = `
         <div class="selected-user">
             <div>
                 <div class="user-name">${user.name}</div>
@@ -2108,75 +2122,75 @@ function showSelectedUserNew(type, user) {
             </button>
         </div>
     `;
-    container.style.display = 'block';
-    document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Search`).style.display = 'none';
-}
-
-function removeUserNew(type) {
-    if (type === 'owner') {
-        newSelectedOwner = null;
-    } else {
-        newSelectedEscalation = null;
+        container.style.display = 'block';
+        document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Search`).style.display = 'none';
     }
-    
-    document.getElementById(`newSelected${type.charAt(0).toUpperCase() + type.slice(1)}`).style.display = 'none';
-    document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Search`).style.display = 'block';
-}
 
-// =====================================================
-// PRESET OBLIGATIONS
-// =====================================================
-function openPresetModal() {
-    document.getElementById('presetModal').classList.add('show');
-    selectedPresets.clear();
-    currentPresetProfile = 'client'; // Default to client
-    
-    // Set active tab
-    document.querySelectorAll('.preset-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.dataset.profile === currentPresetProfile) {
-            tab.classList.add('active');
+    function removeUserNew(type) {
+        if (type === 'owner') {
+            newSelectedOwner = null;
+        } else {
+            newSelectedEscalation = null;
         }
-    });
-    
-    displayPresetObligations();
-}
 
-function closePresetModal() {
-    document.getElementById('presetModal').classList.remove('show');
-    selectedPresets.clear();
-}
+        document.getElementById(`newSelected${type.charAt(0).toUpperCase() + type.slice(1)}`).style.display = 'none';
+        document.getElementById(`new${type.charAt(0).toUpperCase() + type.slice(1)}Search`).style.display = 'block';
+    }
 
-function switchPresetProfile(profile) {
-    currentPresetProfile = profile;
-    
-    // Update active tab
-    document.querySelectorAll('.preset-tab').forEach(tab => {
-        tab.classList.remove('active');
-        if (tab.dataset.profile === profile) {
-            tab.classList.add('active');
-        }
-    });
-    
-    selectedPresets.clear();
-    displayPresetObligations();
-}
+    // =====================================================
+    // PRESET OBLIGATIONS
+    // =====================================================
+    function openPresetModal() {
+        document.getElementById('presetModal').classList.add('show');
+        selectedPresets.clear();
+        currentPresetProfile = 'client'; // Default to client
 
-function displayPresetObligations() {
-    const container = document.getElementById('presetObligationsList');
-    const obligations = presetObligations[currentPresetProfile] || [];
-    
-    if (obligations.length === 0) {
-        container.innerHTML = `
+        // Set active tab
+        document.querySelectorAll('.preset-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.profile === currentPresetProfile) {
+                tab.classList.add('active');
+            }
+        });
+
+        displayPresetObligations();
+    }
+
+    function closePresetModal() {
+        document.getElementById('presetModal').classList.remove('show');
+        selectedPresets.clear();
+    }
+
+    function switchPresetProfile(profile) {
+        currentPresetProfile = profile;
+
+        // Update active tab
+        document.querySelectorAll('.preset-tab').forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.profile === profile) {
+                tab.classList.add('active');
+            }
+        });
+
+        selectedPresets.clear();
+        displayPresetObligations();
+    }
+
+    function displayPresetObligations() {
+        const container = document.getElementById('presetObligationsList');
+        const obligations = presetObligations[currentPresetProfile] || [];
+
+        if (obligations.length === 0) {
+            container.innerHTML = `
             <div class="empty-state" style="padding: 2rem;">
                 <i class="ti ti-inbox"></i>
                 <p>No preset obligations available for this profile.</p>
             </div>
         `;
-        return;
-    }
-    
-    container.innerHTML = obligations.map(obl => `
+            return;
+        }
+
+        container.innerHTML = obligations.map(obl => `
         <div class="preset-obligation-item ${selectedPresets.has(obl.id) ? 'selected' : ''}" 
              onclick="togglePresetSelection('${obl.id}')"
              data-preset-id="${obl.id}">
@@ -2203,86 +2217,238 @@ function displayPresetObligations() {
             </div>
         </div>
     `).join('');
-    
-    updatePresetCount();
-}
 
-function togglePresetSelection(presetId) {
-    if (selectedPresets.has(presetId)) {
-        selectedPresets.delete(presetId);
-    } else {
-        selectedPresets.add(presetId);
-    }
-    
-    // Update UI
-    const item = document.querySelector(`[data-preset-id="${presetId}"]`);
-    const check = item.querySelector('.preset-check');
-    
-    if (selectedPresets.has(presetId)) {
-        item.classList.add('selected');
-        check.innerHTML = '<i class="ti ti-check"></i>';
-    } else {
-        item.classList.remove('selected');
-        check.innerHTML = '';
-    }
-    
-    updatePresetCount();
-}
-
-function updatePresetCount() {
-    document.getElementById('presetSelectedCount').textContent = 
-        `${selectedPresets.size} selected`;
-}
-
-async function addPresetObligations() {
-    if (selectedPresets.size === 0) {
-        showToast('Please select at least one preset obligation', 'error');
-        return;
+        updatePresetCount();
     }
 
-    try {
-        showLoading(true);
-        
-        const obligations = presetObligations[currentPresetProfile];
-        const obligationsToAdd = Array.from(selectedPresets).map(id => 
-            obligations.find(o => o.id === id)
-        ).filter(Boolean);
-
-        const promises = obligationsToAdd.map(obl => 
-            fetch('/api/obligations/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contract_id: contractId,
-                    obligation_title: obl.title,
-                    description: obl.description,
-                    obligation_type: obl.category,
-                    status: 'initiated',
-                    is_ai_generated: false
-                })
-            })
-        );
-
-        const results = await Promise.all(promises);
-        const failed = results.filter(r => !r.ok);
-
-        if (failed.length > 0) {
-            throw new Error(`Failed to add ${failed.length} preset obligations`);
+    function togglePresetSelection(presetId) {
+        if (selectedPresets.has(presetId)) {
+            selectedPresets.delete(presetId);
+        } else {
+            selectedPresets.add(presetId);
         }
 
-        showToast(`Successfully added ${obligationsToAdd.length} preset obligations`, 'success');
-        closePresetModal();
-        await loadExistingObligations();
+        // Update UI
+        const item = document.querySelector(`[data-preset-id="${presetId}"]`);
+        const check = item.querySelector('.preset-check');
 
-    } catch (error) {
-        console.error('Error adding preset obligations:', error);
-        showToast(error.message || 'Failed to add preset obligations', 'error');
-    } finally {
-        showLoading(false);
+        if (selectedPresets.has(presetId)) {
+            item.classList.add('selected');
+            check.innerHTML = '<i class="ti ti-check"></i>';
+        } else {
+            item.classList.remove('selected');
+            check.innerHTML = '';
+        }
+
+        updatePresetCount();
     }
-}
+
+    function updatePresetCount() {
+        document.getElementById('presetSelectedCount').textContent =
+            `${selectedPresets.size} selected`;
+    }
+
+    async function addPresetObligations() {
+        if (selectedPresets.size === 0) {
+            showToast('Please select at least one preset obligation', 'error');
+            return;
+        }
+
+        try {
+            // ADD LOADING INDICATORS
+            showLoading(true, `Adding ${selectedPresets.size} preset obligation(s)...`, 'Please wait...');
+            const addBtn = document.querySelector('#presetModal .btn-success');
+            if (addBtn) {
+                addBtn.dataset.originalHtml = addBtn.innerHTML;
+                addBtn.innerHTML = '<i class="ti ti-loader-2"></i> Adding...';
+                addBtn.disabled = true;
+            }
+
+            const obligations = presetObligations[currentPresetProfile];
+            const obligationsToAdd = Array.from(selectedPresets).map(id =>
+                obligations.find(o => o.id === id)
+            ).filter(Boolean);
+
+            const promises = obligationsToAdd.map(obl =>
+                fetch('/api/obligations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contract_id: contractId,
+                        obligation_title: obl.title,
+                        description: obl.description,
+                        obligation_type: obl.category,
+                        status: 'initiated',
+                        is_ai_generated: false
+                    })
+                })
+            );
+
+            const results = await Promise.all(promises);
+            const failed = results.filter(r => !r.ok);
+
+            if (failed.length > 0) {
+                throw new Error(`Failed to add ${failed.length} preset obligations`);
+            }
+
+            showToast(`Successfully added ${obligationsToAdd.length} preset obligations`, 'success');
+            closePresetModal();
+            await loadExistingObligations();
+
+        } catch (error) {
+            console.error('Error adding preset obligations:', error);
+            showToast(error.message || 'Failed to add preset obligations', 'error');
+        } finally {
+            // ADD CLEANUP
+            showLoading(false);
+            const addBtn = document.querySelector('#presetModal .btn-success');
+            if (addBtn && addBtn.dataset.originalHtml) {
+                addBtn.innerHTML = addBtn.dataset.originalHtml;
+                addBtn.disabled = false;
+            }
+        }
+    }
+
+
+    async function deleteExistingObligation(obligationId) {
+        if (!confirm('Are you sure you want to delete this obligation?')) return;
+
+        try {
+            // ADD LOADING INDICATORS
+            showLoading(true, 'Deleting obligation...', '');
+
+            // Add loading state to the table row
+            const row = document.querySelector(`tr[data-obligation-id="${obligationId}"]`);
+            if (row) row.classList.add('table-row-loading');
+
+            const response = await fetch(`/api/obligations/${obligationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Failed to delete obligation');
+
+            showToast('Obligation deleted successfully', 'success');
+            await loadExistingObligations();
+
+        } catch (error) {
+            console.error('Error deleting obligation:', error);
+            showToast(error.message || 'Failed to delete obligation', 'error');
+        } finally {
+            // ADD CLEANUP
+            showLoading(false);
+        }
+    }
+
+
+
+    function showLoading(show, message = 'Processing...', subtext = '') {
+        const overlay = document.getElementById('loadingOverlay');
+        const messageEl = document.getElementById('loadingMessage');
+        const subtextEl = document.getElementById('loadingSubtext');
+
+        if (overlay) {
+            if (show) {
+                if (messageEl) messageEl.textContent = message;
+                if (subtextEl) subtextEl.textContent = subtext;
+                overlay.classList.add('active');
+            } else {
+                overlay.classList.remove('active');
+            }
+        }
+    }
+
+
+    async function addSelectedAIObligations() {
+        if (selectedObligations.size === 0) {
+            showToast('Please select at least one obligation to add', 'error');
+            return;
+        }
+
+        try {
+            // ADD THESE LOADING INDICATORS
+            showLoading(true, `Adding ${selectedObligations.size} obligation(s)...`, 'Please wait...');
+            const addBtn = document.querySelector('#aiObligationsModal .modal-footer .btn-success');
+            if (addBtn) {
+                addBtn.dataset.originalHtml = addBtn.innerHTML;
+                addBtn.innerHTML = '<i class="ti ti-loader-2"></i> Adding...';
+                addBtn.disabled = true;
+            }
+
+            const obligationsToAdd = Array.from(selectedObligations).map(index => aiObligations[index]);
+
+            const promises = obligationsToAdd.map(obl =>
+                fetch('/api/obligations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contract_id: contractId,
+                        obligation_title: obl.title,
+                        description: obl.description,
+                        obligation_type: obl.category,
+                        owner_user_id: obl.owner?.id,
+                        escalation_user_id: obl.escalation?.id,
+                        threshold_date: obl.threshold_date,
+                        due_date: obl.due_date,
+                        status: 'initiated',
+                        is_ai_generated: true
+                    })
+                })
+            );
+
+            const results = await Promise.all(promises);
+            const failed = results.filter(r => !r.ok);
+
+            if (failed.length > 0) {
+                throw new Error(`Failed to add ${failed.length} obligations`);
+            }
+
+            showToast(`Successfully added ${obligationsToAdd.length} obligations`, 'success');
+
+            // Redirect to obligations dashboard
+            setTimeout(() => {
+                window.location.href = '/obligations';
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error adding obligations:', error);
+            showToast(error.message || 'Failed to add obligations', 'error');
+        } finally {
+            // ADD CLEANUP
+            showLoading(false);
+            const addBtn = document.querySelector('#aiObligationsModal .modal-footer .btn-success');
+            if (addBtn && addBtn.dataset.originalHtml) {
+                addBtn.innerHTML = addBtn.dataset.originalHtml;
+                addBtn.disabled = false;
+            }
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        console.log('Page loaded, contract ID:', contractId);
+
+        // ADD INITIAL LOADING
+        showLoading(true, 'Initializing page...', 'Loading contract and obligations');
+
+        try {
+            // Load contract details and obligations
+            await loadContractDetails();
+            await loadExistingObligations();
+        } catch (error) {
+            console.error('Error during initialization:', error);
+            showToast('Failed to initialize page', 'error');
+        } finally {
+            // HIDE LOADING
+            showLoading(false);
+        }
+    });
 
 </script>
 {% endblock %}

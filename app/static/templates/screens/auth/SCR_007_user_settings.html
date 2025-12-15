@@ -588,6 +588,602 @@
         color: var(--text-muted);
     }
 </style>
+
+
+<style>
+    /* ===================================================== 
+   MODAL STYLES - Add this to your existing <style> tag
+   ===================================================== */
+
+    /* Modal Base Styles */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 99999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .modal.active {
+        display: flex !important;
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    .modal-backdrop {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 1;
+    }
+
+    .modal-container {
+        position: relative;
+        background: white;
+        border-radius: 12px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow: hidden;
+        z-index: 2;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: modalSlideIn 0.3s ease-out;
+    }
+
+    @keyframes modalSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-30px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--background-light);
+    }
+
+    .modal-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--text-color);
+    }
+
+    .modal-close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-muted);
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s;
+        padding: 0;
+    }
+
+    .modal-close-btn:hover {
+        background: var(--border-color);
+        color: var(--text-color);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+        max-height: calc(90vh - 160px);
+        overflow-y: auto;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        background: var(--background-light);
+    }
+
+    /* License Option Styles */
+    .license-options {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .license-option-card {
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+        background: white;
+        position: relative;
+    }
+
+    .license-option-card:hover {
+        border-color: var(--primary-color);
+        background: var(--background-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .license-option-card input[type="radio"] {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .license-option-card input[type="radio"]:checked+.license-option-content {
+        border-left-color: var(--primary-color);
+    }
+
+    .license-option-card:has(input[type="radio"]:checked) {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, white 0%, rgba(39, 98, 203, 0.05) 100%);
+    }
+
+    .license-option-content {
+        display: flex;
+        gap: 1rem;
+        align-items: start;
+        padding-left: 1rem;
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .license-option-content i {
+        font-size: 2rem;
+        color: var(--primary-color);
+        flex-shrink: 0;
+    }
+
+    .license-option-content strong {
+        display: block;
+        font-size: 1.125rem;
+        margin-bottom: 0.25rem;
+        color: var(--text-color);
+    }
+
+    .license-option-content p {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .license-option-content ul {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .license-option-content ul li {
+        margin-bottom: 0.25rem;
+    }
+
+    /* Alert Styles */
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .alert-info {
+        background: #dbeafe;
+        border: 1px solid #3b82f6;
+        color: #1e40af;
+    }
+
+    .alert i {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .alert strong {
+        font-weight: 600;
+    }
+
+    /* Form Select in Modal */
+    .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.925rem;
+        transition: var(--transition);
+        font-family: inherit;
+        background: white;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(39, 98, 203, 0.1);
+    }
+
+    /* Button Styles for Modal */
+    .btn-outline-primary {
+        background: white;
+        color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    /* Responsive Modal */
+    @media (max-width: 640px) {
+        .modal-container {
+            width: 95%;
+            max-height: 95vh;
+        }
+
+        .modal-body {
+            max-height: calc(95vh - 160px);
+        }
+    }
+</style>
+
+
+
+<style>
+    /* License Card Styles */
+    .license-card {
+        background: var(--card-background);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .license-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .license-type-display {
+        display: flex;
+        align-items: center;
+    }
+
+    .license-type {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-color);
+    }
+
+    .license-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .license-detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .license-detail-label {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .license-detail-value {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    /* License Toggle */
+    .license-toggle-container {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: var(--background-light);
+        border-radius: 8px;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .license-toggle-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        background: white;
+        color: var(--text-color);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-radius: 6px;
+    }
+
+    .license-toggle-btn:hover {
+        background: var(--background-light);
+    }
+
+    .license-toggle-btn.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+    }
+
+    /* Modules Grid */
+    .modules-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .module-card {
+        background: var(--card-background);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .module-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .module-card.subscribed {
+        border-color: var(--success-color);
+        background: linear-gradient(135deg, var(--card-background) 0%, rgba(34, 197, 94, 0.05) 100%);
+    }
+
+    .module-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .module-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 8px;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .subscription-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .subscription-badge.active {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .subscription-badge.inactive {
+        background: var(--background-light);
+        color: var(--text-muted);
+    }
+
+    .module-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+    }
+
+    .module-description {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .module-pricing {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: var(--background-light);
+        border-radius: 6px;
+    }
+
+    .price-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+    }
+
+    .price-period {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .module-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* License Option Cards */
+    .license-options {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .license-option-card {
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: block;
+    }
+
+    .license-option-card:hover {
+        border-color: var(--primary-color);
+        background: var(--background-light);
+    }
+
+    .license-option-card input[type="radio"] {
+        display: none;
+    }
+
+    .license-option-card input[type="radio"]:checked+.license-option-content {
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .license-option-content {
+        display: flex;
+        gap: 1rem;
+        align-items: start;
+        padding-left: 1rem;
+        border-left: 4px solid transparent;
+        transition: all 0.3s ease;
+    }
+
+    .license-option-content i {
+        font-size: 2rem;
+        color: var(--primary-color);
+    }
+
+    .license-option-content ul {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .loading-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .modules-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .license-details {
+            grid-template-columns: 1fr;
+        }
+
+        .license-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+    }
+
+
+    /* Button Loading States */
+    .btn {
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-loading-text {
+        pointer-events: none;
+        position: relative;
+    }
+
+    .btn-loading-text::before {
+        content: "";
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
+        border: 2px solid transparent;
+        border-radius: 50%;
+        border-top-color: currentColor;
+        animation: spin 0.6s linear infinite;
+        vertical-align: middle;
+    }
+
+    .module-action-btn.loading {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .module-action-btn.loading i {
+        display: none;
+    }
+
+    .module-action-btn.loading::before {
+        content: "";
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        margin-right: 8px;
+        border: 2px solid transparent;
+        border-radius: 50%;
+        border-top-color: currentColor;
+        animation: spin 0.6s linear infinite;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -915,59 +1511,184 @@
                     <p class="section-description">Manage your subscription and user seats</p>
                 </div>
 
+                <!-- Current License Card -->
                 <div class="license-card">
                     <div class="license-header">
-                        <div class="license-type" id="licenseType">Corporate License</div>
-                        <button class="btn btn-primary">Upgrade Plan</button>
+                        <div class="license-type-display">
+                            <i class="ti ti-license" style="font-size: 1.5rem; margin-right: 0.5rem;"></i>
+                            <div>
+                                <div class="license-type" id="licenseType">Loading...</div>
+                                <small class="text-muted" id="licenseDescription">Please wait...</small>
+                            </div>
+                        </div>
+
+                        <!-- License Type Switcher -->
+                        <div id="licenseSwitcher">
+                            <button class="btn btn-outline-primary" onclick="openLicenseModal()">
+                                <i class="ti ti-settings"></i>
+                                Change License
+                            </button>
+                        </div>
                     </div>
+
                     <div class="license-details">
                         <div class="license-detail-item">
-                            <span class="license-detail-label">Contract Limit</span>
-                            <span class="license-detail-value" id="contractLimit">Unlimited</span>
+                            <span class="license-detail-label">
+                                <i class="ti ti-file-text"></i>
+                                Contract Limit
+                            </span>
+                            <span class="license-detail-value" id="contractLimit">-</span>
                         </div>
                         <div class="license-detail-item">
-                            <span class="license-detail-label">User Seats</span>
-                            <span class="license-detail-value" id="userSeats">6-10 Users</span>
+                            <span class="license-detail-label">
+                                <i class="ti ti-users"></i>
+                                User Seats
+                            </span>
+                            <span class="license-detail-value" id="userSeats">-</span>
                         </div>
                         <div class="license-detail-item">
-                            <span class="license-detail-label">Active Users</span>
-                            <span class="license-detail-value" id="activeUsers">1 / 10</span>
+                            <span class="license-detail-label">
+                                <i class="ti ti-user-check"></i>
+                                Active Users
+                            </span>
+                            <span class="license-detail-value" id="activeUsers">-</span>
                         </div>
                         <div class="license-detail-item">
-                            <span class="license-detail-label">Renewal Date</span>
+                            <span class="license-detail-label">
+                                <i class="ti ti-calendar"></i>
+                                Renewal Date
+                            </span>
                             <span class="license-detail-value" id="renewalDate">-</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-
             <!-- Module Subscriptions Section -->
             <div class="settings-section" id="subscriptionsSection">
                 <div class="section-header">
                     <h2 class="section-title">Module Subscriptions</h2>
-                    <p class="section-description">Manage your company's access to CALIM 360 modules</p>
+                    <p class="section-description">Choose and subscribe to the modules you need</p>
                 </div>
 
-                <!-- Access Check Container -->
-                <div id="subscriptionAccessCheck" style="display: none;">
-                    <div
-                        style="padding: 2rem; text-align: center; background: var(--background-light); border-radius: 8px;">
-                        <i class="ti ti-lock"
-                            style="font-size: 3rem; color: var(--text-muted); margin-bottom: 1rem;"></i>
-                        <h3 style="color: var(--text-color); margin-bottom: 0.5rem;">Access Restricted</h3>
-                        <p style="color: var(--text-muted);">Module subscription management is only available for
-                            external company users. Internal staff have automatic access to all system features.</p>
+                <!-- License Type Toggle for Pricing Preview -->
+                <div class="license-toggle-container" style="margin-bottom: 1.5rem;">
+                    <label style="margin-right: 1rem; font-weight: 500;">View Pricing For:</label>
+                    <div class="btn-group">
+                        <button class="btn btn-sm license-toggle-btn active" data-license="individual"
+                            onclick="switchPricingView('individual')">
+                            <i class="ti ti-user"></i>
+                            Individual
+                        </button>
+                        <button class="btn btn-sm license-toggle-btn" data-license="corporate"
+                            onclick="switchPricingView('corporate')">
+                            <i class="ti ti-building"></i>
+                            Corporate
+                        </button>
                     </div>
                 </div>
 
-                <!-- Modules Container -->
-                <div id="modulesContainer" class="loading-state">
-                    <div class="spinner"></div>
-                    <p>Loading modules...</p>
+                <!-- Modules Grid -->
+                <div id="modulesContainer" class="modules-grid">
+                    <!-- Modules will be loaded here dynamically -->
+                    <div class="loading-state">
+                        <i class="ti ti-loader" style="font-size: 2rem; animation: spin 1s linear infinite;"></i>
+                        <p>Loading modules...</p>
+                    </div>
                 </div>
             </div>
 
+
+            <!-- License Change Modal -->
+            <div class="modal" id="licenseModal">
+                <div class="modal-backdrop" onclick="closeLicenseModal()"></div>
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h3 class="modal-title">
+                            <i class="ti ti-license"></i>
+                            Change License Plan
+                        </h3>
+                        <button class="modal-close-btn" onclick="closeLicenseModal()">
+                            <i class="ti ti-x"></i>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label">License Type</label>
+                            <div class="license-options">
+                                <label class="license-option-card">
+                                    <input type="radio" name="newLicenseType" value="individual">
+                                    <div class="license-option-content">
+                                        <i class="ti ti-user"></i>
+                                        <div>
+                                            <strong>Individual License</strong>
+                                            <p>Perfect for freelancers and small teams</p>
+                                            <ul>
+                                                <li>Up to 10 contracts</li>
+                                                <li>1-5 users</li>
+                                                <li>Basic features</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label class="license-option-card">
+                                    <input type="radio" name="newLicenseType" value="corporate">
+                                    <div class="license-option-content">
+                                        <i class="ti ti-building"></i>
+                                        <div>
+                                            <strong>Corporate License</strong>
+                                            <p>For growing businesses and enterprises</p>
+                                            <ul>
+                                                <li>Unlimited contracts</li>
+                                                <li>6-20 users</li>
+                                                <li>Advanced features</li>
+                                                <li>Priority support</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="numberOfUsersGroup">
+                            <label class="form-label">Number of Users</label>
+                            <select class="form-select" id="numberOfUsers">
+                                <option value="">Select Number of Users</option>
+                                <option value="1">1 User</option>
+                                <option value="2">2 Users</option>
+                                <option value="3">3 Users</option>
+                                <option value="4">4 Users</option>
+                                <option value="5">5 Users</option>
+                                <option value="6">6 Users</option>
+                                <option value="7">7 Users</option>
+                                <option value="8">8 Users</option>
+                                <option value="9">9 Users</option>
+                                <option value="10">10 Users</option>
+                                <option value="15">15 Users</option>
+                                <option value="20">20 Users</option>
+                            </select>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="ti ti-info-circle"></i>
+                            <div>
+                                <strong>Note:</strong> Changing your license will update module pricing.
+                                Existing subscriptions will remain active.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeLicenseModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="updateLicense()">
+                            <i class="ti ti-check"></i>
+                            Update License
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Save Actions -->
             <div class="settings-actions">
@@ -1151,6 +1872,8 @@
 
     // Save Personal Information
     async function savePersonalInfo() {
+        const saveButton = document.querySelector('.settings-actions .btn-primary');
+
         try {
             const formData = {
                 first_name: document.getElementById('firstName').value,
@@ -1160,13 +1883,11 @@
                 country: document.getElementById('country').value
             };
 
-            showLoading(true);
+            setButtonLoading(saveButton, true, 'Saving...');
 
             const response = await fetch('/api/user/settings/personal', {
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify(formData)
             });
@@ -1175,19 +1896,17 @@
 
             if (result.success) {
                 showToast('Personal information updated successfully', 'success');
-                await loadUserSettings(); // Reload to refresh sidebar
+                await loadUserSettings();
             } else {
                 throw new Error(result.message || 'Failed to update');
             }
-
         } catch (error) {
             console.error('Error saving personal info:', error);
             showToast('Failed to update personal information', 'error');
         } finally {
-            showLoading(false);
+            setButtonLoading(saveButton, false);
         }
     }
-
     // Save Company Information
     async function saveCompanyInfo() {
         try {
@@ -1473,6 +2192,28 @@
 </script>
 
 <script>
+
+
+    // ===== LOADING UTILITY FUNCTIONS =====
+    function setButtonLoading(button, loading, loadingText = 'Loading...') {
+        if (!button) return;
+
+        if (loading) {
+            button.dataset.originalHtml = button.innerHTML;
+            button.dataset.originalDisabled = button.disabled;
+            button.disabled = true;
+            button.classList.add('btn-loading-text');
+            button.innerHTML = `<i class="ti ti-loader" style="animation: spin 0.6s linear infinite;"></i> ${loadingText}`;
+        } else {
+            if (button.dataset.originalHtml) {
+                button.innerHTML = button.dataset.originalHtml;
+            }
+            button.disabled = button.dataset.originalDisabled === 'true';
+            button.classList.remove('btn-loading-text');
+            delete button.dataset.originalHtml;
+            delete button.dataset.originalDisabled;
+        }
+    }
     // Check if user can access subscriptions
     async function checkSubscriptionAccess() {
         try {
@@ -1754,6 +2495,418 @@
             showToast('Failed to load modules', 'error');
         }
     }
+</script>
+
+<script>
+    // =====================================================
+    // MODAL FUNCTIONS - Replace your existing modal JavaScript with this
+    // =====================================================
+
+    let currentLicenseType = 'individual';
+    let currentPricingView = 'individual';
+
+    // Open license modal
+    function openLicenseModal() {
+        console.log('Opening license modal...'); // Debug
+
+        const modal = document.getElementById('licenseModal');
+        if (!modal) {
+            console.error('Modal element not found!');
+            alert('Error: Modal not found. Please refresh the page.');
+            return;
+        }
+
+        // Add active class to show modal
+        modal.classList.add('active');
+
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+
+        // Pre-select current license type
+        const radioButton = document.querySelector(`input[name="newLicenseType"][value="${currentLicenseType}"]`);
+        if (radioButton) {
+            radioButton.checked = true;
+
+            // Highlight the selected card
+            document.querySelectorAll('.license-option-card').forEach(card => {
+                const input = card.querySelector('input[type="radio"]');
+                if (input && input.checked) {
+                    card.style.borderColor = 'var(--primary-color)';
+                }
+            });
+
+            updateUserOptions();
+        }
+
+        console.log('Modal opened successfully');
+    }
+
+    // Close license modal
+    function closeLicenseModal() {
+        console.log('Closing license modal...');
+
+        const modal = document.getElementById('licenseModal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    }
+
+    // Update user options based on license type
+    function updateUserOptions() {
+        const selectedType = document.querySelector('input[name="newLicenseType"]:checked')?.value;
+        const userSelect = document.getElementById('numberOfUsers');
+
+        console.log('Updating user options for license type:', selectedType);
+
+        if (!userSelect) {
+            console.error('User select element not found');
+            return;
+        }
+
+        if (selectedType === 'individual') {
+            // Individual: 1-5 users
+            userSelect.innerHTML = `
+            <option value="">Select Number of Users</option>
+            <option value="1">1 User</option>
+            <option value="2">2 Users</option>
+            <option value="3">3 Users</option>
+            <option value="4">4 Users</option>
+            <option value="5">5 Users</option>
+        `;
+        } else if (selectedType === 'corporate') {
+            // Corporate: 6-20 users
+            userSelect.innerHTML = `
+            <option value="">Select Number of Users</option>
+            <option value="6">6 Users</option>
+            <option value="7">7 Users</option>
+            <option value="8">8 Users</option>
+            <option value="9">9 Users</option>
+            <option value="10">10 Users</option>
+            <option value="15">15 Users</option>
+            <option value="20">20 Users</option>
+        `;
+        }
+    }
+
+    // Update license
+    async function updateLicense() {
+        const licenseType = document.querySelector('input[name="newLicenseType"]:checked')?.value;
+        const numberOfUsers = parseInt(document.getElementById('numberOfUsers').value);
+
+        if (!licenseType) {
+            showToast('Please select a license type', 'error');
+            return;
+        }
+
+        if (!numberOfUsers) {
+            showToast('Please select number of users', 'error');
+            return;
+        }
+
+        const updateButton = document.querySelector('#licenseModal .btn-primary');
+
+        try {
+            setButtonLoading(updateButton, true, 'Updating License...');
+
+            const response = await fetch('/api/v1/users/license/update', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    license_type: licenseType,
+                    number_of_users: numberOfUsers
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast(data.message || 'License updated successfully', 'success');
+                closeLicenseModal();
+
+                if (typeof loadLicenseInfo === 'function') {
+                    await loadLicenseInfo();
+                }
+                if (typeof loadModules === 'function') {
+                    await loadModules(licenseType);
+                }
+            } else {
+                showToast(data.message || 'Failed to update license', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating license:', error);
+            showToast('Failed to update license. Please try again.', 'error');
+        } finally {
+            setButtonLoading(updateButton, false);
+        }
+    }
+    // Load license info
+    async function loadLicenseInfo() {
+        try {
+            const response = await fetch('/api/v1/users/license/info', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.license) {
+                const license = data.license;
+                currentLicenseType = license.type;
+
+                // Update license display
+                document.getElementById('licenseType').textContent =
+                    license.type === 'individual' ? 'Individual License' : 'Corporate License';
+
+                document.getElementById('licenseDescription').textContent =
+                    license.type === 'individual'
+                        ? 'Perfect for freelancers and small teams'
+                        : 'For growing businesses and enterprises';
+
+                document.getElementById('contractLimit').textContent = license.max_contracts;
+                document.getElementById('userSeats').textContent = license.number_of_users + ' Users';
+                document.getElementById('activeUsers').textContent =
+                    `${license.active_users} / ${license.max_users}`;
+
+                if (license.expiry) {
+                    const expiryDate = new Date(license.expiry);
+                    document.getElementById('renewalDate').textContent =
+                        expiryDate.toLocaleDateString();
+                } else {
+                    document.getElementById('renewalDate').textContent = 'No expiry date';
+                }
+
+                // Show license switcher if needed (uncomment if you want to show for all users)
+                // document.getElementById('licenseSwitcher').style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading license info:', error);
+            showToast('Failed to load license information', 'error');
+        }
+    }
+
+    // Load modules with pricing
+    async function loadModules(licenseType = null) {
+        const viewType = licenseType || currentPricingView;
+
+        try {
+            const response = await fetch(`/api/v1/users/license/modules/pricing?license_type=${viewType}`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (data.success && data.modules) {
+                renderModules(data.modules);
+            }
+        } catch (error) {
+            console.error('Error loading modules:', error);
+            showToast('Failed to load modules', 'error');
+        }
+    }
+
+    // Render modules
+   function renderModules(modules) {
+    const container = document.getElementById('modulesContainer');
+    
+    if (!modules || modules.length === 0) {
+        container.innerHTML = `
+            <div class="loading-state">
+                <i class="ti ti-package"></i>
+                <p>No modules available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = modules.map(module => `
+        <div class="module-card ${module.is_subscribed ? 'subscribed' : ''}">
+            <div class="module-header">
+                <div class="module-icon">
+                    <i class="${module.icon}"></i>
+                </div>
+                <span class="subscription-badge ${module.is_subscribed ? 'active' : 'inactive'}">
+                    ${module.is_subscribed ? 'Subscribed' : 'Not Subscribed'}
+                </span>
+            </div>
+            
+            <h3 class="module-title">${module.module_name}</h3>
+            <p class="module-description">${module.module_description}</p>
+            
+            <div class="module-pricing">
+                <span class="price-amount">${module.currency} ${module.price_monthly.toFixed(2)}</span>
+                <span class="price-period">/ month</span>
+                <span class="text-muted" style="margin-left: auto; font-size: 0.75rem;">
+                    or ${module.currency} ${module.price_annual.toFixed(2)}/year
+                </span>
+            </div>
+            
+            <div class="module-actions">
+                <button class="module-action-btn ${module.is_subscribed ? 'unsubscribe-btn' : 'subscribe-btn'}" 
+                        data-module="${module.module_code}" 
+                        data-action="${module.is_subscribed ? 'unsubscribe' : 'subscribe'}">
+                    <i class="ti ti-${module.is_subscribed ? 'x' : 'plus'}"></i>
+                    ${module.is_subscribed ? 'Unsubscribe' : 'Subscribe'}
+                </button>
+            </div>
+        </div>
+    `).join('');
+    
+    // Add event listeners
+    container.querySelectorAll('.module-action-btn').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const moduleCode = this.dataset.module;
+            const action = this.dataset.action;
+            toggleSubscription(moduleCode, action, this);
+        });
+    });
+}
+    // Switch pricing view
+    function switchPricingView(licenseType) {
+        currentPricingView = licenseType;
+
+        // Update active button
+        document.querySelectorAll('.license-toggle-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        const activeBtn = document.querySelector(`[data-license="${licenseType}"]`);
+        if (activeBtn) {
+            activeBtn.classList.add('active');
+        }
+
+        // Reload modules with new pricing
+        loadModules(licenseType);
+    }
+
+    // Toggle module subscription
+    async function toggleSubscription(moduleCode, action, buttonElement) {
+        if (!buttonElement) {
+            buttonElement = event?.target?.closest('button');
+        }
+
+        try {
+            if (buttonElement) {
+                setButtonLoading(buttonElement, true, action === 'subscribe' ? 'Subscribing...' : 'Unsubscribing...');
+            }
+
+            const response = await fetch('/api/v1/users/modules/subscription', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                credentials: 'include',
+                body: JSON.stringify({
+                    module_code: moduleCode,
+                    action: action
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showToast(data.message, 'success');
+                setTimeout(() => {
+                    loadModules();
+                }, 500);
+            } else {
+                showToast(data.message || 'Failed to update subscription', 'error');
+                if (buttonElement) {
+                    setButtonLoading(buttonElement, false);
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling subscription:', error);
+            showToast('Failed to update subscription', 'error');
+            if (buttonElement) {
+                setButtonLoading(buttonElement, false);
+            }
+        }
+    }
+
+    // =====================================================
+    // EVENT LISTENERS - Initialize when DOM is ready
+    // =====================================================
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('Initializing license modal...');
+
+        // Load initial data
+        loadLicenseInfo();
+        loadModules();
+
+        // Set up radio button listeners
+        const radioButtons = document.querySelectorAll('input[name="newLicenseType"]');
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', function () {
+                updateUserOptions();
+
+                // Update card styling
+                document.querySelectorAll('.license-option-card').forEach(card => {
+                    const input = card.querySelector('input[type="radio"]');
+                    if (input === this) {
+                        card.style.borderColor = 'var(--primary-color)';
+                    } else {
+                        card.style.borderColor = 'var(--border-color)';
+                    }
+                });
+            });
+        });
+
+        // Click on card to select radio
+        document.querySelectorAll('.license-option-card').forEach(card => {
+            card.addEventListener('click', function (e) {
+                // Don't trigger if clicking the radio directly
+                if (e.target.type === 'radio') return;
+
+                const radio = this.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change'));
+                }
+            });
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeLicenseModal();
+            }
+        });
+
+        // Close modal on backdrop click
+        const modal = document.getElementById('licenseModal');
+        if (modal) {
+            modal.addEventListener('click', function (e) {
+                if (e.target === modal) {
+                    closeLicenseModal();
+                }
+            });
+        }
+
+        console.log('License modal initialized successfully');
+    });
+
+    // =====================================================
+    // TEST FUNCTION - Use in browser console to debug
+    // =====================================================
+
+    window.testModal = function () {
+        console.log('Testing modal...');
+        console.log('Modal element:', document.getElementById('licenseModal'));
+        console.log('Button element:', document.querySelector('button[onclick*="openLicenseModal"]'));
+        openLicenseModal();
+    };
 </script>
 
 {% endblock %}

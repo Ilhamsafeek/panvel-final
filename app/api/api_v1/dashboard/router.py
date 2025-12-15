@@ -26,9 +26,11 @@ async def get_dashboard_statistics(
     """
     Get comprehensive dashboard statistics with real-time data
     Includes contracts where company is either primary party or party B
+    INCLUDES: My Pending Approvals (contracts awaiting current user's approval)
     """
     try:
         company_id = current_user.company_id
+        user_id = current_user.id
         today = datetime.now()
         
         # Total Contracts - including party_b_id
@@ -69,18 +71,36 @@ async def get_dashboard_statistics(
         ).fetchone()
         expiring_soon = expiring_soon_result.count if expiring_soon_result else 0
         
-        # Pending Approvals - including party_b_id
+        # Pending Approvals (Company-wide) - including party_b_id
         pending_approvals_result = db.execute(
             text("""
                 SELECT COUNT(DISTINCT wi.id) as count 
                 FROM workflow_instances wi
                 JOIN contracts c ON wi.contract_id = c.id
                 WHERE (c.company_id = :company_id OR c.party_b_id = :company_id)
-                AND wi.status IN ('pending', 'in_progress')
+                AND wi.status IN ('pending', 'in_progress', 'active')
             """),
             {"company_id": company_id}
         ).fetchone()
         pending_approvals = pending_approvals_result.count if pending_approvals_result else 0
+        
+        # 🆕 MY PENDING APPROVALS - Using same logic as is_my_workflow_turn
+        # Counts contracts where current workflow step is assigned to current user
+        my_pending_approvals_result = db.execute(
+            text("""
+                SELECT COUNT(DISTINCT wi.contract_id) as count
+                FROM workflow_instances wi
+                JOIN workflows w ON wi.workflow_id = w.id
+                JOIN workflow_steps ws ON wi.workflow_id = ws.workflow_id 
+                    AND wi.current_step = ws.step_number
+                JOIN contracts c ON wi.contract_id = c.id
+                WHERE (c.company_id = :company_id OR c.party_b_id = :company_id)
+                AND wi.status IN ('pending', 'in_progress', 'active')
+                AND ws.assignee_user_id = :user_id
+            """),
+            {"company_id": company_id, "user_id": user_id}
+        ).fetchone()
+        my_pending_approvals = my_pending_approvals_result.count if my_pending_approvals_result else 0
         
         # Contracts by Status - including party_b_id
         status_breakdown_result = db.execute(
@@ -192,6 +212,8 @@ async def get_dashboard_statistics(
         # Risk Assessment - risk_level column doesn't exist, skip for now
         high_risk_contracts = 0
         
+        logger.info(f"📊 Dashboard Stats - User: {current_user.email}, Total: {total_contracts}, My Pending Approvals: {my_pending_approvals}, Company Pending: {pending_approvals}")
+        
         return {
             "success": True,
             "data": {
@@ -200,6 +222,7 @@ async def get_dashboard_statistics(
                     "active_contracts": active_contracts,
                     "expiring_soon": expiring_soon,
                     "pending_approvals": pending_approvals,
+                    "my_pending_approvals": my_pending_approvals,  # 🆕 NEW: User's specific pending approvals
                     "recent_contracts": recent_contracts
                 },
                 "contracts": {
@@ -229,6 +252,8 @@ async def get_dashboard_statistics(
     except Exception as e:
         logger.error(f"Error fetching dashboard statistics: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+        
 @router.get("/expiring-contracts")
 async def get_expiring_contracts(
     days: int = 30,

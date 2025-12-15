@@ -820,7 +820,8 @@ function addWorkflowStep() {
 // Remove step
 function removeStep(index) {
     if (workflowSteps.length <= 1) {
-        alert('At least one workflow step is required');
+        showNotification('At least one workflow step is required', 'warning');
+
         return;
     }
     

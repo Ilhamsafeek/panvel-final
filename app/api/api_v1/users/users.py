@@ -139,18 +139,21 @@ async def get_company_users(
     status_filter: Optional[str] = Query(None, description="Filter by status"),
     role_filter: Optional[str] = Query(None, description="Filter by role"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)  # ✅ ENABLED AUTHENTICATION
+    current_user: User = Depends(get_current_user)
 ):
     """
     Get users for company
-    - Internal users: See ALL users across all companies
+    - Internal users: See ALL users across all companies WITH company names
     - Regular users: See only users from their company
     """
     try:
         logger.info(f"Fetching company users with skip={skip}, limit={limit}")
         
-        # Build base query
-        query = db.query(User)
+        # Build base query with LEFT JOIN to companies table        
+        query = db.query(
+            User,
+            Company.company_name.label('company_name')
+        ).outerjoin(Company, User.company_id == Company.id)
         
         # ✅ INTERNAL USER CHECK - Show all users if internal
         if current_user.user_type != 'internal':
@@ -168,7 +171,7 @@ async def get_company_users(
                     "limit": limit
                 }
         else:
-            logger.info(f"Internal user {current_user.id} - showing all users")
+            logger.info(f"Internal user {current_user.id} - showing all users with company names")
         
         # Apply search filter
         if search:
@@ -178,7 +181,8 @@ async def get_company_users(
                 User.last_name.ilike(search_term),
                 User.email.ilike(search_term),
                 User.username.ilike(search_term),
-                User.job_title.ilike(search_term)
+                User.job_title.ilike(search_term),
+                Company.company_name.ilike(search_term)  # Search by company name too
             )
             query = query.filter(search_filter)
         
@@ -199,11 +203,11 @@ async def get_company_users(
         total_users = query.count()
         
         # Get users with pagination
-        users = query.order_by(User.created_at.desc()).offset(skip).limit(limit).all()
+        results = query.order_by(User.created_at.desc()).offset(skip).limit(limit).all()
         
         # Convert to the format your frontend expects
         user_list = []
-        for user in users:
+        for user, company_name in results:
             user_data = {
                 "id": user.id,
                 "company_id": user.company_id,
@@ -222,7 +226,9 @@ async def get_company_users(
                 "is_active": bool(user.is_active) if user.is_active is not None else True,
                 "is_verified": bool(user.is_verified) if user.is_verified is not None else True,
                 "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
-                "created_at": user.created_at.isoformat() if user.created_at else None
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                # ✅ Add company name (only meaningful for internal users viewing multiple companies)
+                "company_name": company_name or "N/A"
             }
             user_list.append(user_data)
         
@@ -241,6 +247,7 @@ async def get_company_users(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch users: {str(e)}"
         )
+
 # =====================================================
 # CREATE USER ENDPOINT (Enhanced with Expert Profile Support)
 # =====================================================

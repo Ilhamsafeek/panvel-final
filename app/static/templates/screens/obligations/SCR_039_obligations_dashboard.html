@@ -833,6 +833,7 @@
         from {
             opacity: 0;
         }
+
         to {
             opacity: 1;
         }
@@ -843,6 +844,7 @@
             transform: translateY(20px);
             opacity: 0;
         }
+
         to {
             transform: translateY(0);
             opacity: 1;
@@ -854,6 +856,7 @@
             transform: translateX(100%);
             opacity: 0;
         }
+
         to {
             transform: translateX(0);
             opacity: 1;
@@ -979,61 +982,61 @@
                     <span>Service Contract</span>
                 </div> -->
             </div>
-            
+
         </div>
     </div>
 
-  
-<!-- Stats Grid -->
-<div class="stats-grid">
-    <div class="stat-card" onclick="filterByStatus('all')">
-        <div class="stat-header">
-            <div>
-                <div class="stat-value" id="statTotal">0</div>
-                <div class="stat-label">Total Obligations</div>
-            </div>
-            <div class="stat-icon total">
-                <i class="ti ti-clipboard-list"></i>
-            </div>
-        </div>
-    </div>
 
-    <div class="stat-card" onclick="filterByStatus('in-progress')">
-        <div class="stat-header">
-            <div>
-                <div class="stat-value" id="statInProgress">0</div>
-                <div class="stat-label">In Progress</div>
-            </div>
-            <div class="stat-icon pending">
-                <i class="ti ti-clock"></i>
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card" onclick="filterByStatus('all')">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="statTotal">0</div>
+                    <div class="stat-label">Total Obligations</div>
+                </div>
+                <div class="stat-icon total">
+                    <i class="ti ti-clipboard-list"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="stat-card" onclick="filterByStatus('completed')">
-        <div class="stat-header">
-            <div>
-                <div class="stat-value" id="statCompleted">0</div>
-                <div class="stat-label">Completed</div>
-            </div>
-            <div class="stat-icon completed">
-                <i class="ti ti-circle-check"></i>
+        <div class="stat-card" onclick="filterByStatus('in-progress')">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="statInProgress">0</div>
+                    <div class="stat-label">In Progress</div>
+                </div>
+                <div class="stat-icon pending">
+                    <i class="ti ti-clock"></i>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="stat-card" onclick="filterByStatus('overdue')">
-        <div class="stat-header">
-            <div>
-                <div class="stat-value" id="statOverdue">0</div>
-                <div class="stat-label">Overdue</div>
+        <div class="stat-card" onclick="filterByStatus('completed')">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="statCompleted">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-icon completed">
+                    <i class="ti ti-circle-check"></i>
+                </div>
             </div>
-            <div class="stat-icon overdue">
-                <i class="ti ti-alert-circle"></i>
+        </div>
+
+        <div class="stat-card" onclick="filterByStatus('overdue')">
+            <div class="stat-header">
+                <div>
+                    <div class="stat-value" id="statOverdue">0</div>
+                    <div class="stat-label">Overdue</div>
+                </div>
+                <div class="stat-icon overdue">
+                    <i class="ti ti-alert-circle"></i>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <!-- Obligations Table -->
     <div class="table-container">
@@ -1130,14 +1133,16 @@
                     <label class="form-label">
                         Obligation Name <span class="required">*</span>
                     </label>
-                    <input type="text" class="form-control" id="obligationName" placeholder="Enter obligation name" required>
+                    <input type="text" class="form-control" id="obligationName" placeholder="Enter obligation name"
+                        required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">
                         Description <span class="required">*</span>
                     </label>
-                    <textarea class="form-control form-textarea" id="obligationDescription" placeholder="Enter detailed description" required></textarea>
+                    <textarea class="form-control form-textarea" id="obligationDescription"
+                        placeholder="Enter detailed description" required></textarea>
                 </div>
 
                 <div class="form-row">
@@ -1179,7 +1184,8 @@
                         <label class="form-label">
                             Escalation Days
                         </label>
-                        <input type="number" class="form-control" id="escalationDays" placeholder="Days before escalation" min="1">
+                        <input type="number" class="form-control" id="escalationDays"
+                            placeholder="Days before escalation" min="1">
                     </div>
                 </div>
 
@@ -1211,22 +1217,25 @@
                 <i class="ti ti-sparkles"></i>
                 OBLIGATIONS SUMMARY
             </h3>
-            <button class="modal-close" style="color: white; border-color: rgba(255,255,255,0.3);" onclick="closeModal('aiObligationsModal')">
+            <button class="modal-close" style="color: white; border-color: rgba(255,255,255,0.3);"
+                onclick="closeModal('aiObligationsModal')">
                 <i class="ti ti-x"></i>
             </button>
         </div>
         <div class="modal-body">
-            <div style="background: var(--info-bg); border: 1px solid var(--info-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <div
+                style="background: var(--info-bg); border: 1px solid var(--info-color); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
                 <i class="ti ti-info-circle" style="color: var(--info-color); font-size: 1.25rem;"></i>
                 <p style="margin: 0; color: var(--info-color);">
-                    Our AI has analyzed the contract and extracted the following obligations. Review, edit if needed, and select which ones to add to your obligations database.
+                    Our AI has analyzed the contract and extracted the following obligations. Review, edit if needed,
+                    and select which ones to add to your obligations database.
                 </p>
             </div>
-            
+
             <div id="aiObligationsList" style="display: grid; gap: 1rem;">
                 <!-- AI obligations will be rendered here -->
             </div>
-            
+
             <div style="margin-top: 1.5rem; padding: 1rem; background: var(--background-light); border-radius: 8px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                     <span style="font-weight: 600;">Selected Obligations:</span>
@@ -1265,7 +1274,7 @@
             <form id="editObligationForm">
                 <!-- Hidden field to store obligation ID -->
                 <input type="hidden" id="editObligationId">
-                
+
                 <div class="form-group">
                     <label class="form-label">
                         Obligation Type <span class="required">*</span>
@@ -1288,14 +1297,16 @@
                     <label class="form-label">
                         Obligation Name <span class="required">*</span>
                     </label>
-                    <input type="text" class="form-control" id="editObligationName" placeholder="Enter obligation name" required>
+                    <input type="text" class="form-control" id="editObligationName" placeholder="Enter obligation name"
+                        required>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">
                         Description <span class="required">*</span>
                     </label>
-                    <textarea class="form-control form-textarea" id="editObligationDescription" placeholder="Enter detailed description" required></textarea>
+                    <textarea class="form-control form-textarea" id="editObligationDescription"
+                        placeholder="Enter detailed description" required></textarea>
                 </div>
 
                 <div class="form-group">
@@ -1393,7 +1404,7 @@
     // =====================================================
     // INITIALIZE ON PAGE LOAD
     // =====================================================
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         console.log('🚀 Initializing Obligations Dashboard...');
         loadObligations();
         setupEventListeners();
@@ -1405,15 +1416,15 @@
     function setupEventListeners() {
         // Search with debounce
         let searchTimeout;
-        document.getElementById('searchInput').addEventListener('input', function(e) {
+        document.getElementById('searchInput').addEventListener('input', function (e) {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => handleSearch(e), 300);
         });
-        
+
         // Filters
         document.getElementById('statusFilter').addEventListener('change', handleFilter);
         document.getElementById('priorityFilter').addEventListener('change', handleFilter);
-        
+
         // Select all checkbox
         const selectAllCheckbox = document.getElementById('selectAll');
         if (selectAllCheckbox) {
@@ -1427,9 +1438,9 @@
     async function loadObligations() {
         try {
             showLoading(true);
-            
+
             console.log('📡 Fetching obligations from API...');
-            
+
             // Fetch obligations and stats in parallel
             const [obligationsResponse, statsResponse] = await Promise.all([
                 fetch(`${API_BASE}/all`, {
@@ -1450,32 +1461,47 @@
                 throw new Error(`HTTP error! status: ${obligationsResponse.status}`);
             }
 
-            const obligationsResult = await obligationsResponse.json();
-            const statsResult = await statsResponse.json();
+            if (!statsResponse.ok) {
+                console.warn('Stats API failed, continuing with obligations only');
+            }
 
-            console.log('✅ Data received:', {
-                obligations: obligationsResult.data?.length || 0,
-                stats: statsResult.data
+            const obligationsResult = await obligationsResponse.json();
+            const statsResult = statsResponse.ok ? await statsResponse.json() : {};
+
+            console.log('📦 Raw API response:', {
+                obligations: obligationsResult,
+                stats: statsResult
             });
 
-            // Store data
-            obligationsData = obligationsResult.data || [];
+            // FIXED: Handle both direct array and wrapped {data: [...]} formats
+            obligationsData = Array.isArray(obligationsResult)
+                ? obligationsResult
+                : (obligationsResult.data || []);
+
             filteredData = [...obligationsData];
-            currentStats = statsResult.data || {};
+
+            // FIXED: Stats are returned directly, not wrapped
+            currentStats = statsResult;
+
+            console.log('✅ Data loaded:', {
+                obligations: obligationsData.length,
+                stats: currentStats
+            });
 
             // Update UI
             updateStats();
             renderTable();
-            
+
             showToast(`Loaded ${obligationsData.length} obligations successfully`, 'success');
 
         } catch (error) {
             console.error('❌ Error loading obligations:', error);
             showToast('Failed to load obligations: ' + error.message, 'error');
-            
+
             // Show error in table
             const tbody = document.getElementById('obligationsTableBody');
-            tbody.innerHTML = `
+            if (tbody) {
+                tbody.innerHTML = `
                 <tr>
                     <td colspan="9" style="text-align: center; padding: 2rem; color: var(--danger-color);">
                         <i class="ti ti-alert-circle" style="font-size: 2rem;"></i>
@@ -1489,27 +1515,36 @@
                     </td>
                 </tr>
             `;
+            }
         } finally {
             showLoading(false);
         }
     }
-
     // =====================================================
     // UPDATE STATISTICS
     // =====================================================
     function updateStats() {
-        document.getElementById('statTotal').textContent = currentStats.total || 0;
-        document.getElementById('statInProgress').textContent = currentStats.in_progress || 0;
-        document.getElementById('statCompleted').textContent = currentStats.completed || 0;
-        document.getElementById('statOverdue').textContent = currentStats.overdue || 0;
-    }
+        console.log('📊 Updating stats display:', currentStats);
 
+        // Handle both wrapped and direct stats formats
+        const stats = currentStats.data || currentStats;
+
+        const totalEl = document.getElementById('statTotal');
+        const inProgressEl = document.getElementById('statInProgress');
+        const completedEl = document.getElementById('statCompleted');
+        const overdueEl = document.getElementById('statOverdue');
+
+        if (totalEl) totalEl.textContent = stats.total || 0;
+        if (inProgressEl) inProgressEl.textContent = stats.pending || 0;
+        if (completedEl) completedEl.textContent = stats.completed || 0;
+        if (overdueEl) overdueEl.textContent = stats.overdue || 0;
+    }
     // =====================================================
     // RENDER TABLE
     // =====================================================
     function renderTable() {
         const tbody = document.getElementById('obligationsTableBody');
-        
+
         if (filteredData.length === 0) {
             tbody.innerHTML = `
                 <tr>
@@ -1534,7 +1569,7 @@
         }).join('');
 
         updatePagination();
-        
+
         // Re-attach checkbox listeners
         document.querySelectorAll('.row-checkbox').forEach(checkbox => {
             checkbox.addEventListener('change', handleRowSelect);
@@ -1547,15 +1582,15 @@
     function createTableRow(obligation, rowNumber) {
         const dueDate = obligation.due_date ? new Date(obligation.due_date) : null;
         const daysUntilDue = obligation.days_until_due;
-        
-        const dateClass = obligation.is_overdue ? 'danger' : 
-                         (daysUntilDue !== null && daysUntilDue <= 7) ? 'warning' : '';
-        
-        const dateLabel = obligation.is_overdue ? `${Math.abs(daysUntilDue)} days overdue` :
-                         daysUntilDue === 0 ? 'Due today' :
-                         daysUntilDue !== null ? `In ${daysUntilDue} days` : 'No due date';
 
-        const ownerInitials = obligation.owner_name ? 
+        const dateClass = obligation.is_overdue ? 'danger' :
+            (daysUntilDue !== null && daysUntilDue <= 7) ? 'warning' : '';
+
+        const dateLabel = obligation.is_overdue ? `${Math.abs(daysUntilDue)} days overdue` :
+            daysUntilDue === 0 ? 'Due today' :
+                daysUntilDue !== null ? `In ${daysUntilDue} days` : 'No due date';
+
+        const ownerInitials = obligation.owner_name ?
             obligation.owner_name.split(' ').map(n => n[0]).join('').toUpperCase() : 'UN';
 
         // Calculate progress based on status
@@ -1638,15 +1673,15 @@
     // =====================================================
     function handleSearch(e) {
         const searchTerm = e.target.value.toLowerCase();
-        
+
         filteredData = obligationsData.filter(obligation => {
             return obligation.obligation_title?.toLowerCase().includes(searchTerm) ||
-                   obligation.description?.toLowerCase().includes(searchTerm) ||
-                   obligation.owner_name?.toLowerCase().includes(searchTerm) ||
-                   obligation.contract_number?.toLowerCase().includes(searchTerm) ||
-                   obligation.contract_title?.toLowerCase().includes(searchTerm);
+                obligation.description?.toLowerCase().includes(searchTerm) ||
+                obligation.owner_name?.toLowerCase().includes(searchTerm) ||
+                obligation.contract_number?.toLowerCase().includes(searchTerm) ||
+                obligation.contract_title?.toLowerCase().includes(searchTerm);
         });
-        
+
         applyFilters();
     }
 
@@ -1658,26 +1693,26 @@
         const statusFilter = document.getElementById('statusFilter').value;
         const priorityFilter = document.getElementById('priorityFilter').value;
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        
+
         filteredData = obligationsData.filter(obligation => {
             // Status filter
-            const statusMatch = statusFilter === 'all' || obligation.status === statusFilter || 
-                               (statusFilter === 'overdue' && obligation.is_overdue);
-            
+            const statusMatch = statusFilter === 'all' || obligation.status === statusFilter ||
+                (statusFilter === 'overdue' && obligation.is_overdue);
+
             // Priority filter
             const priorityMatch = priorityFilter === 'all' || obligation.priority === priorityFilter;
-            
+
             // Search filter
-            const searchMatch = !searchTerm || 
-                              obligation.obligation_title?.toLowerCase().includes(searchTerm) ||
-                              obligation.description?.toLowerCase().includes(searchTerm) ||
-                              obligation.owner_name?.toLowerCase().includes(searchTerm) ||
-                              obligation.contract_number?.toLowerCase().includes(searchTerm) ||
-                              obligation.contract_title?.toLowerCase().includes(searchTerm);
-            
+            const searchMatch = !searchTerm ||
+                obligation.obligation_title?.toLowerCase().includes(searchTerm) ||
+                obligation.description?.toLowerCase().includes(searchTerm) ||
+                obligation.owner_name?.toLowerCase().includes(searchTerm) ||
+                obligation.contract_number?.toLowerCase().includes(searchTerm) ||
+                obligation.contract_title?.toLowerCase().includes(searchTerm);
+
             return statusMatch && priorityMatch && searchMatch;
         });
-        
+
         currentPage = 1;
         renderTable();
     }
@@ -1685,7 +1720,7 @@
     function filterByStatus(status) {
         document.getElementById('statusFilter').value = status;
         handleFilter();
-        
+
         const title = document.getElementById('tableTitle');
         if (status === 'all') {
             title.textContent = 'All Obligations';
@@ -1701,13 +1736,13 @@
         const totalPages = Math.ceil(filteredData.length / itemsPerPage);
         const pagination = document.getElementById('pagination');
         const paginationInfo = document.getElementById('paginationInfo');
-        
+
         const startItem = (currentPage - 1) * itemsPerPage + 1;
         const endItem = Math.min(currentPage * itemsPerPage, filteredData.length);
         paginationInfo.textContent = `Showing ${startItem} to ${endItem} of ${filteredData.length} obligations`;
-        
+
         pagination.innerHTML = '';
-        
+
         // Previous button
         const prevBtn = document.createElement('button');
         prevBtn.className = 'page-btn';
@@ -1715,7 +1750,7 @@
         prevBtn.disabled = currentPage === 1;
         prevBtn.onclick = () => goToPage(currentPage - 1);
         pagination.appendChild(prevBtn);
-        
+
         // Page numbers
         for (let i = 1; i <= totalPages; i++) {
             if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
@@ -1732,7 +1767,7 @@
                 pagination.appendChild(dots);
             }
         }
-        
+
         // Next button
         const nextBtn = document.createElement('button');
         nextBtn.className = 'page-btn';
@@ -1771,12 +1806,12 @@
         } else {
             selectedRows.delete(id);
         }
-        
+
         const selectAll = document.getElementById('selectAll');
         if (selectAll) {
             const allCheckboxes = document.querySelectorAll('.row-checkbox');
             const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
-            
+
             selectAll.checked = checkedCount === allCheckboxes.length && allCheckboxes.length > 0;
             selectAll.indeterminate = checkedCount > 0 && checkedCount < allCheckboxes.length;
         }
@@ -1791,55 +1826,55 @@
             form.reportValidity();
             return;
         }
-        
+
         showToast('Add obligation functionality coming soon!', 'info');
         closeModal('addObligationModal');
     }
 
     async function editObligation(id) {
-    try {
-        const obligation = obligationsData.find(o => o.id === id);
-        if (!obligation) {
-            showToast('Obligation not found', 'error');
-            return;
+        try {
+            const obligation = obligationsData.find(o => o.id === id);
+            if (!obligation) {
+                showToast('Obligation not found', 'error');
+                return;
+            }
+
+            console.log('📝 Editing obligation:', obligation);
+
+            // Populate the edit modal form
+            document.getElementById('editObligationId').value = obligation.id;
+            document.getElementById('editObligationType').value = obligation.obligation_type || 'other';
+            document.getElementById('editObligationName').value = obligation.obligation_title;
+            document.getElementById('editObligationDescription').value = obligation.description || '';
+            document.getElementById('editObligationStatus').value = obligation.status;
+
+            // Set due date if exists
+            if (obligation.due_date) {
+                const dueDate = new Date(obligation.due_date);
+                const dateString = dueDate.toISOString().split('T')[0];
+                document.getElementById('editObligationDueDate').value = dateString;
+            }
+
+            // Set threshold date if exists
+            if (obligation.threshold_date) {
+                const thresholdDate = new Date(obligation.threshold_date);
+                const dateString = thresholdDate.toISOString().split('T')[0];
+                document.getElementById('editObligationThresholdDate').value = dateString;
+            }
+
+            // Open the edit modal
+            openModal('editObligationModal');
+
+        } catch (error) {
+            console.error('❌ Error opening edit modal:', error);
+            showToast('Failed to load obligation details: ' + error.message, 'error');
         }
-        
-        console.log('📝 Editing obligation:', obligation);
-        
-        // Populate the edit modal form
-        document.getElementById('editObligationId').value = obligation.id;
-        document.getElementById('editObligationType').value = obligation.obligation_type || 'other';
-        document.getElementById('editObligationName').value = obligation.obligation_title;
-        document.getElementById('editObligationDescription').value = obligation.description || '';
-        document.getElementById('editObligationStatus').value = obligation.status;
-        
-        // Set due date if exists
-        if (obligation.due_date) {
-            const dueDate = new Date(obligation.due_date);
-            const dateString = dueDate.toISOString().split('T')[0];
-            document.getElementById('editObligationDueDate').value = dateString;
-        }
-        
-        // Set threshold date if exists
-        if (obligation.threshold_date) {
-            const thresholdDate = new Date(obligation.threshold_date);
-            const dateString = thresholdDate.toISOString().split('T')[0];
-            document.getElementById('editObligationThresholdDate').value = dateString;
-        }
-        
-        // Open the edit modal
-        openModal('editObligationModal');
-        
-    } catch (error) {
-        console.error('❌ Error opening edit modal:', error);
-        showToast('Failed to load obligation details: ' + error.message, 'error');
     }
-}
 
     function viewObligation(id) {
         const obligation = obligationsData.find(o => o.id === id);
         if (!obligation) return;
-        
+
         const detailsBody = document.getElementById('obligationDetailsBody');
         if (detailsBody) {
             detailsBody.innerHTML = `
@@ -1870,136 +1905,136 @@
         }
     }
 
-  // =====================================================
-// REPLACE deleteObligation FUNCTION IN YOUR JAVASCRIPT
-// =====================================================
+    // =====================================================
+    // REPLACE deleteObligation FUNCTION IN YOUR JAVASCRIPT
+    // =====================================================
 
-async function deleteObligation(id) {
-    try {
-        // Find the obligation to show its name in confirmation
-        const obligation = obligationsData.find(o => o.id === id);
-        const obligationName = obligation ? obligation.obligation_title : 'this obligation';
-        
-        // Show confirmation dialog with more details
-        const confirmMessage = `Are you sure you want to delete "${obligationName}"?\n\n` +
-                              `This action cannot be undone and will also delete:\n` +
-                              `• All related KPIs\n` +
-                              `• All tracking history\n\n` +
-                              `Do you want to continue?`;
-        
-        if (!confirm(confirmMessage)) {
-            return;
+    async function deleteObligation(id) {
+        try {
+            // Find the obligation to show its name in confirmation
+            const obligation = obligationsData.find(o => o.id === id);
+            const obligationName = obligation ? obligation.obligation_title : 'this obligation';
+
+            // Show confirmation dialog with more details
+            const confirmMessage = `Are you sure you want to delete "${obligationName}"?\n\n` +
+                `This action cannot be undone and will also delete:\n` +
+                `• All related KPIs\n` +
+                `• All tracking history\n\n` +
+                `Do you want to continue?`;
+
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+
+            showLoading(true);
+            console.log('🗑️ Deleting obligation:', id);
+
+            const response = await fetch(`${API_BASE}/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Handle different error status codes
+            if (!response.ok) {
+                let errorMessage = 'Delete failed';
+
+                try {
+                    const error = await response.json();
+                    errorMessage = error.detail || errorMessage;
+                } catch (e) {
+                    // If response is not JSON, use status text
+                    errorMessage = response.statusText || errorMessage;
+                }
+
+                // Handle specific error codes
+                if (response.status === 409) {
+                    // Conflict - Foreign key constraint
+                    showToast(errorMessage, 'warning');
+                    console.error('⚠️ Foreign key constraint:', errorMessage);
+                } else if (response.status === 404) {
+                    // Not found
+                    showToast('Obligation not found', 'error');
+                    console.error('❌ Obligation not found');
+                } else {
+                    // Other errors
+                    showToast(errorMessage, 'error');
+                    console.error('❌ Delete error:', errorMessage);
+                }
+
+                return;
+            }
+
+            const result = await response.json();
+            console.log('✅ Delete successful:', result);
+            showToast('Obligation deleted successfully!', 'success');
+
+            // Reload obligations
+            await loadObligations();
+
+        } catch (error) {
+            console.error('❌ Error deleting obligation:', error);
+            showToast('Failed to delete obligation: ' + error.message, 'error');
+        } finally {
+            showLoading(false);
         }
-        
-        showLoading(true);
-        console.log('🗑️ Deleting obligation:', id);
-        
-        const response = await fetch(`${API_BASE}/${id}`, {
-            method: 'DELETE',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        // Handle different error status codes
-        if (!response.ok) {
-            let errorMessage = 'Delete failed';
-            
-            try {
-                const error = await response.json();
-                errorMessage = error.detail || errorMessage;
-            } catch (e) {
-                // If response is not JSON, use status text
-                errorMessage = response.statusText || errorMessage;
-            }
-            
-            // Handle specific error codes
-            if (response.status === 409) {
-                // Conflict - Foreign key constraint
-                showToast(errorMessage, 'warning');
-                console.error('⚠️ Foreign key constraint:', errorMessage);
-            } else if (response.status === 404) {
-                // Not found
-                showToast('Obligation not found', 'error');
-                console.error('❌ Obligation not found');
-            } else {
-                // Other errors
-                showToast(errorMessage, 'error');
-                console.error('❌ Delete error:', errorMessage);
-            }
-            
-            return;
-        }
-        
-        const result = await response.json();
-        console.log('✅ Delete successful:', result);
-        showToast('Obligation deleted successfully!', 'success');
-        
-        // Reload obligations
-        await loadObligations();
-        
-    } catch (error) {
-        console.error('❌ Error deleting obligation:', error);
-        showToast('Failed to delete obligation: ' + error.message, 'error');
-    } finally {
-        showLoading(false);
     }
-}
-  
+
     async function updateObligation() {
-    try {
-        const form = document.getElementById('editObligationForm');
-        if (!form.checkValidity()) {
-            form.reportValidity();
-            return;
+        try {
+            const form = document.getElementById('editObligationForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            showLoading(true);
+
+            const obligationId = document.getElementById('editObligationId').value;
+
+            const updateData = {
+                obligation_title: document.getElementById('editObligationName').value,
+                description: document.getElementById('editObligationDescription').value,
+                obligation_type: document.getElementById('editObligationType').value,
+                status: document.getElementById('editObligationStatus').value,
+                due_date: document.getElementById('editObligationDueDate').value || null,
+                threshold_date: document.getElementById('editObligationThresholdDate').value || null
+            };
+
+            console.log('📤 Updating obligation:', obligationId, updateData);
+
+            const response = await fetch(`${API_BASE}/${obligationId}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Update failed');
+            }
+
+            const result = await response.json();
+            console.log('✅ Update successful:', result);
+
+            showToast('Obligation updated successfully!', 'success');
+            closeModal('editObligationModal');
+
+            // Reload obligations to show updated data
+            await loadObligations();
+
+        } catch (error) {
+            console.error('❌ Error updating obligation:', error);
+            showToast('Failed to update obligation: ' + error.message, 'error');
+        } finally {
+            showLoading(false);
         }
-        
-        showLoading(true);
-        
-        const obligationId = document.getElementById('editObligationId').value;
-        
-        const updateData = {
-            obligation_title: document.getElementById('editObligationName').value,
-            description: document.getElementById('editObligationDescription').value,
-            obligation_type: document.getElementById('editObligationType').value,
-            status: document.getElementById('editObligationStatus').value,
-            due_date: document.getElementById('editObligationDueDate').value || null,
-            threshold_date: document.getElementById('editObligationThresholdDate').value || null
-        };
-        
-        console.log('📤 Updating obligation:', obligationId, updateData);
-        
-        const response = await fetch(`${API_BASE}/${obligationId}`, {
-            method: 'PUT',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(updateData)
-        });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Update failed');
-        }
-        
-        const result = await response.json();
-        console.log('✅ Update successful:', result);
-        
-        showToast('Obligation updated successfully!', 'success');
-        closeModal('editObligationModal');
-        
-        // Reload obligations to show updated data
-        await loadObligations();
-        
-    } catch (error) {
-        console.error('❌ Error updating obligation:', error);
-        showToast('Failed to update obligation: ' + error.message, 'error');
-    } finally {
-        showLoading(false);
     }
-}
 
     // =====================================================
     // AI OBLIGATIONS
@@ -2008,11 +2043,11 @@ async function deleteObligation(id) {
         const overlay = document.getElementById('loadingOverlay');
         const btn = event.target.closest('button');
         const originalHTML = btn.innerHTML;
-        
+
         overlay.classList.add('active');
         btn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Analyzing Contract...';
         btn.disabled = true;
-        
+
         setTimeout(() => {
             overlay.classList.remove('active');
             btn.innerHTML = originalHTML;
@@ -2124,7 +2159,7 @@ async function deleteObligation(id) {
                 selected: false
             }
         ];
-        
+
         window.aiObligations = aiObligations;
         renderAIObligations();
         openModal('aiObligationsModal');
@@ -2134,7 +2169,7 @@ async function deleteObligation(id) {
     function renderAIObligations() {
         const container = document.getElementById('aiObligationsList');
         const obligations = window.aiObligations || [];
-        
+
         container.innerHTML = obligations.map((obligation, index) => `
             <div class="ai-obligation-card ${obligation.selected ? 'selected' : ''}" 
                  data-id="${obligation.id}"
@@ -2212,7 +2247,7 @@ async function deleteObligation(id) {
                 </div>
             </div>
         `).join('');
-        
+
         updateSelectedCount();
     }
 
@@ -2228,7 +2263,7 @@ async function deleteObligation(id) {
         const selectedCount = window.aiObligations.filter(o => o.selected).length;
         document.getElementById('selectedCount').textContent = `${selectedCount} selected`;
         document.getElementById('addCount').textContent = selectedCount;
-        
+
         const addBtn = document.getElementById('addToDbBtn');
         addBtn.disabled = selectedCount === 0;
     }
@@ -2236,17 +2271,18 @@ async function deleteObligation(id) {
     function editAIObligation(id) {
         const obligation = window.aiObligations.find(o => o.id === id);
         if (!obligation) return;
-        alert(`Edit functionality for: ${obligation.title}`);
+                showNotification(`Edit functionality for: ${obligation.title}`, 'success');
+
     }
 
     function addSelectedAIObligations() {
         const selectedObligations = window.aiObligations.filter(o => o.selected);
-        
+
         if (selectedObligations.length === 0) {
             showToast('Please select at least one obligation to add', 'warning');
             return;
         }
-        
+
         closeModal('aiObligationsModal');
         showToast(`Successfully added ${selectedObligations.length} obligations to the database!`, 'success');
     }
@@ -2256,16 +2292,16 @@ async function deleteObligation(id) {
     // =====================================================
     function exportObligations() {
         showToast('Exporting obligations to Excel...', 'info');
-        
+
         setTimeout(() => {
             showToast('Export completed successfully!', 'success');
-            
-            const csvContent = "data:text/csv;charset=utf-8," 
+
+            const csvContent = "data:text/csv;charset=utf-8,"
                 + "No,Title,Description,Contract,Owner,Status,Priority,Due Date\n"
-                + filteredData.map((o, i) => 
-                    `${i+1},"${o.obligation_title}","${o.description || ''}","${o.contract_number || ''}","${o.owner_name || ''}",${o.status},${o.priority},${o.due_date || ''}`
+                + filteredData.map((o, i) =>
+                    `${i + 1},"${o.obligation_title}","${o.description || ''}","${o.contract_number || ''}","${o.owner_name || ''}",${o.status},${o.priority},${o.due_date || ''}`
                 ).join("\n");
-            
+
             const encodedUri = encodeURI(csvContent);
             const link = document.createElement("a");
             link.setAttribute("href", encodedUri);
@@ -2292,7 +2328,7 @@ async function deleteObligation(id) {
         if (modal) {
             modal.classList.remove('active');
             document.body.style.overflow = '';
-            
+
             const form = modal.querySelector('form');
             if (form) {
                 form.reset();
@@ -2318,10 +2354,10 @@ async function deleteObligation(id) {
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
         const toastIcon = toast.querySelector('.toast-icon');
-        
+
         toastMessage.textContent = message;
         toast.className = `toast ${type} show`;
-        
+
         const icons = {
             success: 'check-circle',
             error: 'alert-circle',
@@ -2329,7 +2365,7 @@ async function deleteObligation(id) {
             info: 'info-circle'
         };
         toastIcon.className = `toast-icon ti ti-${icons[type]}`;
-        
+
         setTimeout(() => hideToast(), 3000);
     }
 
@@ -2376,25 +2412,25 @@ async function deleteObligation(id) {
     // EVENT LISTENERS
     // =====================================================
     document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
+        modal.addEventListener('click', function (e) {
             if (e.target === this) {
                 closeModal(this.id);
             }
         });
     });
 
-    document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             document.querySelectorAll('.modal.active').forEach(modal => {
                 closeModal(modal.id);
             });
         }
-        
+
         if (e.ctrlKey && e.key === 'n') {
             e.preventDefault();
             openModal('addObligationModal');
         }
-        
+
         if (e.ctrlKey && e.key === 'e') {
             e.preventDefault();
             exportObligations();

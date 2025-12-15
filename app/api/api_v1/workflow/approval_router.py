@@ -15,6 +15,8 @@ class ApprovalRequest(BaseModel):
     action: str  # 'approve' or 'reject'
     comments: Optional[str] = None
 
+
+
 @router.post("/approve-reject")
 async def approve_reject_workflow(
     request: ApprovalRequest,
@@ -27,22 +29,28 @@ async def approve_reject_workflow(
     - Rejection: Just save comment, workflow stays at same step
     """
     try:
-        # Get user ID from User object
+        # Get user ID and company ID from User object
         user_id = current_user.id
+        company_id = current_user.company_id
         
-        # Get workflow instance for this contract
+        # 🔥 Get workflow instance FILTERED BY COMPANY (join through workflows table)
         workflow_query = text("""
             SELECT wi.id, wi.current_step, wi.workflow_id
             FROM workflow_instances wi
+            INNER JOIN workflows w ON wi.workflow_id = w.id
             WHERE wi.contract_id = :contract_id
+            AND w.company_id = :company_id
             AND wi.status IN ('active', 'in_progress','pending')
             LIMIT 1
         """)
-        workflow = db.execute(workflow_query, {"contract_id": request.contract_id}).first()
+        workflow = db.execute(workflow_query, {
+            "contract_id": request.contract_id,
+            "company_id": company_id
+        }).first()
         db.commit()
         
         if not workflow:
-            raise HTTPException(status_code=404, detail="No active workflow found for this contract")
+            raise HTTPException(status_code=404, detail="No active workflow found for this contract in your company")
         
         if request.action == "approve":
             # Get total steps in this workflow
@@ -66,32 +74,58 @@ async def approve_reject_workflow(
                 """)
                 db.execute(update_workflow, {"workflow_id": workflow.id})
                 
-                # 🔥 UPDATE CONTRACT STATUS TO 'review_completed'
+                # 🔥 CHECK IF CONTRACT BELONGS TO CURRENT USER'S COMPANY
+                check_contract_company = text("""
+                    SELECT company_id, status FROM contracts WHERE id = :contract_id
+                """)
+                contract_result = db.execute(check_contract_company, {
+                    "contract_id": request.contract_id
+                }).first()
+                
+                if contract_result and contract_result.company_id == company_id:
+                    # Contract belongs to user's company → 'review_completed'
+                    if contract_result.status == 'approval':
+                        new_status = 'approved'
+                    else: 
+                        new_status = 'review_completed'
+                    
+                    message = "Workflow completed successfully"
+
+                else:
+                    # Contract belongs to counterparty → 'negotiation'
+                    new_status = 'negotiation'
+                    message = "Workflow completed - Contract moved to negotiation stage"
+                
+                # 🔥 UPDATE CONTRACT STATUS based on ownership
                 update_contract_status = text("""
                     UPDATE contracts
-                    SET status = 'review_completed',
+                    SET status = :new_status,
                         updated_at = NOW()
                     WHERE id = :contract_id
                 """)
-                db.execute(update_contract_status, {"contract_id": request.contract_id})
+                db.execute(update_contract_status, {
+                    "contract_id": request.contract_id,
+                    "new_status": new_status
+                })
                 
-                message = "Workflow completed successfully"
             else:
                 # Move to next step
                 next_step = workflow.current_step + 1
                 
-                # 🔥 GET NEXT APPROVER'S NAME
+                # 🔥 GET NEXT APPROVER'S NAME (from same company)
                 next_approver_query = text("""
                     SELECT u.first_name, u.last_name, u.email
                     FROM workflow_steps ws
                     INNER JOIN users u ON ws.assignee_user_id = u.id
                     WHERE ws.workflow_id = :workflow_id
                     AND ws.step_number = :next_step
+                    AND u.company_id = :company_id
                     LIMIT 1
                 """)
                 next_approver = db.execute(next_approver_query, {
                     "workflow_id": workflow.workflow_id,
-                    "next_step": next_step
+                    "next_step": next_step,
+                    "company_id": company_id
                 }).first()
                 
                 # Update workflow to next step
@@ -115,7 +149,7 @@ async def approve_reject_workflow(
                     # Fallback if no user found
                     message = f"Approved and moved to step {next_step}"
             
-            # Save approval record (optional - you can remove this if not needed)
+            # Save approval record
             if request.comments:
                 save_comment = text("""
                     INSERT INTO approval_requests 

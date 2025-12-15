@@ -18,6 +18,7 @@ class Module(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     subscriptions = relationship("CompanyModuleSubscription", back_populates="module")
+    pricing = relationship("ModulePricing", back_populates="module", cascade="all, delete-orphan")
 
 
 class CompanyModuleSubscription(Base):

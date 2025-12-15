@@ -518,7 +518,7 @@
         <div class="stat-card">
             <div class="stat-header">
                 <div class="stat-icon orange">
-                    <i class="ti ti-clock-alert"></i>
+                    <i class="ti ti-clock"></i>
                 </div>
                 <div class="stat-info">
                     <h4>Expiring in 30 Days</h4>
@@ -569,17 +569,14 @@
         <div class="stat-card">
             <div class="stat-header">
                 <div class="stat-icon cyan">
-                    <i class="ti ti-currency-dollar"></i>
+                    <i class="ti ti-hourglass"></i>
                 </div>
                 <div class="stat-info">
-                    <h4>Total Contract Value</h4>
+                    <h4>My Approvals</h4>
                 </div>
             </div>
-            <div class="stat-value" id="contractValue">-</div>
-            <div class="stat-change positive" id="contractValueChange" style="display: none;">
-                <i class="ti ti-trending-up"></i>
-                <span>+15% from last quarter</span>
-            </div>
+            <div class="stat-value" id="myApprovals">-</div>
+            
         </div>
     </div>
 
@@ -760,7 +757,8 @@ async function loadDashboardData() {
             
             // Update contract value
             const value = data.contracts.total_value;
-            document.getElementById('contractValue').textContent = formatCurrency(value);
+            console.log(data.overview.my_pending_approvals);
+            document.getElementById('myApprovals').textContent = data.overview.my_pending_approvals;
             
             // Update document stats
             document.getElementById('totalDocuments').textContent = data.documents.total;
@@ -773,9 +771,9 @@ async function loadDashboardData() {
             document.getElementById('workflowCompleted').textContent = data.workflows.completed || 0;
             
             // Show change indicators if there's data
-            if (data.overview.recent_contracts > 0) {
-                document.getElementById('totalContractsChange').style.display = 'inline-flex';
-            }
+            // if (data.overview.recent_contracts > 0) {
+            //     document.getElementById('totalContractsChange').style.display = 'inline-flex';
+            // }
             
             // Build status breakdown
             buildStatusBreakdown(data.contracts.by_status);

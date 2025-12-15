@@ -5,13 +5,14 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy import text, func, case
 from pydantic import BaseModel
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import json
 import re
+
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -418,6 +419,188 @@ async def create_obligation(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+@router.get("/all")
+async def get_all_obligations(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get all obligations for the user's company
+    Used by the obligations dashboard
+    """
+    try:
+        logger.info(f"📋 Fetching all obligations for company {current_user.company_id}")
+        
+        # Get all contracts for the user's company
+        company_contracts = db.query(Contract.id).filter(
+            Contract.company_id == current_user.company_id
+        ).all()
+        
+        contract_ids = [c.id for c in company_contracts]
+        
+        if not contract_ids:
+            logger.info("No contracts found for company")
+            return []
+        
+        # Get all obligations for these contracts
+        obligations = db.query(Obligation).filter(
+            Obligation.contract_id.in_(contract_ids)
+        ).order_by(Obligation.created_at.desc()).all()
+        
+        logger.info(f"✅ Found {len(obligations)} obligations")
+        
+        # Enrich with user and contract data
+        enriched_obligations = []
+        for obligation in obligations:
+            # Get contract info
+            contract = db.query(Contract).filter(Contract.id == obligation.contract_id).first()
+            
+            # Get owner info
+            owner = None
+            if obligation.owner_user_id:
+                owner = db.query(User).filter(User.id == obligation.owner_user_id).first()
+            
+            # Get escalation user info
+            escalation_user = None
+            if obligation.escalation_user_id:
+                escalation_user = db.query(User).filter(User.id == obligation.escalation_user_id).first()
+            
+            enriched_data = {
+                "id": obligation.id,
+                "contract_id": obligation.contract_id,
+                # FIXED: Use contract_number instead of contract_no
+                "contract_number": contract.contract_number if contract else None,
+                "contract_title": contract.contract_title if contract else None,
+                "obligation_title": obligation.obligation_title,
+                "description": obligation.description,
+                "obligation_type": obligation.obligation_type,
+                "owner_user_id": obligation.owner_user_id,
+                "owner_name": f"{owner.first_name} {owner.last_name}" if owner else None,
+                "owner_email": owner.email if owner else None,
+                "escalation_user_id": obligation.escalation_user_id,
+                "escalation_name": f"{escalation_user.first_name} {escalation_user.last_name}" if escalation_user else None,
+                "escalation_email": escalation_user.email if escalation_user else None,
+                "threshold_date": obligation.threshold_date.isoformat() if obligation.threshold_date else None,
+                "due_date": obligation.due_date.isoformat() if obligation.due_date else None,
+                "status": obligation.status or "initiated",
+                "is_ai_generated": obligation.is_ai_generated or False,
+                "created_at": obligation.created_at.isoformat() if obligation.created_at else None,
+                "updated_at": obligation.updated_at.isoformat() if obligation.updated_at else None
+            }
+            
+            enriched_obligations.append(enriched_data)
+        
+        return enriched_obligations
+        
+    except Exception as e:
+        logger.error(f"❌ Error fetching all obligations: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch obligations: {str(e)}"
+        )
+
+
+# 3. REPLACE THE /stats ENDPOINT WITH THIS FIXED VERSION
+# =====================================================
+
+@router.get("/stats")
+async def get_obligations_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get statistics about obligations for the dashboard
+    Returns counts by status, priority, overdue, etc.
+    """
+    try:
+        logger.info(f"📊 Fetching obligations statistics for company {current_user.company_id}")
+        
+        # Get all contracts for the user's company
+        company_contracts = db.query(Contract.id).filter(
+            Contract.company_id == current_user.company_id
+        ).all()
+        
+        contract_ids = [c.id for c in company_contracts]
+        
+        if not contract_ids:
+            return {
+                "total": 0,
+                "by_status": {},
+                "overdue": 0,
+                "due_soon": 0,
+                "completed": 0,
+                "pending": 0
+            }
+        
+        # Get base query
+        base_query = db.query(Obligation).filter(
+            Obligation.contract_id.in_(contract_ids)
+        )
+        
+        # Total count
+        total = base_query.count()
+        
+        # Count by status - FIXED: Now using func from sqlalchemy
+        status_counts = db.query(
+            Obligation.status,
+            func.count(Obligation.id).label('count')
+        ).filter(
+            Obligation.contract_id.in_(contract_ids)
+        ).group_by(Obligation.status).all()
+        
+        by_status = {status: count for status, count in status_counts}
+        
+        # Overdue count (due_date < today and status not completed)
+        today = datetime.now().date()
+        
+        overdue = base_query.filter(
+            Obligation.due_date < today,
+            Obligation.status != 'completed'
+        ).count()
+        
+        # Due soon (within 7 days)
+        next_week = today + timedelta(days=7)
+        due_soon = base_query.filter(
+            Obligation.due_date >= today,
+            Obligation.due_date <= next_week,
+            Obligation.status != 'completed'
+        ).count()
+        
+        # Completed count
+        completed = base_query.filter(
+            Obligation.status == 'completed'
+        ).count()
+        
+        # Pending/Initiated count
+        pending = base_query.filter(
+            Obligation.status.in_(['initiated', 'pending', 'in_progress'])
+        ).count()
+        
+        stats = {
+            "total": total,
+            "by_status": by_status,
+            "overdue": overdue,
+            "due_soon": due_soon,
+            "completed": completed,
+            "pending": pending
+        }
+        
+        logger.info(f"✅ Statistics: {stats}")
+        
+        return stats
+        
+    except Exception as e:
+        logger.error(f"❌ Error fetching obligations stats: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch statistics: {str(e)}"
+        )
+
 
 # =====================================================
 # UPDATE OBLIGATION

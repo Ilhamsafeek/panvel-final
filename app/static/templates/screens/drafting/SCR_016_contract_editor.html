@@ -1498,105 +1498,108 @@
 
 
 <style>
-/* Blockchain Monitor Button */
-.blockchain-btn-info {
-    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-    color: white;
-    border: none;
-}
-
-.blockchain-btn-info:hover {
-    background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
-    transform: translateY(-2px);
-}
-
-/* Live Indicator Animation */
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
+    /* Blockchain Monitor Button */
+    .blockchain-btn-info {
+        background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+        color: white;
+        border: none;
     }
-    50% {
-        opacity: 0.5;
+
+    .blockchain-btn-info:hover {
+        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+        transform: translateY(-2px);
     }
-}
 
-/* Modal Overlay */
-#blockchainMonitorModal.show {
-    display: flex !important;
-}
+    /* Live Indicator Animation */
+    @keyframes pulse {
 
-/* Activity Item Styles */
-.activity-item {
-    padding: 1rem;
-    border-left: 3px solid #3b82f6;
-    background: #f8fafc;
-    border-radius: 0 8px 8px 0;
-    margin-bottom: 0.75rem;
-    transition: all 0.3s ease;
-}
+        0%,
+        100% {
+            opacity: 1;
+        }
 
-.activity-item:hover {
-    background: #eff6ff;
-    border-left-color: #2563eb;
-    transform: translateX(4px);
-}
+        50% {
+            opacity: 0.5;
+        }
+    }
 
-.activity-item-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
+    /* Modal Overlay */
+    #blockchainMonitorModal.show {
+        display: flex !important;
+    }
 
-.activity-item-type {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 600;
-    color: #1e293b;
-    font-size: 0.875rem;
-}
+    /* Activity Item Styles */
+    .activity-item {
+        padding: 1rem;
+        border-left: 3px solid #3b82f6;
+        background: #f8fafc;
+        border-radius: 0 8px 8px 0;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+    }
 
-.activity-item-time {
-    font-size: 0.75rem;
-    color: #64748b;
-}
+    .activity-item:hover {
+        background: #eff6ff;
+        border-left-color: #2563eb;
+        transform: translateX(4px);
+    }
 
-.activity-item-details {
-    font-size: 0.8125rem;
-    color: #475569;
-    margin-left: 1.75rem;
-}
+    .activity-item-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
 
-.activity-item-hash {
-    font-family: monospace;
-    font-size: 0.75rem;
-    color: #6366f1;
-    background: #eef2ff;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    margin-top: 0.5rem;
-    display: inline-block;
-}
+    .activity-item-type {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+        color: #1e293b;
+        font-size: 0.875rem;
+    }
 
-/* Scrollbar Styling */
-.activity-stream-modal::-webkit-scrollbar {
-    width: 6px;
-}
+    .activity-item-time {
+        font-size: 0.75rem;
+        color: #64748b;
+    }
 
-.activity-stream-modal::-webkit-scrollbar-track {
-    background: #f1f5f9;
-    border-radius: 3px;
-}
+    .activity-item-details {
+        font-size: 0.8125rem;
+        color: #475569;
+        margin-left: 1.75rem;
+    }
 
-.activity-stream-modal::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
+    .activity-item-hash {
+        font-family: monospace;
+        font-size: 0.75rem;
+        color: #6366f1;
+        background: #eef2ff;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
+        display: inline-block;
+    }
 
-.activity-stream-modal::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
-}
+    /* Scrollbar Styling */
+    .activity-stream-modal::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .activity-stream-modal::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .activity-stream-modal::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .activity-stream-modal::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
 </style>
 
 
@@ -1907,6 +1910,347 @@
 </style>
 
 
+<style>
+    /* Negotiation Container */
+    .negotiation-container {
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+        max-height: 80vh;
+    }
+
+    /* Status Bar */
+    .negotiation-status {
+        padding: 1rem 1.5rem;
+        background: var(--background-light);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .participants {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .participant {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: white;
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+
+    .participant.online .status-dot {
+        width: 8px;
+        height: 8px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.5;
+        }
+    }
+
+    .session-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .session-btn {
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.875rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .session-btn:hover {
+        background: var(--background-light);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    /* Messages Area */
+    .messages-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        background: #f8f9fa;
+    }
+
+    /* Welcome Message */
+    .welcome-message {
+        text-align: center;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .welcome-icon {
+        width: 64px;
+        height: 64px;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        font-size: 32px;
+    }
+
+    .welcome-message h4 {
+        margin: 0 0 0.5rem 0;
+        color: var(--text-color);
+    }
+
+    .welcome-message p {
+        margin: 0;
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+
+    /* System Message */
+    .system-message {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: rgba(14, 165, 233, 0.1);
+        border-left: 3px solid #0ea5e9;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        font-size: 0.875rem;
+        color: #0369a1;
+    }
+
+    .system-icon {
+        font-size: 18px;
+    }
+
+    /* Message */
+    .message {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        max-width: 80%;
+    }
+
+    .message.user-msg {
+        margin-left: auto;
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 36px;
+        height: 36px;
+        background: var(--primary-color);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .message-content {
+        flex: 1;
+    }
+
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .sender {
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: var(--text-color);
+    }
+
+    .timestamp {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .message-text {
+        padding: 0.75rem 1rem;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: var(--text-color);
+    }
+
+    .user-msg .message-text {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    /* Input Area */
+    .input-area {
+        padding: 1rem 1.5rem;
+        background: white;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+    }
+
+    .send-btn {
+        padding: 0.75rem 1.25rem;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        transition: all 0.3s ease;
+        height: 44px;
+    }
+
+    .send-btn:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* Suggestions */
+    .suggestion-btn {
+        padding: 0.5rem 0.75rem;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .suggestion-btn:hover {
+        background: var(--background-light);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    /* Loading Spinner Animation */
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Pending Message State */
+    .message-pending {
+        opacity: 0.7;
+    }
+
+    .message-pending .message-text {
+        position: relative;
+    }
+
+    .message-pending .message-text::after {
+        content: '';
+        display: inline-block;
+        width: 4px;
+        height: 4px;
+        background: currentColor;
+        border-radius: 50%;
+        margin-left: 0.5rem;
+        animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+
+        0%,
+        100% {
+            opacity: 0.3;
+        }
+
+        50% {
+            opacity: 1;
+        }
+    }
+
+    /* Send Button States */
+    .send-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .send-btn:disabled:hover {
+        background: var(--primary-color);
+        transform: none;
+    }
+
+    /* Smooth Message Transitions */
+    .message,
+    .system-message {
+        transition: opacity 0.3s ease-in;
+    }
+
+    /* Modal Large */
+    .modal-content.modal-lg {
+        max-width: 900px;
+        width: 90vw;
+    }
+
+    /* Action Button Styles */
+    .action-btn {
+        background: white;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+    }
+
+    .action-btn:hover {
+        border-color: var(--primary-color);
+        background: var(--background-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn-title {
+        font-weight: 600;
+        color: var(--text-color);
+        margin-bottom: 0.25rem;
+    }
+
+    .action-btn-desc {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+</style>
+
+
 {% endblock %}
 
 {% block content %}
@@ -1953,9 +2297,9 @@
                 What is this?
             </button>
             <button type="button" class="blockchain-btn blockchain-btn-info" onclick="openBlockchainMonitor()">
-    <i class="ti ti-activity"></i>
-    Blockchain Operations Monitor
-</button>
+                <i class="ti ti-activity"></i>
+                Blockchain Operations Monitor
+            </button>
         </div>
 
         <!-- Info Text -->
@@ -1974,49 +2318,63 @@
 <div class="modal" id="blockchainMonitorModal">
     <div class="modal-content modal-xl" style="max-width: 1100px;">
         <!-- Modal Header -->
-        <div class="modal-header" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0;">
+        <div class="modal-header"
+            style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0;">
             <div style="display: flex; align-items: center; gap: 1rem; width: 100%;">
                 <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
                     <i class="ti ti-shield-lock" style="font-size: 1.5rem;"></i>
                     <h3 style="margin: 0; font-size: 1.25rem; font-weight: 600;">Blockchain Operations Monitor</h3>
                 </div>
-                <div class="live-indicator-modal" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 20px;">
-                    <span class="live-dot-modal" style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></span>
+                <div class="live-indicator-modal"
+                    style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; background: rgba(255,255,255,0.2); border-radius: 20px;">
+                    <span class="live-dot-modal"
+                        style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite;"></span>
                     <span style="font-size: 0.875rem; font-weight: 600;">LIVE</span>
                 </div>
             </div>
-            <button class="modal-close" onclick="closeBlockchainMonitor()" style="background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0.25rem;">&times;</button>
+            <button class="modal-close" onclick="closeBlockchainMonitor()"
+                style="background: transparent; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0.25rem;">&times;</button>
         </div>
 
         <!-- Modal Body -->
         <div class="modal-body" style="padding: 1.5rem; max-height: 70vh; overflow-y: auto;">
             <!-- Network Status Bar -->
-            <div class="network-status-bar-modal" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+            <div class="network-status-bar-modal"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
                 <div class="status-item-modal" style="display: flex; align-items: center; gap: 0.5rem;">
                     <i class="ti ti-network" style="color: #0066cc; font-size: 1.25rem;"></i>
                     <div>
-                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Network</div>
+                        <div
+                            style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Network</div>
                         <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;">calim360-network</div>
                     </div>
                 </div>
                 <div class="status-item-modal" style="display: flex; align-items: center; gap: 0.5rem;">
                     <i class="ti ti-circle-check" style="color: #10b981; font-size: 1.25rem;"></i>
                     <div>
-                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Status</div>
-                        <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;" id="networkStatusValueModal">Operational</div>
+                        <div
+                            style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Status</div>
+                        <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;"
+                            id="networkStatusValueModal">Operational</div>
                     </div>
                 </div>
                 <div class="status-item-modal" style="display: flex; align-items: center; gap: 0.5rem;">
                     <i class="ti ti-server" style="color: #0066cc; font-size: 1.25rem;"></i>
                     <div>
-                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Peers Active</div>
+                        <div
+                            style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Peers Active</div>
                         <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;" id="peersCountModal">3</div>
                     </div>
                 </div>
                 <div class="status-item-modal" style="display: flex; align-items: center; gap: 0.5rem;">
                     <i class="ti ti-database" style="color: #8b5cf6; font-size: 1.25rem;"></i>
                     <div>
-                        <div style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Channel</div>
+                        <div
+                            style="font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">
+                            Channel</div>
                         <div style="font-size: 0.875rem; font-weight: 600; color: #1e293b;">contract-channel</div>
                     </div>
                 </div>
@@ -2024,19 +2382,23 @@
 
             <!-- Activity Stream Header -->
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
-                <h4 style="margin: 0; font-size: 1rem; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 0.5rem;">
+                <h4
+                    style="margin: 0; font-size: 1rem; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 0.5rem;">
                     <i class="ti ti-timeline"></i>
                     Activity Timeline
                 </h4>
-                <button onclick="refreshBlockchainActivity()" style="padding: 0.5rem 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #475569;">
+                <button onclick="refreshBlockchainActivity()"
+                    style="padding: 0.5rem 1rem; background: white; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: #475569;">
                     <i class="ti ti-refresh"></i>
                     Refresh
                 </button>
             </div>
 
             <!-- Activity Stream -->
-            <div class="activity-stream-modal" id="activityStreamModal" style="min-height: 300px; max-height: 400px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
-                <div class="empty-activity-state" id="emptyActivityState" style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+            <div class="activity-stream-modal" id="activityStreamModal"
+                style="min-height: 300px; max-height: 400px; overflow-y: auto; background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem;">
+                <div class="empty-activity-state" id="emptyActivityState"
+                    style="text-align: center; padding: 3rem 1rem; color: #64748b;">
                     <i class="ti ti-clock-hour-4" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
                     <p style="margin: 0; font-size: 1rem; font-weight: 500;">Waiting for blockchain operations...</p>
                     <p style="font-size: 0.875rem; margin-top: 0.5rem; opacity: 0.7;">
@@ -2046,34 +2408,41 @@
             </div>
 
             <!-- Blockchain Statistics -->
-            <div style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
-                <h4 style="margin: 0 0 1rem 0; font-size: 0.875rem; font-weight: 600; color: #1e293b; text-transform: uppercase; letter-spacing: 0.05em;">
+            <div
+                style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h4
+                    style="margin: 0 0 1rem 0; font-size: 0.875rem; font-weight: 600; color: #1e293b; text-transform: uppercase; letter-spacing: 0.05em;">
                     Blockchain Statistics
                 </h4>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
                     <div>
-                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Total Transactions</div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Total Transactions
+                        </div>
                         <div style="font-size: 1.5rem; font-weight: 700; color: #1e293b;" id="totalTransactions">0</div>
                     </div>
                     <div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Last Block Hash</div>
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #1e293b; font-family: monospace; overflow: hidden; text-overflow: ellipsis;" id="lastBlockHash">N/A</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #1e293b; font-family: monospace; overflow: hidden; text-overflow: ellipsis;"
+                            id="lastBlockHash">N/A</div>
                     </div>
                     <div>
-                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Verification Status</div>
+                        <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Verification Status
+                        </div>
                         <div style="font-size: 0.875rem; font-weight: 600; color: #10b981;" id="verificationStatus">
                             <i class="ti ti-circle-check"></i> Verified
                         </div>
                     </div>
                     <div>
                         <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Last Activity</div>
-                        <div style="font-size: 0.75rem; font-weight: 600; color: #1e293b;" id="lastActivityTime">Just now</div>
+                        <div style="font-size: 0.75rem; font-weight: 600; color: #1e293b;" id="lastActivityTime">Just
+                            now</div>
                     </div>
                 </div>
             </div>
 
             <!-- Audit Trail Quick Access -->
-            <div style="margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 8px; border: 1px solid #bfdbfe;">
+            <div
+                style="margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 8px; border: 1px solid #bfdbfe;">
                 <div style="display: flex; align-items: center; justify-content: space-between;">
                     <div>
                         <h4 style="margin: 0 0 0.25rem 0; font-size: 0.875rem; font-weight: 600; color: #1e40af;">
@@ -2084,7 +2453,8 @@
                             View complete blockchain-verified audit logs with timestamps and user actions
                         </p>
                     </div>
-                    <button onclick="viewFullAuditTrail()" style="padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500; white-space: nowrap;">
+                    <button onclick="viewFullAuditTrail()"
+                        style="padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500; white-space: nowrap;">
                         View Full Trail
                     </button>
                 </div>
@@ -2092,12 +2462,14 @@
         </div>
 
         <!-- Modal Footer -->
-        <div class="modal-footer" style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="modal-footer"
+            style="padding: 1rem 1.5rem; background: #f8fafc; border-top: 1px solid #e2e8f0; border-radius: 0 0 12px 12px; display: flex; justify-content: space-between; align-items: center;">
             <div style="font-size: 0.75rem; color: #64748b;">
                 <i class="ti ti-info-circle" style="font-size: 0.875rem;"></i>
                 Powered by Hyperledger Fabric & Qatar National Blockchain Framework
             </div>
-            <button onclick="closeBlockchainMonitor()" style="padding: 0.5rem 1.5rem; background: #e2e8f0; color: #475569; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+            <button onclick="closeBlockchainMonitor()"
+                style="padding: 0.5rem 1.5rem; background: #e2e8f0; color: #475569; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
                 Close
             </button>
         </div>
@@ -2297,7 +2669,7 @@
                     style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.3s ease;"
                     onmouseover="this.style.borderColor='var(--primary-color)'; this.style.background='var(--background-light)'"
                     onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='white'">
-                    <input type="radio" name="reviewOption" id="masterWorkflow" value="masterWorkflow"
+                    <input type="radio" name="reviewOption" id="customWorkflow" value="customWorkflow"
                         style="margin-right: 0.75rem; width: 18px; height: 18px; cursor: pointer;">
                     <div>
                         <span
@@ -2332,7 +2704,9 @@
 </div>
 
 
-<!-- Live Negotiation Chat Modal - COMPLETELY REDESIGNED -->
+<!-- =====================================================
+     LIVE NEGOTIATION CHAT MODAL
+     ===================================================== -->
 <div class="modal" id="liveNegotiationModal">
     <div class="modal-content modal-lg">
         <div class="modal-header">
@@ -2340,7 +2714,7 @@
                 <i class="ti ti-video"></i>
                 Live Negotiation Session
             </h3>
-            <button class="modal-close" onclick="closeModal('liveNegotiationModal')">
+            <button class="modal-close" onclick="closeModal('liveNegotiationModal'); stopMessagePolling();">
                 <i class="ti ti-x"></i>
             </button>
         </div>
@@ -2349,14 +2723,7 @@
                 <!-- Status Bar -->
                 <div class="negotiation-status">
                     <div class="participants">
-                        <div class="participant online">
-                            <div class="status-dot"></div>
-                            <span>You (Counterparty)</span>
-                        </div>
-                        <div class="participant online">
-                            <div class="status-dot"></div>
-                            <span>Contract Initiator</span>
-                        </div>
+                        <!-- Participants will be loaded dynamically -->
                     </div>
                     <div class="session-actions">
                         <button class="session-btn" onclick="downloadMinutes()">
@@ -2368,66 +2735,38 @@
 
                 <!-- Messages Area -->
                 <div class="messages-area" id="chatMessages">
-                    <div class="welcome-message">
-                        <div class="welcome-icon">
-                            <i class="ti ti-handshake"></i>
-                        </div>
-                        <h4>Negotiation Session Started</h4>
-                        <p>You can now discuss contract terms in real-time with the initiator.</p>
-                    </div>
-
-                    <div class="message initiator-msg">
-                        <div class="message-avatar">
-                            <i class="ti ti-user"></i>
-                        </div>
-                        <div class="message-content">
-                            <div class="message-header">
-                                <span class="sender">Contract Initiator</span>
-                                <span class="timestamp">Just now</span>
-                            </div>
-                            <div class="message-text">Hello! Ready to discuss the contract terms. I've reviewed your
-                                concerns about the termination clause.</div>
-                        </div>
-                    </div>
-
-                    <div class="message user-msg">
-                        <div class="message-content">
-                            <div class="message-header">
-                                <span class="sender">You</span>
-                                <span class="timestamp">Just now</span>
-                            </div>
-                            <div class="message-text">Hi! Yes, I'd like to discuss making the termination rights more
-                                balanced between both parties.</div>
-                        </div>
-                        <div class="message-avatar">
-                            <i class="ti ti-user-check"></i>
-                        </div>
-                    </div>
+                    <!-- Messages will be loaded dynamically -->
                 </div>
 
                 <!-- Input Area -->
-                <div class="message-input-area">
-                    <div class="input-container">
-                        <input type="text" id="messageInput" placeholder="Type your message..." autocomplete="off"
-                            onkeypress="handleInputKeypress(event)">
-                        <button id="sendButton" class="send-btn" onclick="handleSendClick()">
-                            <i class="ti ti-send"></i>
-                        </button>
-                    </div>
-                    <div class="input-suggestions">
-                        <button class="suggestion-btn" onclick="insertSuggestion('I agree with those terms')">I agree
-                            with those terms</button>
+                <div class="input-area">
+                    <textarea id="messageInput" placeholder="Type your message here..."
+                        onkeypress="handleMessageKeyPress(event)"
+                        style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; resize: none; min-height: 60px; font-family: inherit; font-size: 0.9rem;"></textarea>
+                    <button class="send-btn" onclick="sendMessage()">
+                        <i class="ti ti-send"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Suggestions -->
+                <div class="suggestions"
+                    style="padding: 0.75rem 1.5rem; border-top: 1px solid var(--border-color); background: var(--background-light);">
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="suggestion-btn" onclick="insertSuggestion('I agree with the proposed terms.')">I
+                            agree</button>
                         <button class="suggestion-btn"
-                            onclick="insertSuggestion('Can we modify the payment schedule?')">Can we modify the payment
-                            schedule?</button>
-                        <button class="suggestion-btn" onclick="insertSuggestion('What about liability limits?')">What
-                            about liability limits?</button>
+                            onclick="insertSuggestion('Can we modify the payment schedule?')">Modify payment</button>
+                        <button class="suggestion-btn"
+                            onclick="insertSuggestion('What about liability limits?')">Liability limits</button>
+                        <button class="suggestion-btn"
+                            onclick="insertSuggestion('Let me consult with my team.')">Consult team</button>
                     </div>
                 </div>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline-secondary" onclick="closeModal('liveNegotiationModal')">
+            <button class="btn btn-outline-secondary"
+                onclick="closeModal('liveNegotiationModal'); stopMessagePolling();">
                 End Session
             </button>
             <button class="btn btn-success" onclick="finalizeNegotiation()">
@@ -2437,7 +2776,6 @@
         </div>
     </div>
 </div>
-
 
 <!-- Documents Modal -->
 <div class="modal" id="documentsModal">
@@ -3606,20 +3944,21 @@
         </div>
         <div class="modal-body">
             <p style="margin-bottom: 2rem; color: var(--text-muted);">
-                Choose how you would like to proceed with this contract:
+                Choose how you would like to proceed with this contract negotiation:
             </p>
 
             <div style="display: grid; gap: 1.5rem;">
-                <button class="action-btn" onclick="generateRiskSummary()" style="text-align: left; padding: 1.5rem;">
+                <!-- Internal Negotiation Button -->
+                <button class="action-btn" onclick="startInternalNegotiation()"
+                    style="text-align: left; padding: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <div
                             style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--warning-color), #ffc107); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white;">
-                            <i class="ti ti-video" style="font-size: 24px;"></i>
+                            <i class="ti ti-users" style="font-size: 24px;"></i>
                         </div>
                         <div>
-                            <div class="action-btn-title" style="font-size: 1rem;">Live Negotiation within Counter-party
-                                Team</div>
-                            <div class="action-btn-desc">Real-time discussion with the team</div>
+                            <div class="action-btn-title" style="font-size: 1rem;">Internal Team Negotiation</div>
+                            <div class="action-btn-desc">Real-time discussion with workflow participants</div>
                         </div>
                     </div>
                 </button>
@@ -3632,16 +3971,17 @@
                         style="background: white; padding: 0 1rem; position: relative; color: var(--text-muted); font-weight: 500;">OR</span>
                 </div>
 
-                <button class="action-btn" onclick="initiateLiveNegotiation()"
+                <!-- External Negotiation Button -->
+                <button class="action-btn" onclick="startExternalNegotiation()"
                     style="text-align: left; padding: 1.5rem;">
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <div
-                            style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: 12px; display: flex; align-items: center; justify-content: left; color: white;">
+                            style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white;">
                             <i class="ti ti-video" style="font-size: 24px;"></i>
                         </div>
                         <div>
-                            <div class="action-btn-title" style="font-size: 1rem;">Live Negotiation with Initiator</div>
-                            <div class="action-btn-desc">Real-time discussion with the initiator</div>
+                            <div class="action-btn-title" style="font-size: 1rem;">Negotiation with Initiator</div>
+                            <div class="action-btn-desc">Real-time discussion with the contract initiator</div>
                         </div>
                     </div>
                 </button>
@@ -3654,7 +3994,6 @@
         </div>
     </div>
 </div>
-
 
 
 <!-- Execute Contract Confirmation Modal -->
@@ -3859,7 +4198,7 @@
     // RENDERING FUNCTIONS
     // =====================================================
     function renderContractEditor(data) {
-        const { contract, workflow, versions, current_approver} = data;
+        const { contract, workflow, versions, current_approver } = data;
 
         console.log('Rendering contract:', contract);
         console.log('Contract content length:', contract.content ? contract.content.length : 0);
@@ -3911,7 +4250,7 @@
             // Review stage
 
             if ((contract.is_initiator === true)) {
-              actionButtons = getApprovalBadge(current_approver, workflow);
+                actionButtons = getApprovalBadge(current_approver, workflow,'review');
             } else {
 
                 if ((workflow && workflow.is_my_workflow_turn === true) && (workflow && workflow.status != 'completed')) {
@@ -3923,13 +4262,16 @@
         <button class="btn btn-danger" onclick="rejectWorkflow(${contract.id})">
             <i class="ti ti-x"></i> Reject
         </button>`;
-                }else{
-                    
+                } else {
+                    //if I am not the current approver
+                    actionButtons = getApprovalBadge(current_approver, workflow,'review');
                 }
 
             }
-             } else if ((contract.status === 'review_completed')) {
-  actionButtons = `
+        } else if ((contract.status === 'review_completed')) {
+
+            if (contract.is_initiator === true) {
+                actionButtons = `
             <button class="btn signature-btn" onclick="saveAsDraft()">
                 <i class="ti ti-device-floppy"></i> Save Contract
             </button>
@@ -3937,17 +4279,45 @@
                 <i class="ti ti-send"></i> Send to Counter-Party
             </button>`;
 
-
+            } else {
+                actionButtons = ``;
+            }
         }
-        
+
         else if (contract.status === 'counterparty_internal_review') {
 
             if (contract.is_counterparty === true) {
-                actionButtons = `
+
+                if ((workflow && workflow.status != 'active')) {
+
+                    actionButtons = `
         <button class="btn btn-success" onclick="markCounterpartyReviewComplete()">
-            <i class="ti ti-check"></i> Mark Review Complete
+            <i class="ti ti-check"></i> Quick Review
         </button>
-    `;
+        <button class="btn btn-primary" onclick="submitForReview()">
+                <i class="ti ti-send"></i> Submit for Internal Review
+            </button>`;
+                } else if ((workflow && workflow.status == 'active')) {
+
+                    if ((workflow && workflow.is_my_workflow_turn === true) && (workflow && workflow.status != 'completed')) {
+
+                        actionButtons = `
+        <button class="btn signature-btn" onclick="approveWorkflow(${contract.id})">
+            <i class="ti ti-check"></i> Approve
+        </button>
+        <button class="btn btn-danger" onclick="rejectWorkflow(${contract.id})">
+            <i class="ti ti-x"></i> Reject
+        </button>`;
+                    } else {
+                        //if I am not the current approver
+                        actionButtons = getApprovalBadge(current_approver, workflow,'review');
+                    }
+                    //           actionButtons = `
+                    // <button class="btn btn-success" onclick="markCounterpartyReviewComplete()">
+                    //     <i class="ti ti-check"></i> Quick Review
+                    // </button>`;
+
+                }
             }
 
 
@@ -3965,11 +4335,26 @@
             <button class="btn btn-outline-secondary" onclick="openDocumentsModal()">
                 <i class="ti ti-paperclip"></i> Attach Documents
             </button>`;
+            } else {
+                actionButtons = `
+            <button class="btn btn-primary" onclick="openNegotiationModal()">
+                <i class="ti ti-message-circle"></i> Open Negotiation
+            </button>`;
             }
-        } else if (contract.status === 'approved') {
+        } else if (contract.status === 'negotiation_completed') {
+            if ((contract.is_initiator === true)) {
+                actionButtons = `
+            <button class="btn btn-primary" onclick="initiateApprovalWorkflow()">
+                <i class="ti ti-send"></i> Initiate Approval Workflow
+            </button>`;
+            }
+
+
+        } else if (contract.status === 'approval') {
+
 
             if ((contract.is_counterparty === false)) {
-                if ((workflow && workflow.is_my_workflow_turn === false) && (workflow && workflow.status != 'completed')) {
+                if ((workflow && workflow.is_my_workflow_turn === true) && (workflow && workflow.status != 'completed')) {
 
                     actionButtons = `
         <button class="btn signature-btn" onclick="approveWorkflow(${contract.id})">
@@ -3980,53 +4365,74 @@
         </button>`;
                 } else {
 
-                    if ((contract.is_initiator === true)) {
+                    actionButtons = getApprovalBadge(current_approver, workflow,'approval');
 
-                        if ((workflow && workflow.status === 'completed')) {
-                            // Approved stage
-                            actionButtons = `
+                }
+            }
+
+    } else if (contract.status === 'approved') {
+
+        if ((contract.is_counterparty === false)) {
+            if ((workflow && workflow.is_my_workflow_turn === false) && (workflow && workflow.status != 'completed')) {
+
+                actionButtons = `
+        <button class="btn signature-btn" onclick="approveWorkflow(${contract.id})">
+            <i class="ti ti-check"></i> Approve
+        </button>
+        <button class="btn btn-danger" onclick="rejectWorkflow(${contract.id})">
+            <i class="ti ti-x"></i> Reject
+        </button>`;
+            } else {
+
+                if ((contract.is_initiator === true)) {
+
+                    if ((workflow && workflow.status === 'completed')) {
+                        // Approved stage
+                        actionButtons = `
             <button class="btn btn-primary" onclick="sendForSignature()">
                 <i class="ti ti-writing-sign"></i> Send for Signature
             </button>`;
-                        } else if ((workflow && workflow.status === 'active')) {
-                            // Approved stage
-                            actionButtons = `
+                    } else if ((workflow && workflow.status === 'active')) {
+                        // Approved stage
+                        actionButtons = `
             <button class="btn btn-primary" onclick="initiateApprovalWorkflow()">
                 <i class="ti ti-writing-sign"></i> Initiate Approval Workflow
             </button>`;
-                        } else {
-                          actionButtons = getApprovalBadge(contract, workflow);
-                        }
+                    } else {
+                    actionButtons = getApprovalBadge(current_approver, workflow);
                     }
                 }
             }
-        } else if (contract.status === 'signature') {
-            // Signature stage
-            actionButtons = `
+        }
+
+
+    } else if (contract.status === 'signature') {
+        // Signature stage
+        actionButtons = `
             <button class="btn btn-success" onclick="openSignatureModal()">
                 <i class="ti ti-writing-sign"></i> Sign Contract
             </button>`;
-        } else if (contract.status === 'signed') {
-            // 🆕 SIGNED STAGE - READY FOR EXECUTION
-            actionButtons = `
+    } else if (contract.status === 'signed') {
+        // 🆕 SIGNED STAGE - READY FOR EXECUTION
+        actionButtons = `
             <button class="btn btn-success" onclick="openExecuteContractModal()" style="background: linear-gradient(135deg, var(--success-color), #20c997);">
                 <i class="ti ti-rocket"></i> Execute Contract
             </button>
             <button class="btn btn-outline-secondary" onclick="exportDocument()">
                 <i class="ti ti-download"></i> Download
             </button>`;
-        } else if (contract.status === 'executed') {
-            // Executed stage - Show certificate and download
-            actionButtons = `
+    } else if (contract.status === 'executed') {
+        // Executed stage - Show certificate and download
+        actionButtons = `
             <button class="btn btn-success" onclick="viewExecutionCertificate()">
                 <i class="ti ti-certificate"></i> View Certificate
             </button>
             <button class="btn btn-outline-secondary" onclick="exportDocument()">
                 <i class="ti ti-download"></i> Download Contract
             </button>`;
-        }
+    }
 
-        document.getElementById('contractEditor').innerHTML = `
+    document.getElementById('contractEditor').innerHTML = `
         <!-- Page Header -->
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; background: white; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem;">
             <div class="page-header-left">
@@ -4054,7 +4460,7 @@ ${renderWorkflowStepper(contract.status)}
                     <i class="ti ti-settings-automation"></i> Setup Custom Workflow
                 </button>
                 ${!contract.is_counterparty ? `
-                <button class="ai-toolbar-btn" onclick="openRiviewisModal()">
+                <button class="ai-toolbar-btn" onclick="openRiviewModal()">
                     <i class="ti ti-alert-triangle"></i> Review Analysis
                 </button>
                 <button class="ai-toolbar-btn" onclick="openClauseAnalysisModal()">
@@ -4075,8 +4481,8 @@ ${renderDocumentInfo(contract, versions)}
                 <div class="editor-content">
                     <div class="editor-paper" contenteditable="true" id="contractContent">
 ${contract.content && contract.content.trim() !== '' ?
-                (contract.content.includes('signature-field') ? contract.content : contract.content + signature_block)
-                : getDefaultContractContent()}
+            (contract.content.includes('signature-field') ? contract.content : contract.content + signature_block)
+            : getDefaultContractContent()}
                     </div>
                 </div>
             </div>
@@ -4087,89 +4493,89 @@ ${contract.content && contract.content.trim() !== '' ?
 
 
     function renderWorkflowStepper(status) {
-    const steps = [
-        {
-            key: 'draft', 
-            icon: 'file-text', 
-            label: 'Draft',
-            status: 'completed' // Draft is always completed if viewing the contract
-        },
-        {
-            key: 'review',
-            icon: 'users',
-            label: 'Internal Review',
-            status: status === 'draft' ? 'pending' :
+        const steps = [
+            {
+                key: 'draft',
+                icon: 'file-text',
+                label: 'Draft',
+                status: 'completed' // Draft is always completed if viewing the contract
+            },
+            {
+                key: 'review',
+                icon: 'users',
+                label: 'Internal Review',
+                status: status === 'draft' ? 'pending' :
                     status === 'review' ? 'active' :
-                    status === 'review_completed' ? 'completed' :
-                    // If any later stage, internal review must be completed
-                    ['counterparty_internal_review', 'counterparty_review_completed', 
-                     'negotiation', 'negotiation_completed', 'approval', 'approved', 
-                     'signing', 'signed', 'executed'].includes(status) ? 'completed' :
-                    'pending'
-        },
-        {
-            key: 'counterparty_internal_review', 
-            icon: 'building', 
-            label: 'Counterparty Review',
-            status: ['draft', 'review'].includes(status) ? 'pending' :
+                        status === 'review_completed' ? 'completed' :
+                            // If any later stage, internal review must be completed
+                            ['counterparty_internal_review', 'counterparty_review_completed',
+                                'negotiation', 'negotiation_completed', 'approval', 'approved',
+                                'signature', 'signed', 'executed'].includes(status) ? 'completed' :
+                                'pending'
+            },
+            {
+                key: 'counterparty_internal_review',
+                icon: 'building',
+                label: 'Counterparty Review',
+                status: ['draft', 'review'].includes(status) ? 'pending' :
                     status === 'review_completed' ? 'pending' :
-                    status === 'counterparty_internal_review' ? 'active' :
-                    status === 'counterparty_review_completed' ? 'completed' :
-                    // If negotiation or later stages, counterparty review must be completed
-                    ['negotiation', 'negotiation_completed', 'approval', 'approved', 
-                     'signing', 'signed', 'executed'].includes(status) ? 'completed' :
-                    'pending'
-        },
-        {
-            key: 'negotiation', 
-            icon: 'message-circle', 
-            label: 'Negotiation',
-            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review'].includes(status) ? 'pending' :
+                        status === 'counterparty_internal_review' ? 'active' :
+                            status === 'counterparty_review_completed' ? 'completed' :
+                                // If negotiation or later stages, counterparty review must be completed
+                                ['negotiation', 'negotiation_completed', 'approval', 'approved',
+                                    'signature', 'signed', 'executed'].includes(status) ? 'completed' :
+                                    'pending'
+            },
+            {
+                key: 'negotiation',
+                icon: 'message-circle',
+                label: 'Negotiation',
+                status: ['draft', 'review', 'review_completed', 'counterparty_internal_review'].includes(status) ? 'pending' :
                     status === 'counterparty_review_completed' ? 'pending' :
-                    status === 'negotiation' ? 'active' :
-                    status === 'negotiation_completed' ? 'completed' :
-                    // If approval or later stages, negotiation must be completed
-                    ['approval', 'approved', 'signing', 'signed', 'executed'].includes(status) ? 'completed' :
-                    'pending'
-        },
-        {
-            key: 'approval', 
-            icon: 'circle-check', 
-            label: 'Approval',
-            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review', 
-                     'counterparty_review_completed', 'negotiation'].includes(status) ? 'pending' :
+                        status === 'negotiation' ? 'active' :
+                            status === 'negotiation_completed' ? 'completed' :
+                                // If approval or later stages, negotiation must be completed
+                                ['approval', 'approved', 'signature', 'signed', 'executed'].includes(status) ? 'completed' :
+                                    'pending'
+            },
+            {
+                key: 'approval',
+                icon: 'circle-check',
+                label: 'Approval',
+                status: ['draft', 'review', 'review_completed', 'counterparty_internal_review',
+                    'counterparty_review_completed', 'negotiation'].includes(status) ? 'pending' :
                     status === 'negotiation_completed' ? 'pending' :
-                    status === 'approval' ? 'active' :
-                    status === 'approved' ? 'completed' :
-                    // If signing or later stages, approval must be completed
-                    ['signing', 'signed', 'executed'].includes(status) ? 'completed' :
-                    'pending'
-        },
-        {
-            key: 'signature', 
-            icon: 'writing-sign', 
-            label: 'Signature',
-            status: ['draft', 'review', 'review_completed', 'counterparty_internal_review', 
-                     'counterparty_review_completed', 'negotiation', 'negotiation_completed', 
-                     'approval'].includes(status) ? 'pending' :
+                        status === 'approval' ? 'active' :
+                            status === 'approved' ? 'completed' :
+                                // If signing or later stages, approval must be completed
+                                ['signature', 'signed', 'executed'].includes(status) ? 'completed' :
+                                    'pending'
+            },
+            {
+                key: 'signature',
+                icon: 'writing-sign',
+                label: 'Signature',
+                status: ['draft', 'review', 'review_completed', 'counterparty_internal_review',
+                    'counterparty_review_completed', 'negotiation', 'negotiation_completed',
+                    'approval'].includes(status) ? 'pending' :
                     status === 'approved' ? 'pending' :
-                    status === 'signing' ? 'active' :
-                    status === 'signed' ? 'completed' :
-                    status === 'executed' ? 'completed' :
-                    'pending'
-        },
-        {
-            key: 'executed', 
-            icon: 'file-check', 
-            label: 'Executed',
-            status: status === 'executed' ? 'completed' : 
+                        status === 'signature' ? 'active' :
+                            status === 'signed' ? 'completed' :
+                                status === 'executed' ? 'completed' :
+                                    'pending'
+            },
+            {
+                key: 'executed',
+                icon: 'file-check',
+                label: 'Executed',
+                status: status === 'executed' ? 'completed' :
                     status === 'signed' ? 'pending' :
-                    'pending'
-        }
-    ];
+                        'pending'
+            }
+        ];
 
 
-    return `
+        return `
         <div class="workflow-stepper">
             <div class="stepper-container">
                 <div class="stepper-line">
@@ -4182,15 +4588,15 @@ ${contract.content && contract.content.trim() !== '' ?
                         </div>
                         <span class="step-label">${step.label}</span>
                         <span class="step-date">${step.status === 'completed' ? 'Completed' :
-                                                    step.status === 'active' ? 'In Progress' :
-                                                    'Pending'
-                        }</span>
+                step.status === 'active' ? 'In Progress' :
+                    'Pending'
+            }</span>
                     </div>
                 `).join('')}
             </div>
         </div>
     `;
-}
+    }
 
 
     function renderEditorToolbar() {
@@ -4295,7 +4701,7 @@ ${contract.content && contract.content.trim() !== '' ?
         const progress = {
             'draft': 0,
             'internal_review': 16.67,
-            'counterparty_internal_review': 33.33,  // ← ADD THIS LINE
+            'counterparty_internal_review': 33.33,
             'negotiation': 50,
             'approved': 66.67,
             'signed': 83.33,
@@ -4466,7 +4872,7 @@ ${contract.content && contract.content.trim() !== '' ?
                     contract_id: contractId,
                     review_type: reviewType,
                     personnel_emails: personnelEmails,
-                    notes: notes
+                    notes: notes,
                 })
             });
 
@@ -4490,7 +4896,7 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
     // Risk Analysis - CONNECTED TO AI BACKEND
-    async function openRiviewisModal() {
+    async function openRiviewModal() {
         openModal('riskAnalysisModal');
 
         // Fetch risk analysis from backend
@@ -4620,7 +5026,7 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
     function downloadRiskReport() {
-        alert('Downloading AI risk analysis report...');
+        showNotification('Downloading AI risk analysis report...', 'success');
     }
 
 
@@ -4645,7 +5051,8 @@ ${contract.content && contract.content.trim() !== '' ?
 
         if (!input || !messagesArea) {
             console.error('Required elements not found');
-            alert('Chat elements not found. Please try refreshing.');
+            showNotification('Chat elements not found. Please try refreshing.', 'success');
+
             return;
         }
 
@@ -6294,7 +6701,9 @@ ${contract.content && contract.content.trim() !== '' ?
     // Workflow Setup - CONNECTED TO BACKEND
     async function saveContractWorkflow() {
         if (!selectedContractWorkflow) {
-            alert('Please select a workflow type.');
+
+            showNotification('Please select a workflow type.', 'warning');
+
             return;
         }
 
@@ -6352,7 +6761,8 @@ ${contract.content && contract.content.trim() !== '' ?
             console.log(`📦 Prepared ${steps.length} steps for backend:`, steps);
 
             if (steps.length === 0) {
-                alert('Please add at least one workflow step with role and email.');
+                showNotification('Please add at least one workflow step with role and email.', 'warning');
+
                 return;
             }
         }
@@ -6395,12 +6805,13 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
     function downloadMinutes() {
-        alert('Downloading negotiation minutes...');
+        showNotification('Downloading negotiation minutes...', 'success');
+
     }
 
     function finalizeNegotiation() {
         if (confirm('Are you ready to finalize this negotiation? This will conclude the negotiation stage.')) {
-            alert('Negotiation finalized successfully! Moving to next stage.');
+            showNotification('Negotiation finalized successfully! Moving to next stage.', 'success');
             closeModal('liveNegotiationModal');
         }
     }
@@ -7437,7 +7848,8 @@ ${contract.content && contract.content.trim() !== '' ?
 
     function uploadDocuments() {
         if (uploadedFiles.length > 0) {
-            alert(`Uploading ${uploadedFiles.length} document(s)...`);
+            showNotification(`Uploading ${uploadedFiles.length} document(s)...`, 'success');
+
             const uploadBtn = document.getElementById('uploadBtn');
             if (uploadBtn) {
                 uploadBtn.innerHTML = '<i class="ti ti-loader"></i> Uploading...';
@@ -7445,7 +7857,8 @@ ${contract.content && contract.content.trim() !== '' ?
             }
 
             setTimeout(() => {
-                alert('Documents uploaded successfully!');
+                showNotification('Documents uploaded successfully!', 'success');
+
                 uploadedFiles = [];
                 const container = document.getElementById('uploadedFiles');
                 if (container) {
@@ -7461,11 +7874,13 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
     function viewDocument(docId) {
-        alert(`Opening document viewer for: ${docId}`);
+        showNotification(`Opening document viewer for: ${docId}`, 'success');
+
     }
 
     function downloadDocument(docId) {
-        alert(`Downloading document: ${docId}`);
+        showNotification(`Downloading document: ${docId}`, 'success');
+
     }
 
 
@@ -7648,7 +8063,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
             button.closest('tr').remove();
             updateContractStepNumbers();
         } else {
-            alert('At least one workflow step is required.');
+            showNotification('At least one workflow step is required.', 'warning');
         }
     }
 
@@ -7936,7 +8351,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
             button.closest('tr').remove();
             updateWorkflowStepNumbers();
         } else {
-            alert('At least one workflow step is required.');
+            showNotification('At least one workflow step is required.', 'warning');
         }
     }
 
@@ -8231,22 +8646,22 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         }
     }
 
-   function showLoader(message) {
-    let loader = document.getElementById('loader');
-    if (!loader) {
-        loader = document.createElement('div');
-        loader.id = 'loader';
-        loader.className = 'loader-overlay';
-        loader.innerHTML = `
+    function showLoader(message) {
+        let loader = document.getElementById('loader');
+        if (!loader) {
+            loader = document.createElement('div');
+            loader.id = 'loader';
+            loader.className = 'loader-overlay';
+            loader.innerHTML = `
             <div class="loader">
                 <div class="spinner"></div>
                 <p>${message}</p>
             </div>
         `;
-        document.body.appendChild(loader);
+            document.body.appendChild(loader);
+        }
+        loader.style.display = 'flex';
     }
-    loader.style.display = 'flex';
-}
 
     function hideLoader() {
         const loader = document.getElementById('loadingOverlay');
@@ -8804,7 +9219,8 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         if (contractId) {
             verifyContract(contractId);
         } else {
-            alert('Contract ID not found. Please save the contract first.');
+            showNotification('Contract ID not found. Please save the contract first.', 'error');
+
         }
     }
 
@@ -8814,7 +9230,8 @@ ${(riskAnalysisData.risk_items || []).map(item => `
             // Call the function from blockchain-verification.js
             showBlockchainCertificateById(contractId);
         } else {
-            alert('Contract ID not found. Please save the contract first.');
+            showNotification('Contract ID not found. Please save the contract first.', 'error');
+
         }
     }
 
@@ -9919,14 +10336,16 @@ Generated by CALIM 360 Smart CLM
             const result = await response.json();
 
             if (response.ok) {
-                alert(result.message || 'Contract approved successfully!');
+                showNotification(result.message || 'Contract approved successfully!', 'success');
                 window.location.reload();
             } else {
-                alert('Error: ' + (result.detail || 'Failed to approve contract'));
+                showNotification('Error: ' + (result.detail || 'Failed to approve contract'), 'error');
+
             }
         } catch (error) {
             console.error('Error approving workflow:', error);
-            alert('Error approving contract. Please try again.');
+            showNotification('Error approving contract. Please try again.', 'error');
+
         }
     }
 
@@ -10007,7 +10426,7 @@ Generated by CALIM 360 Smart CLM
         const comment = document.getElementById('rejectionComment').value.trim();
 
         if (!comment) {
-            alert('Please provide a reason for rejection');
+            showNotification(`Please provide a reason for rejection`, 'warning');
             return;
         }
 
@@ -10028,14 +10447,16 @@ Generated by CALIM 360 Smart CLM
 
             if (response.ok) {
                 closeRejectionModal();
-                alert('Rejection comment has been saved.');
+                showNotification(`Rejection comment has been saved.`, 'success');
+
                 window.location.reload();
             } else {
-                alert('Error: ' + (result.detail || 'Failed to reject contract'));
+                showNotification('Error: ' + (result.detail || 'Failed to reject contract'), 'success');
+
             }
         } catch (error) {
             console.error('Error rejecting workflow:', error);
-            alert('Error rejecting contract. Please try again.');
+            showNotification('Error rejecting contract. Please try again.', 'success');
         }
     }
 
@@ -10048,136 +10469,136 @@ Generated by CALIM 360 Smart CLM
 
 
 <script>
-// Open Blockchain Operations Monitor Modal
-function openBlockchainMonitor() {
-    const modal = document.getElementById('blockchainMonitorModal');
-    if (modal) {
-        modal.classList.add('show');
-        // Load blockchain activity when modal opens
-        loadBlockchainActivity();
-        // Auto-refresh every 10 seconds
-        startBlockchainMonitoring();
+    // Open Blockchain Operations Monitor Modal
+    function openBlockchainMonitor() {
+        const modal = document.getElementById('blockchainMonitorModal');
+        if (modal) {
+            modal.classList.add('show');
+            // Load blockchain activity when modal opens
+            loadBlockchainActivity();
+            // Auto-refresh every 10 seconds
+            startBlockchainMonitoring();
+        }
     }
-}
 
-// Close Blockchain Operations Monitor Modal
-function closeBlockchainMonitor() {
-    const modal = document.getElementById('blockchainMonitorModal');
-    if (modal) {
-        modal.classList.remove('show');
-        // Stop auto-refresh
-        stopBlockchainMonitoring();
+    // Close Blockchain Operations Monitor Modal
+    function closeBlockchainMonitor() {
+        const modal = document.getElementById('blockchainMonitorModal');
+        if (modal) {
+            modal.classList.remove('show');
+            // Stop auto-refresh
+            stopBlockchainMonitoring();
+        }
     }
-}
 
-// Auto-refresh interval ID
-let blockchainMonitorInterval = null;
+    // Auto-refresh interval ID
+    let blockchainMonitorInterval = null;
 
-// Start monitoring (auto-refresh)
-function startBlockchainMonitoring() {
-    if (blockchainMonitorInterval) {
-        clearInterval(blockchainMonitorInterval);
+    // Start monitoring (auto-refresh)
+    function startBlockchainMonitoring() {
+        if (blockchainMonitorInterval) {
+            clearInterval(blockchainMonitorInterval);
+        }
+        // Refresh every 10 seconds
+        blockchainMonitorInterval = setInterval(() => {
+            loadBlockchainActivity();
+        }, 10000);
     }
-    // Refresh every 10 seconds
-    blockchainMonitorInterval = setInterval(() => {
-        loadBlockchainActivity();
-    }, 10000);
-}
 
-// Stop monitoring
-function stopBlockchainMonitoring() {
-    if (blockchainMonitorInterval) {
-        clearInterval(blockchainMonitorInterval);
-        blockchainMonitorInterval = null;
+    // Stop monitoring
+    function stopBlockchainMonitoring() {
+        if (blockchainMonitorInterval) {
+            clearInterval(blockchainMonitorInterval);
+            blockchainMonitorInterval = null;
+        }
     }
-}
 
-// Load blockchain activity from API
-async function loadBlockchainActivity() {
-    try {
-       
-        // Get auth token
-        const token = getAuthToken();
-        
-        // Fetch blockchain activity
-        const response = await fetch(`/api/blockchain/activity/${contractId}`, {
-            headers: {
-                'Authorization': `Bearer ${token}`
+    // Load blockchain activity from API
+    async function loadBlockchainActivity() {
+        try {
+
+            // Get auth token
+            const token = getAuthToken();
+
+            // Fetch blockchain activity
+            const response = await fetch(`/api/blockchain/activity/${contractId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch blockchain activity');
             }
+
+            const data = await response.json();
+
+            // Update network status
+            if (data.network_status) {
+                updateNetworkStatus(data.network_status);
+            }
+
+            // Update activity stream
+            if (data.activities && data.activities.length > 0) {
+                displayActivities(data.activities);
+                updateStatistics(data.statistics);
+            } else {
+                // Show empty state
+                showEmptyActivityState();
+            }
+
+        } catch (error) {
+            console.error('Error loading blockchain activity:', error);
+            showErrorState();
+        }
+    }
+
+    // Update network status display
+    function updateNetworkStatus(status) {
+        const statusValue = document.getElementById('networkStatusValueModal');
+        const peersCount = document.getElementById('peersCountModal');
+
+        if (statusValue) {
+            statusValue.textContent = status.status || 'Operational';
+            statusValue.style.color = status.status === 'Operational' ? '#10b981' : '#ef4444';
+        }
+
+        if (peersCount) {
+            peersCount.textContent = status.peers_count || '3';
+        }
+    }
+
+    // Display blockchain activities
+    function displayActivities(activities) {
+        const streamContainer = document.getElementById('activityStreamModal');
+        const emptyState = document.getElementById('emptyActivityState');
+
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+
+        if (!streamContainer) return;
+
+        // Clear existing activities (except empty state)
+        const existingActivities = streamContainer.querySelectorAll('.activity-item');
+        existingActivities.forEach(item => item.remove());
+
+        // Add new activities
+        activities.forEach(activity => {
+            const activityElement = createActivityElement(activity);
+            streamContainer.insertBefore(activityElement, streamContainer.firstChild);
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch blockchain activity');
-        }
-
-        const data = await response.json();
-        
-        // Update network status
-        if (data.network_status) {
-            updateNetworkStatus(data.network_status);
-        }
-
-        // Update activity stream
-        if (data.activities && data.activities.length > 0) {
-            displayActivities(data.activities);
-            updateStatistics(data.statistics);
-        } else {
-            // Show empty state
-            showEmptyActivityState();
-        }
-
-    } catch (error) {
-        console.error('Error loading blockchain activity:', error);
-        showErrorState();
     }
-}
 
-// Update network status display
-function updateNetworkStatus(status) {
-    const statusValue = document.getElementById('networkStatusValueModal');
-    const peersCount = document.getElementById('peersCountModal');
-    
-    if (statusValue) {
-        statusValue.textContent = status.status || 'Operational';
-        statusValue.style.color = status.status === 'Operational' ? '#10b981' : '#ef4444';
-    }
-    
-    if (peersCount) {
-        peersCount.textContent = status.peers_count || '3';
-    }
-}
+    // Create activity element
+    function createActivityElement(activity) {
+        const div = document.createElement('div');
+        div.className = 'activity-item';
 
-// Display blockchain activities
-function displayActivities(activities) {
-    const streamContainer = document.getElementById('activityStreamModal');
-    const emptyState = document.getElementById('emptyActivityState');
-    
-    if (emptyState) {
-        emptyState.style.display = 'none';
-    }
-    
-    if (!streamContainer) return;
-    
-    // Clear existing activities (except empty state)
-    const existingActivities = streamContainer.querySelectorAll('.activity-item');
-    existingActivities.forEach(item => item.remove());
-    
-    // Add new activities
-    activities.forEach(activity => {
-        const activityElement = createActivityElement(activity);
-        streamContainer.insertBefore(activityElement, streamContainer.firstChild);
-    });
-}
+        const icon = getActivityIcon(activity.action);
+        const timestamp = formatTimestamp(activity.timestamp);
 
-// Create activity element
-function createActivityElement(activity) {
-    const div = document.createElement('div');
-    div.className = 'activity-item';
-    
-    const icon = getActivityIcon(activity.action);
-    const timestamp = formatTimestamp(activity.timestamp);
-    
-    div.innerHTML = `
+        div.innerHTML = `
         <div class="activity-item-header">
             <div class="activity-item-type">
                 <i class="ti ${icon}" style="font-size: 1.25rem; color: #3b82f6;"></i>
@@ -10194,81 +10615,81 @@ function createActivityElement(activity) {
             </div>
         ` : ''}
     `;
-    
-    return div;
-}
 
-// Get activity icon based on action type
-function getActivityIcon(action) {
-    const icons = {
-        'blockchain_storage': 'ti-database-export',
-        'blockchain_verification': 'ti-shield-check',
-        'contract_created': 'ti-file-plus',
-        'contract_updated': 'ti-edit',
-        'contract_signed': 'ti-writing-sign',
-        'default': 'ti-activity'
-    };
-    return icons[action] || icons.default;
-}
-
-// Get activity title
-function getActivityTitle(action) {
-    const titles = {
-        'blockchain_storage': 'Contract Stored on Blockchain',
-        'blockchain_verification': 'Blockchain Verification',
-        'contract_created': 'Contract Created',
-        'contract_updated': 'Contract Updated',
-        'contract_signed': 'Contract Signed',
-        'default': 'Blockchain Activity'
-    };
-    return titles[action] || titles.default;
-}
-
-// Format timestamp
-function formatTimestamp(timestamp) {
-    if (!timestamp) return 'Just now';
-    
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-}
-
-// Update statistics
-function updateStatistics(stats) {
-    if (!stats) return;
-    
-    const totalTx = document.getElementById('totalTransactions');
-    const lastHash = document.getElementById('lastBlockHash');
-    const lastActivity = document.getElementById('lastActivityTime');
-    
-    if (totalTx) totalTx.textContent = stats.total_transactions || '0';
-    if (lastHash) lastHash.textContent = stats.last_block_hash ? `${stats.last_block_hash.substring(0, 16)}...` : 'N/A';
-    if (lastActivity) lastActivity.textContent = stats.last_activity_time || 'Just now';
-}
-
-// Show empty activity state
-function showEmptyActivityState() {
-    const emptyState = document.getElementById('emptyActivityState');
-    if (emptyState) {
-        emptyState.style.display = 'block';
+        return div;
     }
-}
 
-// Show error state
-function showErrorState() {
-    const streamContainer = document.getElementById('activityStreamModal');
-    if (!streamContainer) return;
-    
-    streamContainer.innerHTML = `
+    // Get activity icon based on action type
+    function getActivityIcon(action) {
+        const icons = {
+            'blockchain_storage': 'ti-database-export',
+            'blockchain_verification': 'ti-shield-check',
+            'contract_created': 'ti-file-plus',
+            'contract_updated': 'ti-edit',
+            'contract_signed': 'ti-writing-sign',
+            'default': 'ti-activity'
+        };
+        return icons[action] || icons.default;
+    }
+
+    // Get activity title
+    function getActivityTitle(action) {
+        const titles = {
+            'blockchain_storage': 'Contract Stored on Blockchain',
+            'blockchain_verification': 'Blockchain Verification',
+            'contract_created': 'Contract Created',
+            'contract_updated': 'Contract Updated',
+            'contract_signed': 'Contract Signed',
+            'default': 'Blockchain Activity'
+        };
+        return titles[action] || titles.default;
+    }
+
+    // Format timestamp
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'Just now';
+
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+
+        const diffHours = Math.floor(diffMins / 60);
+        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+
+        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    }
+
+    // Update statistics
+    function updateStatistics(stats) {
+        if (!stats) return;
+
+        const totalTx = document.getElementById('totalTransactions');
+        const lastHash = document.getElementById('lastBlockHash');
+        const lastActivity = document.getElementById('lastActivityTime');
+
+        if (totalTx) totalTx.textContent = stats.total_transactions || '0';
+        if (lastHash) lastHash.textContent = stats.last_block_hash ? `${stats.last_block_hash.substring(0, 16)}...` : 'N/A';
+        if (lastActivity) lastActivity.textContent = stats.last_activity_time || 'Just now';
+    }
+
+    // Show empty activity state
+    function showEmptyActivityState() {
+        const emptyState = document.getElementById('emptyActivityState');
+        if (emptyState) {
+            emptyState.style.display = 'block';
+        }
+    }
+
+    // Show error state
+    function showErrorState() {
+        const streamContainer = document.getElementById('activityStreamModal');
+        if (!streamContainer) return;
+
+        streamContainer.innerHTML = `
         <div style="text-align: center; padding: 3rem 1rem; color: #ef4444;">
             <i class="ti ti-alert-circle" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
             <p style="margin: 0; font-size: 1rem; font-weight: 500;">Failed to load blockchain activity</p>
@@ -10277,64 +10698,66 @@ function showErrorState() {
             </p>
         </div>
     `;
-}
-
-// Refresh blockchain activity manually
-function refreshBlockchainActivity() {
-    loadBlockchainActivity();
-}
-
-// View full audit trail
-function viewFullAuditTrail() {
-    // Redirect to audit trail page or open in new tab
-    window.open('/audit-trail', '_blank');
-}
-
-// Get contract ID from URL or form
-function getContractId() {
-    // Try to get from URL parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    let contractId = urlParams.get('contract_id');
-    
-    // If not in URL, try to get from form
-    if (!contractId) {
-        const contractIdInput = document.querySelector('[name="contract_id"]');
-        contractId = contractIdInput ? contractIdInput.value : null;
     }
-    
-    return contractId;
-}
 
-// Close modal when clicking outside
-window.addEventListener('click', function(event) {
-    const modal = document.getElementById('blockchainMonitorModal');
-    if (event.target === modal) {
-        closeBlockchainMonitor();
+    // Refresh blockchain activity manually
+    function refreshBlockchainActivity() {
+        loadBlockchainActivity();
     }
-});
 
-// Close modal on ESC key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeBlockchainMonitor();
+    // View full audit trail
+    function viewFullAuditTrail() {
+        // Redirect to audit trail page or open in new tab
+        window.open('/audit-trail', '_blank');
     }
-});
+
+    // Get contract ID from URL or form
+    function getContractId() {
+        // Try to get from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        let contractId = urlParams.get('contract_id');
+
+        // If not in URL, try to get from form
+        if (!contractId) {
+            const contractIdInput = document.querySelector('[name="contract_id"]');
+            contractId = contractIdInput ? contractIdInput.value : null;
+        }
+
+        return contractId;
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function (event) {
+        const modal = document.getElementById('blockchainMonitorModal');
+        if (event.target === modal) {
+            closeBlockchainMonitor();
+        }
+    });
+
+    // Close modal on ESC key
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeBlockchainMonitor();
+        }
+    });
 
 
-function getApprovalBadge(current_approver, workflow) {
-    console.log();
-    const approver = current_approver;
-    const approverName = approver?.name || 'Approver';
-    const approvalType = approver?.step_type?.includes('review') ? 'Review' : 'Approval';
-    
-    return `<span class="comment-count-badge" style="background: rgb(255, 243, 205); color: rgb(133, 100, 4); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; display: inline-flex; gap: 6px;">
-        <i class="ti ti-clock"></i> Awaiting ${approverName} ${approvalType}
+    function getApprovalBadge(current_approver, workflow, step_type) {
+        console.log(current_approver);
+        const approver = current_approver;
+        const approverName = approver?.name || 'Approver';
+        const approverDepartment = approver?.department || 'Department';
+        const approvalType = step_type?.includes('review') ? 'Review' : 'Approval';
+
+        return `<span class="comment-count-badge" style="background: rgb(255, 243, 205); color: rgb(133, 100, 4); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; display: inline-flex; gap: 6px;">
+        <i class="ti ti-clock"></i> Awaiting ${approverName} ${approvalType} (${approverDepartment})
     </span>`;
-}
+    }
 </script>
 
 {% endblock %}
 
 {% block extra_js %}
+<script src="/app/static/js/negotiation.js"></script>
 <script src="/app/static/js/contract-edit.js"></script>
 {% endblock %}
