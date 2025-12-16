@@ -1,1625 +1,4 @@
-<script>
-    // Correspondence Management JavaScript - Inline Implementation
-    // Complete functionality for document analysis, AI queries, and response generation
-
-    /**
-     * Correspondence Management Module
-     * Handles document analysis, AI queries, and response generation
-     */
-
-    class CorrespondenceManager {
-        constructor() {
-            this.currentMode = 'project';
-            this.selectedProject = null;
-            this.selectedDocuments = [];
-            this.selectedDocument = null;
-            this.queryHistory = [];
-            this.aiResponses = [];
-
-            this.init();
-        }
-
-        init() {
-            this.bindEvents();
-            this.updateUI();
-            this.loadSettings();
-        }
-
-        bindEvents() {
-            // Mode selection
-            document.querySelectorAll('.mode-card').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    const mode = card.id.replace('Mode', '');
-                    this.selectMode(mode);
-                });
-            });
-
-            // Project selection
-            document.querySelectorAll('.project-card').forEach(card => {
-                card.addEventListener('click', (e) => {
-                    const projectId = card.getAttribute('data-project-id') || 'project-1';
-                    this.selectProject(card, projectId);
-                });
-            });
-
-            // Document toggles
-            document.querySelectorAll('.document-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    if (!e.target.closest('.document-actions')) {
-                        const docId = item.getAttribute('data-doc-id') || item.querySelector('input').id;
-                        this.toggleDocument(item, docId);
-                    }
-                });
-            });
-
-            // Query form submission
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) {
-                submitBtn.addEventListener('click', () => this.submitQuery());
-            }
-
-            // Template buttons
-            document.querySelectorAll('.template-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const templateType = btn.getAttribute('data-template') ||
-                        btn.textContent.toLowerCase().replace(/\s+/g, '');
-                    this.useTemplate(templateType);
-                });
-            });
-
-            // Keyboard shortcuts
-            document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
-
-            // Auto-save functionality
-            const queryInput = document.getElementById('queryInput');
-            if (queryInput) {
-                let saveTimeout;
-                queryInput.addEventListener('input', () => {
-                    clearTimeout(saveTimeout);
-                    saveTimeout = setTimeout(() => this.autoSave(), 2000);
-                });
-            }
-        }
-
-        selectMode(mode) {
-            this.currentMode = mode;
-
-            // Update UI
-            document.querySelectorAll('.mode-card').forEach(card => {
-                card.classList.remove('active');
-                card.querySelector('.radio-button').classList.remove('active');
-            });
-
-            const selectedCard = document.getElementById(mode + 'Mode');
-            if (selectedCard) {
-                selectedCard.classList.add('active');
-                selectedCard.querySelector('.radio-button').classList.add('active');
-            }
-
-            // Show/hide sections
-            document.getElementById('projectSection').style.display =
-                mode === 'project' ? 'block' : 'none';
-            document.getElementById('documentSection').style.display =
-                mode === 'document' ? 'block' : 'none';
-
-            this.resetSelections();
-            this.trackEvent('mode_selected', { mode });
-        }
-
-        selectProject(element, projectId) {
-            // Remove previous selection
-            document.querySelectorAll('.project-card').forEach(card => {
-                card.classList.remove('active');
-            });
-
-            // Add selection to clicked project
-            element.classList.add('active');
-            this.selectedProject = projectId;
-
-            // Show document selection section with animation
-            const docSection = document.getElementById('documentSelectionSection');
-            if (docSection) {
-                docSection.style.display = 'block';
-                docSection.classList.add('fade-in');
-
-                // Smooth scroll to section
-                setTimeout(() => {
-                    docSection.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }, 100);
-            }
-
-            this.trackEvent('project_selected', { projectId });
-        }
-
-        toggleDocument(element, docId) {
-            const checkbox = element.querySelector('input[type="checkbox"]');
-            if (!checkbox) return;
-
-            checkbox.checked = !checkbox.checked;
-
-            if (checkbox.checked) {
-                this.selectedDocuments.push(docId);
-                element.classList.add('selected');
-            } else {
-                this.selectedDocuments = this.selectedDocuments.filter(id => id !== docId);
-                element.classList.remove('selected');
-            }
-
-            this.updateProceedButton();
-            this.updateSelectedCount();
-            this.trackEvent('document_toggled', { docId, selected: checkbox.checked });
-        }
-
-        selectAllDocuments() {
-            document.querySelectorAll('.document-item input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = true;
-                checkbox.closest('.document-item').classList.add('selected');
-            });
-
-            this.selectedDocuments = ['doc-1', 'doc-2', 'email-1', 'email-2'];
-            this.updateProceedButton();
-            this.updateSelectedCount();
-            this.showNotification('All documents selected', 'success');
-        }
-
-        clearDocumentSelection() {
-            document.querySelectorAll('.document-item input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = false;
-                checkbox.closest('.document-item').classList.remove('selected');
-            });
-
-            this.selectedDocuments = [];
-            this.updateProceedButton();
-            this.updateSelectedCount();
-            this.showNotification('Document selection cleared', 'info');
-        }
-
-        updateProceedButton() {
-            const proceedBtn = document.getElementById('proceedBtn');
-            if (proceedBtn) {
-                proceedBtn.disabled = this.selectedDocuments.length === 0;
-
-                if (this.selectedDocuments.length > 0) {
-                    proceedBtn.classList.add('pulse');
-                    setTimeout(() => proceedBtn.classList.remove('pulse'), 1000);
-                }
-            }
-        }
-
-        updateSelectedCount() {
-            const countElement = document.getElementById('selectedCount');
-            if (countElement) {
-                countElement.textContent = this.selectedDocuments.length;
-            }
-
-            // Update document chips in modal
-            this.updateDocumentChips();
-        }
-
-        updateDocumentChips() {
-            const chipsContainer = document.querySelector('.selected-docs-preview');
-            if (!chipsContainer) return;
-
-            const docNames = {
-                'doc-1': 'Document 1',
-                'doc-2': 'Document 2',
-                'email-1': 'Email 1',
-                'email-2': 'Email 2'
-            };
-
-            chipsContainer.innerHTML = this.selectedDocuments
-                .map(docId => {
-                    const isEmail = docId.includes('email');
-                    return `<span class="doc-chip ${isEmail ? 'email' : ''}">${docNames[docId]}</span>`;
-                })
-                .join('');
-        }
-
-        proceedToQuery() {
-            const querySection = document.getElementById('querySection');
-            if (querySection) {
-                querySection.style.display = 'block';
-                querySection.classList.add('fade-in');
-
-                setTimeout(() => {
-                    querySection.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }, 100);
-            }
-
-            document.getElementById('responseSection').style.display = 'none';
-            this.trackEvent('proceed_to_query');
-        }
-
-        useTemplate(templateType) {
-            const queryInput = document.getElementById('queryInput');
-            if (!queryInput) return;
-
-            const templates = {
-                'backcharge': "We received a back charge letter from QatarEnergy. Based on the selected project files, please provide contractually viable guidance on how to defend our rights and respond to this back charge while ensuring our best benefit.",
-                'dispute': "There appears to be a dispute regarding contract terms. Please analyze the selected documents and provide guidance on the best approach for dispute resolution based on the contract clauses.",
-                'termination': "We need guidance on contract termination procedures. Please review the selected documents and advise on the proper termination process and our rights/obligations.",
-                'compliance': "Please review the selected documents for compliance with contractual obligations and highlight any areas of concern or recommended actions.",
-                'backchargedefense': "We received a back charge letter from QatarEnergy. Based on the selected project files, please provide contractually viable guidance on how to defend our rights and respond to this back charge while ensuring our best benefit.", // Fallback
-                'disputeresolution': "There appears to be a dispute regarding contract terms. Please analyze the selected documents and provide guidance on the best approach for dispute resolution based on the contract clauses.",     // Fallback
-                'contracttermination': "We need guidance on contract termination procedures. Please review the selected documents and advise on the proper termination process and our rights/obligations.", // Fallback
-                'compliancecheck': "Please review the selected documents for compliance with contractual obligations and highlight any areas of concern or recommended actions."    // Fallback
-            };
-
-            const template = templates[templateType.toLowerCase()];
-            if (template) {
-                queryInput.value = template;
-                queryInput.focus();
-
-                // Add visual feedback
-                queryInput.classList.add('template-filled');
-                setTimeout(() => queryInput.classList.remove('template-filled'), 1000);
-
-                this.trackEvent('template_used', { templateType });
-            }
-        }
-
-        async submitQuery() {
-            const queryText = document.getElementById('queryInput').value.trim();
-            const tone = document.getElementById('toneSelector').value;
-            const urgency = document.getElementById('urgencyLevel').value;
-
-            // Validation
-            if (!this.validateQuerySubmission(queryText)) {
-                return;
-            }
-
-            // Show loading state
-            this.setLoadingState(true);
-
-            try {
-                // Process AI query with real API call
-                const response = await this.processAIQuery({
-                    query: queryText,
-                    tone: tone,
-                    urgency: urgency,
-                    documents: this.selectedDocuments,
-                    mode: this.currentMode
-                });
-
-                // Check if there was an error
-                if (response.error) {
-                    this.showNotification('Failed to analyze correspondence. Please try again.', 'error');
-                    this.setLoadingState(false);
-                    return;
-                }
-
-                // Store query and response
-                this.queryHistory.push({
-                    query: queryText,
-                    tone: tone,
-                    urgency: urgency,
-                    timestamp: new Date(),
-                    documents: [...this.selectedDocuments]
-                });
-
-                this.aiResponses.push(response);
-
-                // Display response with enhanced formatting
-                this.displayAIResponse(response);
-                this.showResponseSection();
-
-                // Display recommendations and key points if available
-                if (response.recommendations && response.recommendations.length > 0) {
-                    this.displayRecommendations(response.recommendations);
-                }
-
-                if (response.keyPoints && response.keyPoints.length > 0) {
-                    this.displayKeyPoints(response.keyPoints);
-                }
-
-                if (response.suggestedActions && response.suggestedActions.length > 0) {
-                    this.displaySuggestedActions(response.suggestedActions);
-                }
-
-                this.showNotification('AI analysis completed successfully!', 'success');
-                this.trackEvent('query_submitted', {
-                    queryLength: queryText.length,
-                    tone,
-                    urgency,
-                    documentCount: this.selectedDocuments.length,
-                    processingTime: response.processingTime,
-                    tokensUsed: response.tokensUsed
-                });
-
-            } catch (error) {
-                console.error('Query submission error:', error);
-                this.showNotification('Error processing query. Please try again.', 'error');
-            } finally {
-                this.setLoadingState(false);
-            }
-        }
-
-
-        displayRecommendations(recommendations) {
-            const responseSection = document.getElementById('responseSection');
-            if (!responseSection) return;
-
-            const recommendationsHtml = `
-        <div class="recommendations-section">
-            <h4><i class="ti ti-bulb"></i> Recommendations</h4>
-            <ul class="recommendation-list">
-                ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
-            </ul>
-        </div>
-    `;
-
-            // Append to response section
-            const existingRecommendations = responseSection.querySelector('.recommendations-section');
-            if (existingRecommendations) {
-                existingRecommendations.remove();
-            }
-
-            responseSection.insertAdjacentHTML('beforeend', recommendationsHtml);
-        }
-
-        displayKeyPoints(keyPoints) {
-            const responseSection = document.getElementById('responseSection');
-            if (!responseSection) return;
-
-            const keyPointsHtml = `
-        <div class="key-points-section">
-            <h4><i class="ti ti-key"></i> Key Points</h4>
-            <ul class="key-points-list">
-                ${keyPoints.map(point => `<li>${point}</li>`).join('')}
-            </ul>
-        </div>
-    `;
-
-            // Append to response section
-            const existingKeyPoints = responseSection.querySelector('.key-points-section');
-            if (existingKeyPoints) {
-                existingKeyPoints.remove();
-            }
-
-            responseSection.insertAdjacentHTML('beforeend', keyPointsHtml);
-        }
-
-        displaySuggestedActions(actions) {
-            const responseSection = document.getElementById('responseSection');
-            if (!responseSection) return;
-
-            const actionsHtml = `
-        <div class="suggested-actions-section">
-            <h4><i class="ti ti-checklist"></i> Suggested Actions</h4>
-            <ul class="actions-list">
-                ${actions.map((action, idx) => `
-                    <li>
-                        <span class="action-number">${idx + 1}</span>
-                        ${action}
-                    </li>
-                `).join('')}
-            </ul>
-        </div>
-    `;
-
-            // Append to response section
-            const existingActions = responseSection.querySelector('.suggested-actions-section');
-            if (existingActions) {
-                existingActions.remove();
-            }
-
-            responseSection.insertAdjacentHTML('beforeend', actionsHtml);
-        }
-
-        validateQuerySubmission(queryText) {
-            if (!queryText) {
-                this.showNotification('Please enter your query before submitting.', 'warning');
-                document.getElementById('queryInput').focus();
-                return false;
-            }
-
-            if (this.currentMode === 'project' && this.selectedDocuments.length === 0) {
-                this.showNotification('Please select at least one document for analysis.', 'warning');
-                return false;
-            }
-
-            if (this.currentMode === 'document' && !this.selectedDocument) {
-                this.showNotification('Please select a document for analysis.', 'warning');
-                return false;
-            }
-
-            return true;
-        }
-        async processAIQuery(params) {
-            /**
-             * Process AI query by calling the backend API
-             * This replaces the simulated response with real Claude AI integration
-             */
-
-            const startTime = Date.now();
-
-            try {
-                // Prepare request payload
-                const requestPayload = {
-                    query: params.query,
-                    mode: params.mode, // 'project' or 'document'
-                    document_ids: params.documents.map(doc => doc.id),
-                    project_id: this.currentProjectId, // If project mode
-                    tone: params.tone,
-                    urgency: params.urgency,
-                    language: 'en' // or 'ar' based on user preference
-                };
-
-                console.log('📤 Sending analysis request:', requestPayload);
-
-                // Call the correspondence analyze endpoint
-                const response = await fetch('/api/correspondence/analyze', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify(requestPayload)
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.detail || 'Analysis request failed');
-                }
-
-                const result = await response.json();
-                console.log('✅ Analysis response received:', result);
-
-                // Return formatted response for display
-                return {
-                    content: result.content,
-                    confidence: result.confidence,
-                    processingTime: result.processingTime,
-                    sources: result.sources || [],
-                    recommendations: result.recommendations || [],
-                    keyPoints: result.key_points || [],
-                    suggestedActions: result.suggested_actions || [],
-                    tokensUsed: result.tokens_used,
-                    timestamp: result.timestamp
-                };
-
-            } catch (error) {
-                console.error('❌ AI Query Error:', error);
-
-                // Return error response
-                return {
-                    content: `<div class="error-message">
-                <i class="ti ti-alert-circle"></i>
-                <strong>Analysis Error</strong>
-                <p>${error.message}</p>
-                <p>Please try again or contact support if the issue persists.</p>
-            </div>`,
-                    confidence: 0,
-                    processingTime: (Date.now() - startTime) / 1000,
-                    sources: [],
-                    recommendations: [],
-                    error: true
-                };
-            }
-        }
-
-        generateMockResponse(params) {
-            const { query, tone, documents } = params;
-
-            // Analyze query for key terms
-            const isBackcharge = query.toLowerCase().includes('back charge');
-            const isDispute = query.toLowerCase().includes('dispute');
-            const isTermination = query.toLowerCase().includes('termination');
-
-            let responseContent = '';
-
-            if (isBackcharge) {
-                responseContent = this.getBackchargeResponse(tone);
-            } else if (isDispute) {
-                responseContent = this.getDisputeResponse(tone);
-            } else if (isTermination) {
-                responseContent = this.getTerminationResponse(tone);
-            } else {
-                responseContent = this.getGeneralResponse(query, tone);
-            }
-
-            return {
-                content: responseContent,
-                confidence: 85 + Math.random() * 15, // 85-100%
-                processingTime: (2000 + Math.random() * 2000) / 1000,
-                sources: this.generateSourceReferences(documents),
-                tone: tone,
-                query: query,
-                timestamp: new Date()
-            };
-        }
-
-        getBackchargeResponse(tone) {
-            const responses = {
-                formal: `
-                <h4>Formal Response Strategy for Back Charge Dispute</h4>
-                <p><strong>Executive Summary:</strong> Based on the contract analysis, we recommend a structured formal response to dispute the back charge on procedural and substantive grounds.</p>
-                
-                <div style="margin: 1.5rem 0;">
-                    <h5>1. Procedural Deficiencies</h5>
-                    <ul>
-                        <li>The back charge was not raised following the dispute resolution mechanism outlined in the contract</li>
-                        <li>No proper notice was provided during the contract termination process</li>
-                        <li>The claim lacks the required supporting documentation</li>
-                    </ul>
-                </div>
-                
-                <div style="margin: 1.5rem 0;">
-                    <h5>2. Recommended Actions</h5>
-                    <ul>
-                        <li>Submit formal dispute notice within contractual timeframes</li>
-                        <li>Request detailed justification and supporting evidence</li>
-                        <li>Invoke relevant contract clauses protecting your rights</li>
-                        <li>Preserve all records for potential arbitration</li>
-                    </ul>
-                </div>
-                
-                <div style="background: var(--info-bg); padding: 1rem; border-radius: 8px;">
-                    <p><strong>Next Steps:</strong> Draft formal response letter within 14 days, following the template provided in Appendix A of your contract.</p>
-                </div>
-            `,
-                conciliatory: `
-                <h4>Collaborative Approach to Back Charge Resolution</h4>
-                <p>We understand QatarEnergy's concerns and are committed to resolving this matter amicably while protecting our legitimate interests.</p>
-                
-                <div style="margin: 1.5rem 0;">
-                    <h5>Proposed Resolution Path</h5>
-                    <p>We suggest initiating a collaborative discussion to:</p>
-                    <ul>
-                        <li>Understand the specific concerns underlying the back charge</li>
-                        <li>Review relevant contract provisions together</li>
-                        <li>Explore mutually acceptable solutions</li>
-                        <li>Avoid lengthy dispute procedures that benefit neither party</li>
-                    </ul>
-                </div>
-            `,
-                assertive: `
-                <h4>Strong Defense Against Improper Back Charge</h4>
-                <p><strong>Position:</strong> The back charge is procedurally flawed and substantively unjustified. We reject it in its entirety.</p>
-                
-                <div style="margin: 1.5rem 0;">
-                    <h5>Key Arguments</h5>
-                    <ul>
-                        <li>Clear violation of contractual dispute procedures</li>
-                        <li>Failure to raise claims during contract performance</li>
-                        <li>Lack of evidence supporting the claimed damages</li>
-                        <li>Untimely assertion waives any potential claims</li>
-                    </ul>
-                </div>
-                
-                <div style="background: var(--warning-bg); padding: 1rem; border-radius: 8px;">
-                    <p><strong>Demand:</strong> Immediate withdrawal of the back charge and confirmation that no deductions will be made.</p>
-                </div>
-            `
-            };
-
-            return responses[tone] || responses.formal;
-        }
-
-        getDisputeResponse(tone) {
-            return `
-            <h4>Dispute Resolution Guidance</h4>
-            <p>Based on contract analysis, here's your optimal dispute resolution strategy:</p>
-            
-            <div style="margin: 1.5rem 0;">
-                <h5>Contract Analysis</h5>
-                <p>Your contract provides for a three-tier dispute resolution process:</p>
-                <ul>
-                    <li>Direct negotiation (30 days)</li>
-                    <li>Mediation (60 days)</li>
-                    <li>Arbitration (final binding resolution)</li>
-                </ul>
-            </div>
-            
-            <div style="margin: 1.5rem 0;">
-                <h5>Recommended Strategy</h5>
-                <p>Initiate formal dispute resolution while maintaining commercial relationships.</p>
-            </div>
-        `;
-        }
-
-        getTerminationResponse(tone) {
-            return `
-            <h4>Contract Termination Guidance</h4>
-            <p>Analysis of termination clauses and recommended approach:</p>
-            
-            <div style="margin: 1.5rem 0;">
-                <h5>Termination Rights</h5>
-                <p>Based on contract review, termination may be available under:</p>
-                <ul>
-                    <li>Material breach provisions (Clause 15.1)</li>
-                    <li>Convenience termination (Clause 15.3)</li>
-                    <li>Force majeure (Clause 16.2)</li>
-                </ul>
-            </div>
-            
-            <div style="margin: 1.5rem 0;">
-                <h5>Notice Requirements</h5>
-                <p>Ensure compliance with all procedural requirements for valid termination.</p>
-            </div>
-        `;
-        }
-
-        getGeneralResponse(query, tone) {
-            return `
-            <h4>AI Analysis Results</h4>
-            <p>Based on your query: "${query.substring(0, 100)}${query.length > 100 ? '...' : ''}"</p>
-            
-            <div style="margin: 1.5rem 0;">
-                <h5>Key Findings</h5>
-                <p>Our analysis has identified several important considerations relevant to your query.</p>
-            </div>
-            
-            <div style="margin: 1.5rem 0;">
-                <h5>Recommendations</h5>
-                <p>Based on the selected documents and contract terms, we recommend a structured approach to address your concerns.</p>
-            </div>
-        `;
-        }
-
-        generateSourceReferences(documents) {
-            const references = {
-                'doc-1': 'Document 1, Clause 15.2 - Dispute Resolution',
-                'doc-2': 'Document 2, Section 8 - Technical Specifications',
-                'email-1': 'Email 1 - Back charge notice from QatarEnergy',
-                'email-2': 'Email 2 - Contract termination correspondence'
-            };
-
-            return documents.map(docId => ({
-                id: docId,
-                reference: references[docId] || `Document ${docId}`,
-                type: docId.includes('email') ? 'email' : 'document'
-            }));
-        }
-
-        displayAIResponse(response) {
-            const responseText = document.getElementById('responseText');
-            if (!responseText) return;
-
-            responseText.innerHTML = response.content;
-
-            // Update confidence score
-            this.updateConfidenceScore(response.confidence);
-
-            // Update processing time
-            this.updateProcessingTime(response.processingTime);
-
-            // Update source references
-            this.updateSourceReferences(response.sources);
-
-            // Add copy functionality
-            this.addCopyFunctionality(responseText);
-        }
-
-        updateConfidenceScore(confidence) {
-            const scoreFill = document.querySelector('.score-fill');
-            const scoreValue = document.querySelector('.score-value');
-
-            if (scoreFill && scoreValue) {
-                scoreFill.style.width = `${confidence}%`;
-                scoreValue.textContent = `${Math.round(confidence)}%`;
-
-                // Color coding based on confidence
-                if (confidence >= 90) {
-                    scoreFill.style.background = 'var(--success-color)';
-                } else if (confidence >= 75) {
-                    scoreFill.style.background = 'linear-gradient(90deg, var(--warning-color), var(--success-color))';
-                } else {
-                    scoreFill.style.background = 'var(--warning-color)';
-                }
-            }
-        }
-
-        updateProcessingTime(time) {
-            const timeElement = document.querySelector('.analysis-time span');
-            if (timeElement) {
-                timeElement.textContent = `Analysis completed in ${time.toFixed(1)} seconds`;
-            }
-        }
-
-        updateSourceReferences(sources) {
-            const referenceList = document.querySelector('.reference-list');
-            if (!referenceList) return;
-
-            referenceList.innerHTML = sources.map(source => `
-            <div class="reference-item" data-source-id="${source.id}">
-                <i class="ti ti-${source.type === 'email' ? 'mail' : 'file-text'}"></i>
-                <span>${source.reference}</span>
-            </div>
-        `).join('');
-
-            // Add click handlers for source references
-            referenceList.querySelectorAll('.reference-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const sourceId = item.getAttribute('data-source-id');
-                    this.highlightSource(sourceId);
-                });
-            });
-        }
-
-        addCopyFunctionality(responseElement) {
-            // Add copy button to response
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'btn-icon copy-response-btn';
-            copyBtn.innerHTML = '<i class="ti ti-copy"></i>';
-            copyBtn.title = 'Copy response';
-            copyBtn.style.cssText = 'position: absolute; top: 1rem; right: 1rem;';
-
-            responseElement.style.position = 'relative';
-            responseElement.appendChild(copyBtn);
-
-            copyBtn.addEventListener('click', () => {
-                this.copyResponseToClipboard(responseElement.textContent);
-            });
-        }
-
-        async copyResponseToClipboard(text) {
-            try {
-                await navigator.clipboard.writeText(text);
-                this.showNotification('Response copied to clipboard!', 'success');
-            } catch (error) {
-                console.error('Copy failed:', error);
-                this.showNotification('Failed to copy response', 'error');
-            }
-        }
-
-        showResponseSection() {
-            const responseSection = document.getElementById('responseSection');
-            if (responseSection) {
-                responseSection.style.display = 'block';
-                responseSection.classList.add('fade-in');
-
-                setTimeout(() => {
-                    responseSection.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }, 300);
-            }
-        }
-
-        setLoadingState(loading) {
-            const submitBtn = document.getElementById('submitBtn');
-            if (!submitBtn) return;
-
-            if (loading) {
-                submitBtn.dataset.originalContent = submitBtn.innerHTML;
-                submitBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
-                submitBtn.disabled = true;
-            } else {
-                submitBtn.innerHTML = submitBtn.dataset.originalContent || '<i class="ti ti-send"></i> Submit Query';
-                submitBtn.disabled = false;
-            }
-        }
-
-        // Additional utility methods
-
-        autoSave() {
-            const queryText = document.getElementById('queryInput').value;
-            if (queryText.trim()) {
-                localStorage.setItem('correspondence_draft', JSON.stringify({
-                    query: queryText,
-                    mode: this.currentMode,
-                    selectedDocuments: this.selectedDocuments,
-                    timestamp: Date.now()
-                }));
-
-                this.showNotification('Draft saved automatically', 'info');
-            }
-        }
-
-        loadSettings() {
-            // Load saved draft
-            try {
-                const draft = localStorage.getItem('correspondence_draft');
-                if (draft) {
-                    const parsed = JSON.parse(draft);
-                    const age = Date.now() - parsed.timestamp;
-
-                    // Only restore if less than 24 hours old
-                    if (age < 24 * 60 * 60 * 1000) {
-                        const queryInput = document.getElementById('queryInput');
-                        if (queryInput && !queryInput.value) {
-                            queryInput.value = parsed.query;
-                            this.showNotification('Previous draft restored', 'info');
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error loading settings:', error);
-            }
-        }
-
-        handleKeyboardShortcuts(e) {
-            // Ctrl/Cmd + Enter to submit query
-            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-                const queryInput = document.getElementById('queryInput');
-                if (queryInput && queryInput === document.activeElement) {
-                    e.preventDefault();
-                    this.submitQuery();
-                }
-            }
-
-            // Escape to close modals
-            if (e.key === 'Escape') {
-                const modals = document.querySelectorAll('.modal.show');
-                modals.forEach(modal => {
-                    modal.classList.remove('show');
-                });
-                document.body.style.overflow = '';
-            }
-
-            // Ctrl/Cmd + S to save draft
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                this.autoSave();
-            }
-        }
-
-        trackEvent(eventName, properties = {}) {
-            // Analytics tracking
-            console.log('Event:', eventName, properties);
-
-            // Integration with analytics service would go here
-            // Example: analytics.track(eventName, properties);
-        }
-
-        highlightSource(sourceId) {
-            // Highlight referenced source in UI
-            const sourceElement = document.querySelector(`[data-doc-id="${sourceId}"]`);
-            if (sourceElement) {
-                sourceElement.classList.add('highlighted');
-                sourceElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-                setTimeout(() => {
-                    sourceElement.classList.remove('highlighted');
-                }, 3000);
-            }
-        }
-
-        updateUI() {
-            // Update button states, counters, etc.
-            this.updateProceedButton();
-            this.updateSelectedCount();
-        }
-
-        resetSelections() {
-            this.selectedProject = null;
-            this.selectedDocuments = [];
-            this.selectedDocument = null;
-
-            // Hide sections
-            const sections = ['documentSelectionSection', 'querySection', 'responseSection'];
-            sections.forEach(sectionId => {
-                const section = document.getElementById(sectionId);
-                if (section) {
-                    section.style.display = 'none';
-                }
-            });
-
-            // Clear form
-            const queryInput = document.getElementById('queryInput');
-            if (queryInput) {
-                queryInput.value = '';
-            }
-
-            // Reset selections in UI
-            document.querySelectorAll('.project-card, .document-card').forEach(card => {
-                card.classList.remove('active');
-            });
-
-            document.querySelectorAll('.document-item input[type="checkbox"]').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-
-            this.updateUI();
-        }
-
-        showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-
-            const icons = {
-                success: 'ti-check-circle',
-                warning: 'ti-alert-triangle',
-                error: 'ti-x-circle',
-                info: 'ti-info-circle'
-            };
-
-            notification.innerHTML = `
-            <i class="ti ${icons[type] || icons.info}"></i>
-            <span>${message}</span>
-            <button class="notification-close" onclick="this.parentElement.remove()">
-                <i class="ti ti-x"></i>
-            </button>
-        `;
-
-            // Position and style
-            notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            border: 1px solid var(--border-color);
-            border-left: 4px solid var(--${type === 'success' ? 'success' :
-                    type === 'warning' ? 'warning' :
-                        type === 'error' ? 'danger' : 'info'}-color);
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 10000;
-            max-width: 400px;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            animation: slideInRight 0.3s ease;
-        `;
-
-            document.body.appendChild(notification);
-
-            // Auto remove after 4 seconds
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 4000);
-        }
-    }
-
-    // Global functions for template compatibility
-    window.correspondenceManager = new CorrespondenceManager();
-
-    // Export individual functions for backward compatibility
-    window.selectMode = (mode) => window.correspondenceManager.selectMode(mode);
-    window.selectProject = (element, projectId) => window.correspondenceManager.selectProject(element, projectId);
-    window.toggleDocument = (element, docId) => window.correspondenceManager.toggleDocument(element, docId);
-    window.selectAllDocuments = () => window.correspondenceManager.selectAllDocuments();
-    window.clearDocumentSelection = () => window.correspondenceManager.clearDocumentSelection();
-    window.proceedToQuery = () => window.correspondenceManager.proceedToQuery();
-    window.useTemplate = (templateType) => window.correspondenceManager.useTemplate(templateType);
-    window.submitQuery = () => window.correspondenceManager.submitQuery();
-
-    // Additional global functions for UI interactions
-    window.clearQuery = () => {
-        document.getElementById('queryInput').value = '';
-    };
-
-    window.pasteFromClipboard = async () => {
-        try {
-            if (navigator.clipboard) {
-                const text = await navigator.clipboard.readText();
-                document.getElementById('queryInput').value = text;
-                window.correspondenceManager.showNotification('Text pasted from clipboard', 'success');
-            }
-        } catch (error) {
-            window.correspondenceManager.showNotification('Unable to access clipboard', 'warning');
-        }
-    };
-
-    window.saveAsDraft = () => {
-        window.correspondenceManager.autoSave();
-    };
-
-    // Modal functions
-    window.openModal = (modalId) => {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-    };
-
-    window.closeModal = (modalId) => {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-    };
-
-    // Document action functions
-    window.previewDocument = (event, docId) => {
-        if (event) event.stopPropagation();
-
-        const docTitles = {
-            'doc-1': 'Main Power Services Agreement.pdf',
-            'doc-2': 'Technical Specifications.docx',
-            'email-1': 'Back charge letter from QatarEnergy.eml',
-            'email-2': 'Contract termination notice.eml'
-        };
-
-        document.getElementById('previewDocTitle').textContent = docTitles[docId] || 'Document Preview';
-        window.openModal('documentPreviewModal');
-
-        // Simulate document loading
-        const viewer = document.getElementById('documentViewer');
-        viewer.innerHTML = `
-        <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
-            <div class="loading-spinner" style="margin: 0 auto 1rem;"></div>
-            <p>Loading document preview...</p>
-        </div>
-    `;
-
-        setTimeout(() => {
-            viewer.innerHTML = `
-            <div style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid var(--border-color);">
-                <h3>${docTitles[docId]}</h3>
-                <p><strong>Document Type:</strong> ${docId.includes('email') ? 'Email Communication' : 'Contract Document'}</p>
-                <p><strong>Last Modified:</strong> January 15, 2025</p>
-                <p><strong>Size:</strong> ${docId.includes('email') ? '45 KB' : '2.3 MB'}</p>
-                <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border-color);">
-                <div style="line-height: 1.6;">
-                    <p>This is a preview of the document content. The actual document viewer would display the full content with proper formatting, highlighting, and navigation features.</p>
-                    <p>Key sections would be highlighted and cross-referenced with related clauses and obligations.</p>
-                    ${docId === 'email-1' ? '<p><strong>Subject:</strong> Back Charge Notice - Contract Deductions</p><p><strong>From:</strong> contracts@qatarenergy.qa</p>' : ''}
-                </div>
-            </div>
-        `;
-        }, 1500);
-    };
-
-    window.downloadDocument = (event, docId) => {
-        if (event) event.stopPropagation();
-        window.correspondenceManager.showNotification('Document download started...', 'success');
-    };
-
-    window.replyToEmail = (event, emailId) => {
-        if (event) event.stopPropagation();
-        window.openModal('queryModal');
-
-        // Pre-fill with reply context
-        const modalQueryInput = document.getElementById('modalQueryInput');
-        if (modalQueryInput) {
-            modalQueryInput.value = 'Please help me draft a professional reply to this email.';
-        }
-    };
-
-    // Project action functions
-    window.viewProjectDetails = (event, projectId) => {
-        if (event) event.stopPropagation();
-        window.correspondenceManager.showNotification('Opening project details...', 'info');
-    };
-
-    window.viewAuditTrail = (event, projectId) => {
-        if (event) event.stopPropagation();
-        window.correspondenceManager.showNotification('Opening audit trail...', 'info');
-    };
-
-    window.refreshProjects = () => {
-        window.correspondenceManager.showNotification('Refreshing project list...', 'info');
-        setTimeout(() => {
-            window.correspondenceManager.showNotification('Project list updated!', 'success');
-        }, 1000);
-    };
-
-    // Response action functions
-    window.exportResponse = () => {
-        window.correspondenceManager.showNotification('Exporting response as PDF...', 'info');
-        setTimeout(() => {
-            window.correspondenceManager.showNotification('Response exported successfully!', 'success');
-        }, 2000);
-    };
-
-    window.shareResponse = () => {
-        if (navigator.share) {
-            navigator.share({
-                title: 'AI Correspondence Analysis',
-                text: 'AI-generated correspondence analysis and recommendations',
-                url: window.location.href
-            });
-        } else {
-            window.correspondenceManager.copyResponseToClipboard(
-                document.getElementById('responseText')?.textContent || 'AI Response'
-            );
-        }
-    };
-
-    window.generateNewResponse = () => {
-        const submitBtn = document.getElementById('submitBtn');
-        if (submitBtn) {
-            submitBtn.innerHTML = '<span class="loading-spinner"></span> Regenerating...';
-            submitBtn.disabled = true;
-
-            setTimeout(() => {
-                submitBtn.innerHTML = '<i class="ti ti-send"></i> Submit Query';
-                submitBtn.disabled = false;
-                window.correspondenceManager.showNotification('New response generated!', 'success');
-            }, 2000);
-        }
-    };
-
-    // AI Generation functions
-    window.letAIGenerate = () => {
-        window.openModal('responsePreviewModal');
-
-        // Populate preview modal with AI-generated content
-        const previewQuery = document.getElementById('previewQuery');
-        const previewTone = document.getElementById('previewTone');
-        const previewResponseText = document.getElementById('previewResponseText');
-
-        if (previewQuery) {
-            previewQuery.textContent = "Please draft a formal response disputing the deductions on the basis that proper dispute mechanism was not followed and it was not mentioned during termination letter";
-        }
-
-        if (previewTone) {
-            previewTone.textContent = "Formal Tone";
-        }
-
-        if (previewResponseText) {
-            previewResponseText.innerHTML = `
-            <div style="padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px;">
-                <h4>Proposed Response</h4>
-                <p><strong>Subject:</strong> Formal Dispute of Back Charge Deductions - Contract No. [Contract Number]</p>
-                
-                <p>Dear QatarEnergy Team,</p>
-                
-                <p>We acknowledge receipt of your back charge letter dated [Date]. After careful review of the contract terms and termination procedures, we formally dispute the proposed deductions on the following grounds:</p>
-                
-                <ol>
-                    <li><strong>Procedural Non-Compliance:</strong> The back charge was not raised in accordance with the dispute resolution mechanism outlined in Clause [X] of our agreement.</li>
-                    <li><strong>Omission During Termination:</strong> No mention of these charges was made during the formal contract termination process, which suggests they were not identified at the time of contract closure.</li>
-                    <li><strong>Lack of Supporting Documentation:</strong> The back charge lacks sufficient detail and supporting evidence as required under our contractual terms.</li>
-                </ol>
-                
-                <p>We request that you withdraw these charges and provide detailed justification if you wish to pursue this matter through the proper contractual dispute resolution process.</p>
-                
-                <p>We look forward to your prompt response and resolution of this matter.</p>
-                
-                <p>Sincerely,<br>[Your Name]<br>[Your Title]</p>
-            </div>
-        `;
-        }
-    };
-
-    // Modal interaction functions
-    window.submitModalQuery = () => {
-        const query = document.getElementById('modalQueryInput')?.value.trim();
-        if (!query) {
-            window.correspondenceManager.showNotification('Please enter your query.', 'warning');
-            return;
-        }
-
-        // Transfer to main query
-        const mainQueryInput = document.getElementById('queryInput');
-        if (mainQueryInput) {
-            mainQueryInput.value = query;
-        }
-
-        window.closeModal('queryModal');
-
-        // Scroll to query section
-        const querySection = document.getElementById('querySection');
-        if (querySection) {
-            querySection.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-
-        window.correspondenceManager.showNotification('Query transferred to main interface!', 'success');
-    };
-
-    window.editResponse = () => {
-        window.closeModal('responsePreviewModal');
-        window.correspondenceManager.showNotification('Response opened for editing.', 'info');
-    };
-
-    window.acceptResponse = () => {
-        const previewResponse = document.getElementById('previewResponseText')?.innerHTML;
-        const responseText = document.getElementById('responseText');
-
-        if (previewResponse && responseText) {
-            responseText.innerHTML = previewResponse;
-        }
-
-        window.closeModal('responsePreviewModal');
-
-        // Show response section
-        const responseSection = document.getElementById('responseSection');
-        if (responseSection) {
-            responseSection.style.display = 'block';
-            responseSection.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
-
-        window.correspondenceManager.showNotification('AI response accepted and applied!', 'success');
-    };
-
-    // Document viewer functions
-    window.zoomIn = () => {
-        const viewer = document.getElementById('documentViewer');
-        if (viewer) {
-            const currentZoom = parseFloat(viewer.style.zoom) || 1;
-            viewer.style.zoom = (currentZoom + 0.1).toString();
-        }
-    };
-
-    window.zoomOut = () => {
-        const viewer = document.getElementById('documentViewer');
-        if (viewer) {
-            const currentZoom = parseFloat(viewer.style.zoom) || 1;
-            const newZoom = Math.max(0.5, currentZoom - 0.1);
-            viewer.style.zoom = newZoom.toString();
-        }
-    };
-
-    window.toggleFullscreen = () => {
-        const modal = document.getElementById('documentPreviewModal');
-        if (modal) {
-            modal.classList.toggle('fullscreen');
-        }
-    };
-
-    // Help and utility functions
-    window.showCorrespondenceHistory = () => {
-        window.correspondenceManager.showNotification('Opening correspondence history...', 'info');
-        // This would typically open a history modal or navigate to a history page
-    };
-
-    // Document selection functions for single document mode
-    window.selectDocument = (element, docId) => {
-        document.querySelectorAll('.document-card').forEach(card => {
-            card.classList.remove('active');
-        });
-
-        element.classList.add('active');
-        window.correspondenceManager.selectedDocument = docId;
-
-        // Proceed to query automatically
-        window.correspondenceManager.proceedToQuery();
-    };
-
-    // Enhanced notification system
-    window.showNotification = (message, type = 'info') => {
-        window.correspondenceManager.showNotification(message, type);
-    };
-
-    // Initialization when DOM is ready
-    document.addEventListener('DOMContentLoaded', function () {
-        // Initialize tooltips
-        initializeTooltips();
-
-        // Initialize auto-save
-        initializeAutoSave();
-
-        // Initialize keyboard shortcuts help
-        initializeKeyboardShortcuts();
-
-        // Initialize accessibility features
-        initializeAccessibility();
-
-        console.log('Correspondence Management initialized');
-    });
-
-    function initializeTooltips() {
-        // Add tooltips to buttons and interactive elements
-        const elementsWithTooltips = document.querySelectorAll('[title]');
-        elementsWithTooltips.forEach(element => {
-            element.addEventListener('mouseenter', showTooltip);
-            element.addEventListener('mouseleave', hideTooltip);
-        });
-    }
-
-    function showTooltip(event) {
-        const element = event.target;
-        const title = element.getAttribute('title');
-        if (!title) return;
-
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tooltip';
-        tooltip.textContent = title;
-        tooltip.style.cssText = `
-        position: absolute;
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 0.5rem;
-        border-radius: 4px;
-        font-size: 0.75rem;
-        z-index: 10001;
-        pointer-events: none;
-        white-space: nowrap;
-    `;
-
-        document.body.appendChild(tooltip);
-
-        // Position tooltip
-        const rect = element.getBoundingClientRect();
-        tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
-        tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
-
-        element.tooltipElement = tooltip;
-
-        // Remove title to prevent browser tooltip
-        element.setAttribute('data-title', title);
-        element.removeAttribute('title');
-    }
-
-    function hideTooltip(event) {
-        const element = event.target;
-        if (element.tooltipElement) {
-            element.tooltipElement.remove();
-            element.tooltipElement = null;
-        }
-
-        // Restore title
-        const title = element.getAttribute('data-title');
-        if (title) {
-            element.setAttribute('title', title);
-            element.removeAttribute('data-title');
-        }
-    }
-
-    function initializeAutoSave() {
-        // Set up auto-save for form data
-        const inputs = document.querySelectorAll('input, textarea, select');
-        inputs.forEach(input => {
-            input.addEventListener('change', () => {
-                // Debounced auto-save
-                clearTimeout(input.autoSaveTimeout);
-                input.autoSaveTimeout = setTimeout(() => {
-                    window.correspondenceManager.autoSave();
-                }, 2000);
-            });
-        });
-    }
-
-    function initializeKeyboardShortcuts() {
-        // Create keyboard shortcuts help
-        const shortcutsHelp = {
-            'Ctrl/Cmd + Enter': 'Submit query',
-            'Ctrl/Cmd + S': 'Save draft',
-            'Escape': 'Close modals',
-            'Tab': 'Navigate between elements',
-            'Enter': 'Activate buttons and links'
-        };
-
-        // Add keyboard shortcuts info to help modal
-        const helpModal = document.getElementById('helpModal');
-        if (helpModal) {
-            const helpBody = helpModal.querySelector('.modal-body');
-            if (helpBody) {
-                const shortcutsSection = document.createElement('div');
-                shortcutsSection.innerHTML = `
-                <h4 style="margin-top: 2rem;">Keyboard Shortcuts</h4>
-                <div class="shortcuts-list">
-                    ${Object.entries(shortcutsHelp).map(([key, desc]) => `
-                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
-                            <kbd style="background: var(--background-light); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: monospace;">${key}</kbd>
-                            <span>${desc}</span>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-                helpBody.appendChild(shortcutsSection);
-            }
-        }
-    }
-
-    function initializeAccessibility() {
-        // Add ARIA labels and roles
-        const buttons = document.querySelectorAll('button:not([aria-label])');
-        buttons.forEach(button => {
-            if (!button.getAttribute('aria-label')) {
-                const text = button.textContent.trim() || button.title || 'Button';
-                button.setAttribute('aria-label', text);
-            }
-        });
-
-        // Add role to custom elements
-        const cards = document.querySelectorAll('.project-card, .document-card, .mode-card');
-        cards.forEach(card => {
-            card.setAttribute('role', 'button');
-            card.setAttribute('tabindex', '0');
-
-            // Add keyboard support
-            card.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    card.click();
-                }
-            });
-        });
-
-        // Add live region for notifications
-        const liveRegion = document.createElement('div');
-        liveRegion.setAttribute('aria-live', 'polite');
-        liveRegion.setAttribute('aria-atomic', 'true');
-        liveRegion.style.cssText = 'position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;';
-        document.body.appendChild(liveRegion);
-
-        // Announce notifications to screen readers
-        const originalShowNotification = window.correspondenceManager.showNotification;
-        window.correspondenceManager.showNotification = function (message, type) {
-            originalShowNotification.call(this, message, type);
-            liveRegion.textContent = `${type}: ${message}`;
-        };
-    }
-    function updateConfidenceScore(confidence) {
-        const scoreFill = document.querySelector('.score-fill');
-        const scoreValue = document.querySelector('.score-value');
-
-        if (scoreFill && scoreValue) {
-            const confidencePercent = Math.round(confidence);
-
-            // Animate the score bar
-            scoreFill.style.width = `${confidencePercent}%`;
-            scoreValue.textContent = `${confidencePercent}%`;
-
-            // Color coding based on confidence level
-            if (confidencePercent >= 90) {
-                scoreFill.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
-                scoreValue.style.color = '#28a745';
-            } else if (confidencePercent >= 75) {
-                scoreFill.style.background = 'linear-gradient(90deg, #ffc107, #28a745)';
-                scoreValue.style.color = '#ffc107';
-            } else if (confidencePercent >= 60) {
-                scoreFill.style.background = 'linear-gradient(90deg, #ff9800, #ffc107)';
-                scoreValue.style.color = '#ff9800';
-            } else {
-                scoreFill.style.background = 'linear-gradient(90deg, #dc3545, #ff9800)';
-                scoreValue.style.color = '#dc3545';
-            }
-        }
-    }
-    function updateProcessingTime(timeInSeconds) {
-        const timeElement = document.querySelector('.analysis-time span');
-        if (timeElement) {
-            timeElement.textContent = `Analysis completed in ${timeInSeconds.toFixed(1)} seconds`;
-        }
-    }
-
-    // =====================================================
-    // UPDATE: Source References Display
-    // =====================================================
-    function updateSourceReferences(sources) {
-        const referenceList = document.querySelector('.reference-list');
-        if (!referenceList) return;
-
-        if (!sources || sources.length === 0) {
-            referenceList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.875rem;">No source references available.</p>';
-            return;
-        }
-
-        referenceList.innerHTML = sources.map(source => {
-            const iconMap = {
-                'email': 'ti-mail',
-                'document': 'ti-file-text',
-                'contract': 'ti-file-certificate',
-                'pdf': 'ti-file-type-pdf',
-                'doc': 'ti-file-type-doc',
-                'docx': 'ti-file-type-doc'
-            };
-
-            const icon = iconMap[source.type] || 'ti-file-text';
-
-            return `
-            <div class="reference-item" data-source-id="${source.id}">
-                <i class="ti ${icon}"></i>
-                <span>${escapeHtml(source.name)} - ${escapeHtml(source.contract || 'Document')}</span>
-            </div>
-        `;
-        }).join('');
-    }
-
-    // =====================================================
-    // NEW: Display Recommendations
-    // =====================================================
-    function displayRecommendations(recommendations) {
-        const responseSection = document.getElementById('responseSection');
-        if (!responseSection) return;
-
-        // Remove existing recommendations section
-        const existing = responseSection.querySelector('.recommendations-section');
-        if (existing) existing.remove();
-
-        const recommendationsHtml = `
-        <div class="recommendations-section">
-            <h4><i class="ti ti-bulb"></i> Recommendations</h4>
-            <ul class="recommendation-list">
-                ${recommendations.map(rec => `<li>${escapeHtml(rec)}</li>`).join('')}
-            </ul>
-        </div>
-    `;
-
-        responseSection.querySelector('.response-content').insertAdjacentHTML('beforeend', recommendationsHtml);
-    }
-
-    // =====================================================
-    // NEW: Display Key Points
-    // =====================================================
-    function displayKeyPoints(keyPoints) {
-        const responseSection = document.getElementById('responseSection');
-        if (!responseSection) return;
-
-        // Remove existing key points section
-        const existing = responseSection.querySelector('.key-points-section');
-        if (existing) existing.remove();
-
-        const keyPointsHtml = `
-        <div class="key-points-section">
-            <h4><i class="ti ti-key"></i> Key Points</h4>
-            <ul class="key-points-list">
-                ${keyPoints.map(point => `<li>${escapeHtml(point)}</li>`).join('')}
-            </ul>
-        </div>
-    `;
-
-        responseSection.querySelector('.response-content').insertAdjacentHTML('beforeend', keyPointsHtml);
-    }
-
-    // =====================================================
-    // NEW: Display Suggested Actions
-    // =====================================================
-    function displaySuggestedActions(actions) {
-        const responseSection = document.getElementById('responseSection');
-        if (!responseSection) return;
-
-        // Remove existing actions section
-        const existing = responseSection.querySelector('.suggested-actions-section');
-        if (existing) existing.remove();
-
-        const actionsHtml = `
-        <div class="suggested-actions-section">
-            <h4><i class="ti ti-checklist"></i> Suggested Actions</h4>
-            <ul class="actions-list">
-                ${actions.map((action, idx) => `
-                    <li>
-                        <span class="action-number">${idx + 1}</span>
-                        ${escapeHtml(action)}
-                    </li>
-                `).join('')}
-            </ul>
-        </div>
-    `;
-
-        responseSection.querySelector('.response-content').insertAdjacentHTML('beforeend', actionsHtml);
-    }
-
-    // =====================================================
-    // NEW: Display Error Response
-    // =====================================================
-    function displayErrorResponse(errorMessage) {
-        const responseText = document.getElementById('responseText');
-        if (!responseText) return;
-
-        responseText.innerHTML = `
-        <div class="error-message">
-            <i class="ti ti-alert-circle"></i>
-            <strong>Analysis Error</strong>
-            <p>${escapeHtml(errorMessage)}</p>
-            <p style="margin-top: 0.5rem; font-size: 0.875rem;">Please try again or contact support if the issue persists.</p>
-        </div>
-    `;
-
-        // Set confidence to 0
-        updateConfidenceScore(0);
-
-        // Clear processing time
-        const timeElement = document.querySelector('.analysis-time span');
-        if (timeElement) {
-            timeElement.textContent = 'Analysis failed';
-        }
-
-        // Clear source references
-        const referenceList = document.querySelector('.reference-list');
-        if (referenceList) {
-            referenceList.innerHTML = '';
-        }
-    }
-
-    // Export for use in other modules
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = { CorrespondenceManager };
-    }
-</script><!-- SCR-044: Document Correspondence Management Screen (Initiator) -->
+<!-- SCR-044: Document Correspondence Management Screen (Initiator) -->
 <!-- File: app/templates/screens/correspondence/SCR_044_correspondence_management.html -->
 {% extends "base.html" %}
 
@@ -2190,10 +569,10 @@
 
             // Open upload modal
             function openUploadModal() {
-                if (!selectedProject) {
-                    showNotification('Please select a project first', 'warning');
-                    return;
-                }
+                // if (!selectedProject) {
+                //     showNotification('Please select a project first', 'warning');
+                //     return;
+                // }
 
                 const modal = document.getElementById('uploadModal');
                 if (modal) {
@@ -2371,10 +750,20 @@
                         <h3>Select Document</h3>
                         <p>Choose a specific contract document for focused analysis</p>
                     </div>
-                    <button class="btn-outline" onclick="refreshDocumentModeList()">
-                        <i class="ti ti-refresh"></i>
-                        Refresh
-                    </button>
+
+
+
+                    <div class="header-actions">
+                        <button class="btn-primary" onclick="uploadDocumentsToProject()">
+                            <i class="ti ti-upload"></i>
+                            Upload
+                        </button>
+
+                        <button class="btn-outline" onclick="refreshDocumentModeList()">
+                            <i class="ti ti-refresh"></i>
+                            Refresh
+                        </button>
+                    </div>
                 </div>
 
                 <div class="document-selector-grid" id="documentModeGrid">
@@ -6274,7 +4663,7 @@
                 new Date(doc.uploaded_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) :
                 'Unknown';
 
-            const statusBadge = `<span class="status-badge active">Active</span>`;
+            const statusBadge = ``;
             const pageInfo = doc.size || doc.file_size || '—';
 
             return `
@@ -6452,6 +4841,1631 @@
         }
     }
 </script>
+
+
+<script>
+    // Correspondence Management JavaScript - Inline Implementation
+    // Complete functionality for document analysis, AI queries, and response generation
+
+    /**
+     * Correspondence Management Module
+     * Handles document analysis, AI queries, and response generation
+     */
+
+    class CorrespondenceManager {
+        constructor() {
+            this.currentMode = 'project';
+            this.selectedProject = null;
+            this.selectedDocuments = [];
+            this.selectedDocument = null;
+            this.queryHistory = [];
+            this.aiResponses = [];
+
+            this.init();
+        }
+
+        init() {
+            this.bindEvents();
+            this.updateUI();
+            this.loadSettings();
+        }
+
+        bindEvents() {
+            // Mode selection
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const mode = card.id.replace('Mode', '');
+                    this.selectMode(mode);
+                });
+            });
+
+            // Project selection
+            document.querySelectorAll('.project-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    const projectId = card.getAttribute('data-project-id') || 'project-1';
+                    this.selectProject(card, projectId);
+                });
+            });
+
+            // Document toggles
+            document.querySelectorAll('.document-item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    if (!e.target.closest('.document-actions')) {
+                        const docId = item.getAttribute('data-doc-id') || item.querySelector('input').id;
+                        this.toggleDocument(item, docId);
+                    }
+                });
+            });
+
+            // Query form submission
+            const submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.addEventListener('click', () => this.submitQuery());
+            }
+
+            // Template buttons
+            document.querySelectorAll('.template-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const templateType = btn.getAttribute('data-template') ||
+                        btn.textContent.toLowerCase().replace(/\s+/g, '');
+                    this.useTemplate(templateType);
+                });
+            });
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => this.handleKeyboardShortcuts(e));
+
+            // Auto-save functionality
+            const queryInput = document.getElementById('queryInput');
+            if (queryInput) {
+                let saveTimeout;
+                queryInput.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => this.autoSave(), 2000);
+                });
+            }
+        }
+
+        selectMode(mode) {
+            this.currentMode = mode;
+
+            // Update UI
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('active');
+                card.querySelector('.radio-button').classList.remove('active');
+            });
+
+            const selectedCard = document.getElementById(mode + 'Mode');
+            if (selectedCard) {
+                selectedCard.classList.add('active');
+                selectedCard.querySelector('.radio-button').classList.add('active');
+            }
+
+            // Show/hide sections
+            document.getElementById('projectSection').style.display =
+                mode === 'project' ? 'block' : 'none';
+            document.getElementById('documentSection').style.display =
+                mode === 'document' ? 'block' : 'none';
+
+            this.resetSelections();
+            this.trackEvent('mode_selected', { mode });
+        }
+
+        selectProject(element, projectId) {
+            // Remove previous selection
+            document.querySelectorAll('.project-card').forEach(card => {
+                card.classList.remove('active');
+            });
+
+            // Add selection to clicked project
+            element.classList.add('active');
+            this.selectedProject = projectId;
+
+            // Show document selection section with animation
+            const docSection = document.getElementById('documentSelectionSection');
+            if (docSection) {
+                docSection.style.display = 'block';
+                docSection.classList.add('fade-in');
+
+                // Smooth scroll to section
+                setTimeout(() => {
+                    docSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 100);
+            }
+
+            this.trackEvent('project_selected', { projectId });
+        }
+
+        toggleDocument(element, docId) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            if (!checkbox) return;
+
+            checkbox.checked = !checkbox.checked;
+
+            if (checkbox.checked) {
+                this.selectedDocuments.push(docId);
+                element.classList.add('selected');
+            } else {
+                this.selectedDocuments = this.selectedDocuments.filter(id => id !== docId);
+                element.classList.remove('selected');
+            }
+
+            this.updateProceedButton();
+            this.updateSelectedCount();
+            this.trackEvent('document_toggled', { docId, selected: checkbox.checked });
+        }
+
+        selectAllDocuments() {
+            document.querySelectorAll('.document-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = true;
+                checkbox.closest('.document-item').classList.add('selected');
+            });
+
+            this.selectedDocuments = ['doc-1', 'doc-2', 'email-1', 'email-2'];
+            this.updateProceedButton();
+            this.updateSelectedCount();
+            this.showNotification('All documents selected', 'success');
+        }
+
+        clearDocumentSelection() {
+            document.querySelectorAll('.document-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('.document-item').classList.remove('selected');
+            });
+
+            this.selectedDocuments = [];
+            this.updateProceedButton();
+            this.updateSelectedCount();
+            this.showNotification('Document selection cleared', 'info');
+        }
+
+        updateProceedButton() {
+            const proceedBtn = document.getElementById('proceedBtn');
+            if (proceedBtn) {
+                proceedBtn.disabled = this.selectedDocuments.length === 0;
+
+                if (this.selectedDocuments.length > 0) {
+                    proceedBtn.classList.add('pulse');
+                    setTimeout(() => proceedBtn.classList.remove('pulse'), 1000);
+                }
+            }
+        }
+
+        updateSelectedCount() {
+            const countElement = document.getElementById('selectedCount');
+            if (countElement) {
+                countElement.textContent = this.selectedDocuments.length;
+            }
+
+            // Update document chips in modal
+            this.updateDocumentChips();
+        }
+
+        updateDocumentChips() {
+            const chipsContainer = document.querySelector('.selected-docs-preview');
+            if (!chipsContainer) return;
+
+            const docNames = {
+                'doc-1': 'Document 1',
+                'doc-2': 'Document 2',
+                'email-1': 'Email 1',
+                'email-2': 'Email 2'
+            };
+
+            chipsContainer.innerHTML = this.selectedDocuments
+                .map(docId => {
+                    const isEmail = docId.includes('email');
+                    return `<span class="doc-chip ${isEmail ? 'email' : ''}">${docNames[docId]}</span>`;
+                })
+                .join('');
+        }
+
+        proceedToQuery() {
+            const querySection = document.getElementById('querySection');
+            if (querySection) {
+                querySection.style.display = 'block';
+                querySection.classList.add('fade-in');
+
+                setTimeout(() => {
+                    querySection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 100);
+            }
+
+            document.getElementById('responseSection').style.display = 'none';
+            this.trackEvent('proceed_to_query');
+        }
+
+        useTemplate(templateType) {
+            const queryInput = document.getElementById('queryInput');
+            if (!queryInput) return;
+
+            const templates = {
+                'backcharge': "We received a back charge letter from QatarEnergy. Based on the selected project files, please provide contractually viable guidance on how to defend our rights and respond to this back charge while ensuring our best benefit.",
+                'dispute': "There appears to be a dispute regarding contract terms. Please analyze the selected documents and provide guidance on the best approach for dispute resolution based on the contract clauses.",
+                'termination': "We need guidance on contract termination procedures. Please review the selected documents and advise on the proper termination process and our rights/obligations.",
+                'compliance': "Please review the selected documents for compliance with contractual obligations and highlight any areas of concern or recommended actions.",
+                'backchargedefense': "We received a back charge letter from QatarEnergy. Based on the selected project files, please provide contractually viable guidance on how to defend our rights and respond to this back charge while ensuring our best benefit.", // Fallback
+                'disputeresolution': "There appears to be a dispute regarding contract terms. Please analyze the selected documents and provide guidance on the best approach for dispute resolution based on the contract clauses.",     // Fallback
+                'contracttermination': "We need guidance on contract termination procedures. Please review the selected documents and advise on the proper termination process and our rights/obligations.", // Fallback
+                'compliancecheck': "Please review the selected documents for compliance with contractual obligations and highlight any areas of concern or recommended actions."    // Fallback
+            };
+
+            const template = templates[templateType.toLowerCase()];
+            if (template) {
+                queryInput.value = template;
+                queryInput.focus();
+
+                // Add visual feedback
+                queryInput.classList.add('template-filled');
+                setTimeout(() => queryInput.classList.remove('template-filled'), 1000);
+
+                this.trackEvent('template_used', { templateType });
+            }
+        }
+
+        async submitQuery() {
+            const queryText = document.getElementById('queryInput').value.trim();
+            const tone = document.getElementById('toneSelector').value;
+            const urgency = document.getElementById('urgencyLevel').value;
+
+            // Validation
+            if (!this.validateQuerySubmission(queryText)) {
+                return;
+            }
+
+            // Show loading state
+            this.setLoadingState(true);
+
+            try {
+                // Process AI query with real API call
+                const response = await this.processAIQuery({
+                    query: queryText,
+                    tone: tone,
+                    urgency: urgency,
+                    documents: this.selectedDocuments,
+                    mode: this.currentMode
+                });
+
+                // Check if there was an error
+                if (response.error) {
+                    this.showNotification('Failed to analyze correspondence. Please try again.', 'error');
+                    this.setLoadingState(false);
+                    return;
+                }
+
+                // Store query and response
+                this.queryHistory.push({
+                    query: queryText,
+                    tone: tone,
+                    urgency: urgency,
+                    timestamp: new Date(),
+                    documents: [...this.selectedDocuments]
+                });
+
+                this.aiResponses.push(response);
+
+                // Display response with enhanced formatting
+                this.displayAIResponse(response);
+                this.showResponseSection();
+
+                // Display recommendations and key points if available
+                if (response.recommendations && response.recommendations.length > 0) {
+                    this.displayRecommendations(response.recommendations);
+                }
+
+                if (response.keyPoints && response.keyPoints.length > 0) {
+                    this.displayKeyPoints(response.keyPoints);
+                }
+
+                if (response.suggestedActions && response.suggestedActions.length > 0) {
+                    this.displaySuggestedActions(response.suggestedActions);
+                }
+
+                this.showNotification('AI analysis completed successfully!', 'success');
+                this.trackEvent('query_submitted', {
+                    queryLength: queryText.length,
+                    tone,
+                    urgency,
+                    documentCount: this.selectedDocuments.length,
+                    processingTime: response.processingTime,
+                    tokensUsed: response.tokensUsed
+                });
+
+            } catch (error) {
+                console.error('Query submission error:', error);
+                this.showNotification('Error processing query. Please try again.', 'error');
+            } finally {
+                this.setLoadingState(false);
+            }
+        }
+
+
+        displayRecommendations(recommendations) {
+            const responseSection = document.getElementById('responseSection');
+            if (!responseSection) return;
+
+            const recommendationsHtml = `
+        <div class="recommendations-section">
+            <h4><i class="ti ti-bulb"></i> Recommendations</h4>
+            <ul class="recommendation-list">
+                ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+
+            // Append to response section
+            const existingRecommendations = responseSection.querySelector('.recommendations-section');
+            if (existingRecommendations) {
+                existingRecommendations.remove();
+            }
+
+            responseSection.insertAdjacentHTML('beforeend', recommendationsHtml);
+        }
+
+        displayKeyPoints(keyPoints) {
+            const responseSection = document.getElementById('responseSection');
+            if (!responseSection) return;
+
+            const keyPointsHtml = `
+        <div class="key-points-section">
+            <h4><i class="ti ti-key"></i> Key Points</h4>
+            <ul class="key-points-list">
+                ${keyPoints.map(point => `<li>${point}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+
+            // Append to response section
+            const existingKeyPoints = responseSection.querySelector('.key-points-section');
+            if (existingKeyPoints) {
+                existingKeyPoints.remove();
+            }
+
+            responseSection.insertAdjacentHTML('beforeend', keyPointsHtml);
+        }
+
+        displaySuggestedActions(actions) {
+            const responseSection = document.getElementById('responseSection');
+            if (!responseSection) return;
+
+            const actionsHtml = `
+        <div class="suggested-actions-section">
+            <h4><i class="ti ti-checklist"></i> Suggested Actions</h4>
+            <ul class="actions-list">
+                ${actions.map((action, idx) => `
+                    <li>
+                        <span class="action-number">${idx + 1}</span>
+                        ${action}
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+    `;
+
+            // Append to response section
+            const existingActions = responseSection.querySelector('.suggested-actions-section');
+            if (existingActions) {
+                existingActions.remove();
+            }
+
+            responseSection.insertAdjacentHTML('beforeend', actionsHtml);
+        }
+
+        validateQuerySubmission(queryText) {
+            if (!queryText) {
+                this.showNotification('Please enter your query before submitting.', 'warning');
+                document.getElementById('queryInput').focus();
+                return false;
+            }
+
+            if (this.currentMode === 'project' && this.selectedDocuments.length === 0) {
+                this.showNotification('Please select at least one document for analysis.', 'warning');
+                return false;
+            }
+
+            if (this.currentMode === 'document' && !this.selectedDocument) {
+                this.showNotification('Please select a document for analysis.', 'warning');
+                return false;
+            }
+
+            return true;
+        }
+        async processAIQuery(params) {
+            /**
+             * Process AI query by calling the backend API
+             * This replaces the simulated response with real Claude AI integration
+             */
+
+            const startTime = Date.now();
+
+            try {
+                // Prepare request payload
+                const requestPayload = {
+                    query: params.query,
+                    mode: params.mode, // 'project' or 'document'
+                    document_ids: params.documents.map(doc => doc.id),
+                    project_id: this.currentProjectId, // If project mode
+                    tone: params.tone,
+                    urgency: params.urgency,
+                    language: 'en' // or 'ar' based on user preference
+                };
+
+                console.log('📤 Sending analysis request:', requestPayload);
+
+                // Call the correspondence analyze endpoint
+                const response = await fetch('/api/correspondence/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(requestPayload)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Analysis request failed');
+                }
+
+                const result = await response.json();
+                console.log('✅ Analysis response received:', result);
+
+                // Return formatted response for display
+                return {
+                    content: result.content,
+                    confidence: result.confidence,
+                    processingTime: result.processingTime,
+                    sources: result.sources || [],
+                    recommendations: result.recommendations || [],
+                    keyPoints: result.key_points || [],
+                    suggestedActions: result.suggested_actions || [],
+                    tokensUsed: result.tokens_used,
+                    timestamp: result.timestamp
+                };
+
+            } catch (error) {
+                console.error('❌ AI Query Error:', error);
+
+                // Return error response
+                return {
+                    content: `<div class="error-message">
+                <i class="ti ti-alert-circle"></i>
+                <strong>Analysis Error</strong>
+                <p>${error.message}</p>
+                <p>Please try again or contact support if the issue persists.</p>
+            </div>`,
+                    confidence: 0,
+                    processingTime: (Date.now() - startTime) / 1000,
+                    sources: [],
+                    recommendations: [],
+                    error: true
+                };
+            }
+        }
+
+        generateMockResponse(params) {
+            const { query, tone, documents } = params;
+
+            // Analyze query for key terms
+            const isBackcharge = query.toLowerCase().includes('back charge');
+            const isDispute = query.toLowerCase().includes('dispute');
+            const isTermination = query.toLowerCase().includes('termination');
+
+            let responseContent = '';
+
+            if (isBackcharge) {
+                responseContent = this.getBackchargeResponse(tone);
+            } else if (isDispute) {
+                responseContent = this.getDisputeResponse(tone);
+            } else if (isTermination) {
+                responseContent = this.getTerminationResponse(tone);
+            } else {
+                responseContent = this.getGeneralResponse(query, tone);
+            }
+
+            return {
+                content: responseContent,
+                confidence: 85 + Math.random() * 15, // 85-100%
+                processingTime: (2000 + Math.random() * 2000) / 1000,
+                sources: this.generateSourceReferences(documents),
+                tone: tone,
+                query: query,
+                timestamp: new Date()
+            };
+        }
+
+        getBackchargeResponse(tone) {
+            const responses = {
+                formal: `
+                <h4>Formal Response Strategy for Back Charge Dispute</h4>
+                <p><strong>Executive Summary:</strong> Based on the contract analysis, we recommend a structured formal response to dispute the back charge on procedural and substantive grounds.</p>
+                
+                <div style="margin: 1.5rem 0;">
+                    <h5>1. Procedural Deficiencies</h5>
+                    <ul>
+                        <li>The back charge was not raised following the dispute resolution mechanism outlined in the contract</li>
+                        <li>No proper notice was provided during the contract termination process</li>
+                        <li>The claim lacks the required supporting documentation</li>
+                    </ul>
+                </div>
+                
+                <div style="margin: 1.5rem 0;">
+                    <h5>2. Recommended Actions</h5>
+                    <ul>
+                        <li>Submit formal dispute notice within contractual timeframes</li>
+                        <li>Request detailed justification and supporting evidence</li>
+                        <li>Invoke relevant contract clauses protecting your rights</li>
+                        <li>Preserve all records for potential arbitration</li>
+                    </ul>
+                </div>
+                
+                <div style="background: var(--info-bg); padding: 1rem; border-radius: 8px;">
+                    <p><strong>Next Steps:</strong> Draft formal response letter within 14 days, following the template provided in Appendix A of your contract.</p>
+                </div>
+            `,
+                conciliatory: `
+                <h4>Collaborative Approach to Back Charge Resolution</h4>
+                <p>We understand QatarEnergy's concerns and are committed to resolving this matter amicably while protecting our legitimate interests.</p>
+                
+                <div style="margin: 1.5rem 0;">
+                    <h5>Proposed Resolution Path</h5>
+                    <p>We suggest initiating a collaborative discussion to:</p>
+                    <ul>
+                        <li>Understand the specific concerns underlying the back charge</li>
+                        <li>Review relevant contract provisions together</li>
+                        <li>Explore mutually acceptable solutions</li>
+                        <li>Avoid lengthy dispute procedures that benefit neither party</li>
+                    </ul>
+                </div>
+            `,
+                assertive: `
+                <h4>Strong Defense Against Improper Back Charge</h4>
+                <p><strong>Position:</strong> The back charge is procedurally flawed and substantively unjustified. We reject it in its entirety.</p>
+                
+                <div style="margin: 1.5rem 0;">
+                    <h5>Key Arguments</h5>
+                    <ul>
+                        <li>Clear violation of contractual dispute procedures</li>
+                        <li>Failure to raise claims during contract performance</li>
+                        <li>Lack of evidence supporting the claimed damages</li>
+                        <li>Untimely assertion waives any potential claims</li>
+                    </ul>
+                </div>
+                
+                <div style="background: var(--warning-bg); padding: 1rem; border-radius: 8px;">
+                    <p><strong>Demand:</strong> Immediate withdrawal of the back charge and confirmation that no deductions will be made.</p>
+                </div>
+            `
+            };
+
+            return responses[tone] || responses.formal;
+        }
+
+        getDisputeResponse(tone) {
+            return `
+            <h4>Dispute Resolution Guidance</h4>
+            <p>Based on contract analysis, here's your optimal dispute resolution strategy:</p>
+            
+            <div style="margin: 1.5rem 0;">
+                <h5>Contract Analysis</h5>
+                <p>Your contract provides for a three-tier dispute resolution process:</p>
+                <ul>
+                    <li>Direct negotiation (30 days)</li>
+                    <li>Mediation (60 days)</li>
+                    <li>Arbitration (final binding resolution)</li>
+                </ul>
+            </div>
+            
+            <div style="margin: 1.5rem 0;">
+                <h5>Recommended Strategy</h5>
+                <p>Initiate formal dispute resolution while maintaining commercial relationships.</p>
+            </div>
+        `;
+        }
+
+        getTerminationResponse(tone) {
+            return `
+            <h4>Contract Termination Guidance</h4>
+            <p>Analysis of termination clauses and recommended approach:</p>
+            
+            <div style="margin: 1.5rem 0;">
+                <h5>Termination Rights</h5>
+                <p>Based on contract review, termination may be available under:</p>
+                <ul>
+                    <li>Material breach provisions (Clause 15.1)</li>
+                    <li>Convenience termination (Clause 15.3)</li>
+                    <li>Force majeure (Clause 16.2)</li>
+                </ul>
+            </div>
+            
+            <div style="margin: 1.5rem 0;">
+                <h5>Notice Requirements</h5>
+                <p>Ensure compliance with all procedural requirements for valid termination.</p>
+            </div>
+        `;
+        }
+
+        getGeneralResponse(query, tone) {
+            return `
+            <h4>AI Analysis Results</h4>
+            <p>Based on your query: "${query.substring(0, 100)}${query.length > 100 ? '...' : ''}"</p>
+            
+            <div style="margin: 1.5rem 0;">
+                <h5>Key Findings</h5>
+                <p>Our analysis has identified several important considerations relevant to your query.</p>
+            </div>
+            
+            <div style="margin: 1.5rem 0;">
+                <h5>Recommendations</h5>
+                <p>Based on the selected documents and contract terms, we recommend a structured approach to address your concerns.</p>
+            </div>
+        `;
+        }
+
+        generateSourceReferences(documents) {
+            const references = {
+                'doc-1': 'Document 1, Clause 15.2 - Dispute Resolution',
+                'doc-2': 'Document 2, Section 8 - Technical Specifications',
+                'email-1': 'Email 1 - Back charge notice from QatarEnergy',
+                'email-2': 'Email 2 - Contract termination correspondence'
+            };
+
+            return documents.map(docId => ({
+                id: docId,
+                reference: references[docId] || `Document ${docId}`,
+                type: docId.includes('email') ? 'email' : 'document'
+            }));
+        }
+
+        displayAIResponse(response) {
+            const responseText = document.getElementById('responseText');
+            if (!responseText) return;
+
+            responseText.innerHTML = response.content;
+
+            // Update confidence score
+            this.updateConfidenceScore(response.confidence);
+
+            // Update processing time
+            this.updateProcessingTime(response.processingTime);
+
+            // Update source references
+            this.updateSourceReferences(response.sources);
+
+            // Add copy functionality
+            this.addCopyFunctionality(responseText);
+        }
+
+        updateConfidenceScore(confidence) {
+            const scoreFill = document.querySelector('.score-fill');
+            const scoreValue = document.querySelector('.score-value');
+
+            if (scoreFill && scoreValue) {
+                scoreFill.style.width = `${confidence}%`;
+                scoreValue.textContent = `${Math.round(confidence)}%`;
+
+                // Color coding based on confidence
+                if (confidence >= 90) {
+                    scoreFill.style.background = 'var(--success-color)';
+                } else if (confidence >= 75) {
+                    scoreFill.style.background = 'linear-gradient(90deg, var(--warning-color), var(--success-color))';
+                } else {
+                    scoreFill.style.background = 'var(--warning-color)';
+                }
+            }
+        }
+
+        updateProcessingTime(time) {
+            const timeElement = document.querySelector('.analysis-time span');
+            if (timeElement) {
+                timeElement.textContent = `Analysis completed in ${time.toFixed(1)} seconds`;
+            }
+        }
+
+        updateSourceReferences(sources) {
+            const referenceList = document.querySelector('.reference-list');
+            if (!referenceList) return;
+
+            referenceList.innerHTML = sources.map(source => `
+            <div class="reference-item" data-source-id="${source.id}">
+                <i class="ti ti-${source.type === 'email' ? 'mail' : 'file-text'}"></i>
+                <span>${source.reference}</span>
+            </div>
+        `).join('');
+
+            // Add click handlers for source references
+            referenceList.querySelectorAll('.reference-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const sourceId = item.getAttribute('data-source-id');
+                    this.highlightSource(sourceId);
+                });
+            });
+        }
+
+        addCopyFunctionality(responseElement) {
+            // Add copy button to response
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'btn-icon copy-response-btn';
+            copyBtn.innerHTML = '<i class="ti ti-copy"></i>';
+            copyBtn.title = 'Copy response';
+            copyBtn.style.cssText = 'position: absolute; top: 1rem; right: 1rem;';
+
+            responseElement.style.position = 'relative';
+            responseElement.appendChild(copyBtn);
+
+            copyBtn.addEventListener('click', () => {
+                this.copyResponseToClipboard(responseElement.textContent);
+            });
+        }
+
+        async copyResponseToClipboard(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                this.showNotification('Response copied to clipboard!', 'success');
+            } catch (error) {
+                console.error('Copy failed:', error);
+                this.showNotification('Failed to copy response', 'error');
+            }
+        }
+
+        showResponseSection() {
+            const responseSection = document.getElementById('responseSection');
+            if (responseSection) {
+                responseSection.style.display = 'block';
+                responseSection.classList.add('fade-in');
+
+                setTimeout(() => {
+                    responseSection.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 300);
+            }
+        }
+
+        setLoadingState(loading) {
+            const submitBtn = document.getElementById('submitBtn');
+            if (!submitBtn) return;
+
+            if (loading) {
+                submitBtn.dataset.originalContent = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+                submitBtn.disabled = true;
+            } else {
+                submitBtn.innerHTML = submitBtn.dataset.originalContent || '<i class="ti ti-send"></i> Submit Query';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Additional utility methods
+
+        autoSave() {
+            const queryText = document.getElementById('queryInput').value;
+            if (queryText.trim()) {
+                localStorage.setItem('correspondence_draft', JSON.stringify({
+                    query: queryText,
+                    mode: this.currentMode,
+                    selectedDocuments: this.selectedDocuments,
+                    timestamp: Date.now()
+                }));
+
+                this.showNotification('Draft saved automatically', 'info');
+            }
+        }
+
+        loadSettings() {
+            // Load saved draft
+            try {
+                const draft = localStorage.getItem('correspondence_draft');
+                if (draft) {
+                    const parsed = JSON.parse(draft);
+                    const age = Date.now() - parsed.timestamp;
+
+                    // Only restore if less than 24 hours old
+                    if (age < 24 * 60 * 60 * 1000) {
+                        const queryInput = document.getElementById('queryInput');
+                        if (queryInput && !queryInput.value) {
+                            queryInput.value = parsed.query;
+                            this.showNotification('Previous draft restored', 'info');
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+            }
+        }
+
+        handleKeyboardShortcuts(e) {
+            // Ctrl/Cmd + Enter to submit query
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                const queryInput = document.getElementById('queryInput');
+                if (queryInput && queryInput === document.activeElement) {
+                    e.preventDefault();
+                    this.submitQuery();
+                }
+            }
+
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                const modals = document.querySelectorAll('.modal.show');
+                modals.forEach(modal => {
+                    modal.classList.remove('show');
+                });
+                document.body.style.overflow = '';
+            }
+
+            // Ctrl/Cmd + S to save draft
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                this.autoSave();
+            }
+        }
+
+        trackEvent(eventName, properties = {}) {
+            // Analytics tracking
+            console.log('Event:', eventName, properties);
+
+            // Integration with analytics service would go here
+            // Example: analytics.track(eventName, properties);
+        }
+
+        highlightSource(sourceId) {
+            // Highlight referenced source in UI
+            const sourceElement = document.querySelector(`[data-doc-id="${sourceId}"]`);
+            if (sourceElement) {
+                sourceElement.classList.add('highlighted');
+                sourceElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                setTimeout(() => {
+                    sourceElement.classList.remove('highlighted');
+                }, 3000);
+            }
+        }
+
+        updateUI() {
+            // Update button states, counters, etc.
+            this.updateProceedButton();
+            this.updateSelectedCount();
+        }
+
+        resetSelections() {
+            this.selectedProject = null;
+            this.selectedDocuments = [];
+            this.selectedDocument = null;
+
+            // Hide sections
+            const sections = ['documentSelectionSection', 'querySection', 'responseSection'];
+            sections.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    section.style.display = 'none';
+                }
+            });
+
+            // Clear form
+            const queryInput = document.getElementById('queryInput');
+            if (queryInput) {
+                queryInput.value = '';
+            }
+
+            // Reset selections in UI
+            document.querySelectorAll('.project-card, .document-card').forEach(card => {
+                card.classList.remove('active');
+            });
+
+            document.querySelectorAll('.document-item input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            this.updateUI();
+        }
+
+        showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+
+            const icons = {
+                success: 'ti-check-circle',
+                warning: 'ti-alert-triangle',
+                error: 'ti-x-circle',
+                info: 'ti-info-circle'
+            };
+
+            notification.innerHTML = `
+            <i class="ti ${icons[type] || icons.info}"></i>
+            <span>${message}</span>
+            <button class="notification-close" onclick="this.parentElement.remove()">
+                <i class="ti ti-x"></i>
+            </button>
+        `;
+
+            // Position and style
+            notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--${type === 'success' ? 'success' :
+                    type === 'warning' ? 'warning' :
+                        type === 'error' ? 'danger' : 'info'}-color);
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            max-width: 400px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideInRight 0.3s ease;
+        `;
+
+            document.body.appendChild(notification);
+
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+    }
+
+    // Global functions for template compatibility
+    window.correspondenceManager = new CorrespondenceManager();
+
+    // Export individual functions for backward compatibility
+    window.selectMode = (mode) => window.correspondenceManager.selectMode(mode);
+    window.selectProject = (element, projectId) => window.correspondenceManager.selectProject(element, projectId);
+    window.toggleDocument = (element, docId) => window.correspondenceManager.toggleDocument(element, docId);
+    window.selectAllDocuments = () => window.correspondenceManager.selectAllDocuments();
+    window.clearDocumentSelection = () => window.correspondenceManager.clearDocumentSelection();
+    window.proceedToQuery = () => window.correspondenceManager.proceedToQuery();
+    window.useTemplate = (templateType) => window.correspondenceManager.useTemplate(templateType);
+    window.submitQuery = () => window.correspondenceManager.submitQuery();
+
+    // Additional global functions for UI interactions
+    window.clearQuery = () => {
+        document.getElementById('queryInput').value = '';
+    };
+
+    window.pasteFromClipboard = async () => {
+        try {
+            if (navigator.clipboard) {
+                const text = await navigator.clipboard.readText();
+                document.getElementById('queryInput').value = text;
+                window.correspondenceManager.showNotification('Text pasted from clipboard', 'success');
+            }
+        } catch (error) {
+            window.correspondenceManager.showNotification('Unable to access clipboard', 'warning');
+        }
+    };
+
+    window.saveAsDraft = () => {
+        window.correspondenceManager.autoSave();
+    };
+
+    // Modal functions
+    window.openModal = (modalId) => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+    };
+
+    window.closeModal = (modalId) => {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
+        }
+    };
+
+    // Document action functions
+    window.previewDocument = (event, docId) => {
+        if (event) event.stopPropagation();
+
+        const docTitles = {
+            'doc-1': 'Main Power Services Agreement.pdf',
+            'doc-2': 'Technical Specifications.docx',
+            'email-1': 'Back charge letter from QatarEnergy.eml',
+            'email-2': 'Contract termination notice.eml'
+        };
+
+        document.getElementById('previewDocTitle').textContent = docTitles[docId] || 'Document Preview';
+        window.openModal('documentPreviewModal');
+
+        // Simulate document loading
+        const viewer = document.getElementById('documentViewer');
+        viewer.innerHTML = `
+        <div style="padding: 2rem; text-align: center; color: var(--text-muted);">
+            <div class="loading-spinner" style="margin: 0 auto 1rem;"></div>
+            <p>Loading document preview...</p>
+        </div>
+    `;
+
+        setTimeout(() => {
+            viewer.innerHTML = `
+            <div style="background: white; padding: 2rem; border-radius: 8px; border: 1px solid var(--border-color);">
+                <h3>${docTitles[docId]}</h3>
+                <p><strong>Document Type:</strong> ${docId.includes('email') ? 'Email Communication' : 'Contract Document'}</p>
+                <p><strong>Last Modified:</strong> January 15, 2025</p>
+                <p><strong>Size:</strong> ${docId.includes('email') ? '45 KB' : '2.3 MB'}</p>
+                <hr style="margin: 1rem 0; border: none; border-top: 1px solid var(--border-color);">
+                <div style="line-height: 1.6;">
+                    <p>This is a preview of the document content. The actual document viewer would display the full content with proper formatting, highlighting, and navigation features.</p>
+                    <p>Key sections would be highlighted and cross-referenced with related clauses and obligations.</p>
+                    ${docId === 'email-1' ? '<p><strong>Subject:</strong> Back Charge Notice - Contract Deductions</p><p><strong>From:</strong> contracts@qatarenergy.qa</p>' : ''}
+                </div>
+            </div>
+        `;
+        }, 1500);
+    };
+
+    window.downloadDocument = (event, docId) => {
+        if (event) event.stopPropagation();
+        window.correspondenceManager.showNotification('Document download started...', 'success');
+    };
+
+    window.replyToEmail = (event, emailId) => {
+        if (event) event.stopPropagation();
+        window.openModal('queryModal');
+
+        // Pre-fill with reply context
+        const modalQueryInput = document.getElementById('modalQueryInput');
+        if (modalQueryInput) {
+            modalQueryInput.value = 'Please help me draft a professional reply to this email.';
+        }
+    };
+
+    // Project action functions
+    window.viewProjectDetails = (event, projectId) => {
+        if (event) event.stopPropagation();
+        window.correspondenceManager.showNotification('Opening project details...', 'info');
+    };
+
+    window.viewAuditTrail = (event, projectId) => {
+        if (event) event.stopPropagation();
+        window.correspondenceManager.showNotification('Opening audit trail...', 'info');
+    };
+
+    window.refreshProjects = () => {
+        window.correspondenceManager.showNotification('Refreshing project list...', 'info');
+        setTimeout(() => {
+            window.correspondenceManager.showNotification('Project list updated!', 'success');
+        }, 1000);
+    };
+
+    // Response action functions
+    window.exportResponse = () => {
+        window.correspondenceManager.showNotification('Exporting response as PDF...', 'info');
+        setTimeout(() => {
+            window.correspondenceManager.showNotification('Response exported successfully!', 'success');
+        }, 2000);
+    };
+
+    window.shareResponse = () => {
+        if (navigator.share) {
+            navigator.share({
+                title: 'AI Correspondence Analysis',
+                text: 'AI-generated correspondence analysis and recommendations',
+                url: window.location.href
+            });
+        } else {
+            window.correspondenceManager.copyResponseToClipboard(
+                document.getElementById('responseText')?.textContent || 'AI Response'
+            );
+        }
+    };
+
+    window.generateNewResponse = () => {
+        const submitBtn = document.getElementById('submitBtn');
+        if (submitBtn) {
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Regenerating...';
+            submitBtn.disabled = true;
+
+            setTimeout(() => {
+                submitBtn.innerHTML = '<i class="ti ti-send"></i> Submit Query';
+                submitBtn.disabled = false;
+                window.correspondenceManager.showNotification('New response generated!', 'success');
+            }, 2000);
+        }
+    };
+
+    // AI Generation functions
+    window.letAIGenerate = () => {
+        window.openModal('responsePreviewModal');
+
+        // Populate preview modal with AI-generated content
+        const previewQuery = document.getElementById('previewQuery');
+        const previewTone = document.getElementById('previewTone');
+        const previewResponseText = document.getElementById('previewResponseText');
+
+        if (previewQuery) {
+            previewQuery.textContent = "Please draft a formal response disputing the deductions on the basis that proper dispute mechanism was not followed and it was not mentioned during termination letter";
+        }
+
+        if (previewTone) {
+            previewTone.textContent = "Formal Tone";
+        }
+
+        if (previewResponseText) {
+            previewResponseText.innerHTML = `
+            <div style="padding: 1rem; border: 1px solid var(--border-color); border-radius: 8px;">
+                <h4>Proposed Response</h4>
+                <p><strong>Subject:</strong> Formal Dispute of Back Charge Deductions - Contract No. [Contract Number]</p>
+                
+                <p>Dear QatarEnergy Team,</p>
+                
+                <p>We acknowledge receipt of your back charge letter dated [Date]. After careful review of the contract terms and termination procedures, we formally dispute the proposed deductions on the following grounds:</p>
+                
+                <ol>
+                    <li><strong>Procedural Non-Compliance:</strong> The back charge was not raised in accordance with the dispute resolution mechanism outlined in Clause [X] of our agreement.</li>
+                    <li><strong>Omission During Termination:</strong> No mention of these charges was made during the formal contract termination process, which suggests they were not identified at the time of contract closure.</li>
+                    <li><strong>Lack of Supporting Documentation:</strong> The back charge lacks sufficient detail and supporting evidence as required under our contractual terms.</li>
+                </ol>
+                
+                <p>We request that you withdraw these charges and provide detailed justification if you wish to pursue this matter through the proper contractual dispute resolution process.</p>
+                
+                <p>We look forward to your prompt response and resolution of this matter.</p>
+                
+                <p>Sincerely,<br>[Your Name]<br>[Your Title]</p>
+            </div>
+        `;
+        }
+    };
+
+    // Modal interaction functions
+    window.submitModalQuery = () => {
+        const query = document.getElementById('modalQueryInput')?.value.trim();
+        if (!query) {
+            window.correspondenceManager.showNotification('Please enter your query.', 'warning');
+            return;
+        }
+
+        // Transfer to main query
+        const mainQueryInput = document.getElementById('queryInput');
+        if (mainQueryInput) {
+            mainQueryInput.value = query;
+        }
+
+        window.closeModal('queryModal');
+
+        // Scroll to query section
+        const querySection = document.getElementById('querySection');
+        if (querySection) {
+            querySection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        window.correspondenceManager.showNotification('Query transferred to main interface!', 'success');
+    };
+
+    window.editResponse = () => {
+        window.closeModal('responsePreviewModal');
+        window.correspondenceManager.showNotification('Response opened for editing.', 'info');
+    };
+
+    window.acceptResponse = () => {
+        const previewResponse = document.getElementById('previewResponseText')?.innerHTML;
+        const responseText = document.getElementById('responseText');
+
+        if (previewResponse && responseText) {
+            responseText.innerHTML = previewResponse;
+        }
+
+        window.closeModal('responsePreviewModal');
+
+        // Show response section
+        const responseSection = document.getElementById('responseSection');
+        if (responseSection) {
+            responseSection.style.display = 'block';
+            responseSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        window.correspondenceManager.showNotification('AI response accepted and applied!', 'success');
+    };
+
+    // Document viewer functions
+    window.zoomIn = () => {
+        const viewer = document.getElementById('documentViewer');
+        if (viewer) {
+            const currentZoom = parseFloat(viewer.style.zoom) || 1;
+            viewer.style.zoom = (currentZoom + 0.1).toString();
+        }
+    };
+
+    window.zoomOut = () => {
+        const viewer = document.getElementById('documentViewer');
+        if (viewer) {
+            const currentZoom = parseFloat(viewer.style.zoom) || 1;
+            const newZoom = Math.max(0.5, currentZoom - 0.1);
+            viewer.style.zoom = newZoom.toString();
+        }
+    };
+
+    window.toggleFullscreen = () => {
+        const modal = document.getElementById('documentPreviewModal');
+        if (modal) {
+            modal.classList.toggle('fullscreen');
+        }
+    };
+
+    // Help and utility functions
+    window.showCorrespondenceHistory = () => {
+        window.correspondenceManager.showNotification('Opening correspondence history...', 'info');
+        // This would typically open a history modal or navigate to a history page
+    };
+
+    // Document selection functions for single document mode
+    window.selectDocument = (element, docId) => {
+        document.querySelectorAll('.document-card').forEach(card => {
+            card.classList.remove('active');
+        });
+
+        element.classList.add('active');
+        window.correspondenceManager.selectedDocument = docId;
+
+        // Proceed to query automatically
+        window.correspondenceManager.proceedToQuery();
+    };
+
+    // Enhanced notification system
+    window.showNotification = (message, type = 'info') => {
+        window.correspondenceManager.showNotification(message, type);
+    };
+
+    // Initialization when DOM is ready
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize tooltips
+        initializeTooltips();
+
+        // Initialize auto-save
+        initializeAutoSave();
+
+        // Initialize keyboard shortcuts help
+        initializeKeyboardShortcuts();
+
+        // Initialize accessibility features
+        initializeAccessibility();
+
+        console.log('Correspondence Management initialized');
+    });
+
+    function initializeTooltips() {
+        // Add tooltips to buttons and interactive elements
+        const elementsWithTooltips = document.querySelectorAll('[title]');
+        elementsWithTooltips.forEach(element => {
+            element.addEventListener('mouseenter', showTooltip);
+            element.addEventListener('mouseleave', hideTooltip);
+        });
+    }
+
+    function showTooltip(event) {
+        const element = event.target;
+        const title = element.getAttribute('title');
+        if (!title) return;
+
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = title;
+        tooltip.style.cssText = `
+        position: absolute;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        z-index: 10001;
+        pointer-events: none;
+        white-space: nowrap;
+    `;
+
+        document.body.appendChild(tooltip);
+
+        // Position tooltip
+        const rect = element.getBoundingClientRect();
+        tooltip.style.left = `${rect.left + rect.width / 2 - tooltip.offsetWidth / 2}px`;
+        tooltip.style.top = `${rect.top - tooltip.offsetHeight - 5}px`;
+
+        element.tooltipElement = tooltip;
+
+        // Remove title to prevent browser tooltip
+        element.setAttribute('data-title', title);
+        element.removeAttribute('title');
+    }
+
+    function hideTooltip(event) {
+        const element = event.target;
+        if (element.tooltipElement) {
+            element.tooltipElement.remove();
+            element.tooltipElement = null;
+        }
+
+        // Restore title
+        const title = element.getAttribute('data-title');
+        if (title) {
+            element.setAttribute('title', title);
+            element.removeAttribute('data-title');
+        }
+    }
+
+    function initializeAutoSave() {
+        // Set up auto-save for form data
+        const inputs = document.querySelectorAll('input, textarea, select');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+                // Debounced auto-save
+                clearTimeout(input.autoSaveTimeout);
+                input.autoSaveTimeout = setTimeout(() => {
+                    window.correspondenceManager.autoSave();
+                }, 2000);
+            });
+        });
+    }
+
+    function initializeKeyboardShortcuts() {
+        // Create keyboard shortcuts help
+        const shortcutsHelp = {
+            'Ctrl/Cmd + Enter': 'Submit query',
+            'Ctrl/Cmd + S': 'Save draft',
+            'Escape': 'Close modals',
+            'Tab': 'Navigate between elements',
+            'Enter': 'Activate buttons and links'
+        };
+
+        // Add keyboard shortcuts info to help modal
+        const helpModal = document.getElementById('helpModal');
+        if (helpModal) {
+            const helpBody = helpModal.querySelector('.modal-body');
+            if (helpBody) {
+                const shortcutsSection = document.createElement('div');
+                shortcutsSection.innerHTML = `
+                <h4 style="margin-top: 2rem;">Keyboard Shortcuts</h4>
+                <div class="shortcuts-list">
+                    ${Object.entries(shortcutsHelp).map(([key, desc]) => `
+                        <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
+                            <kbd style="background: var(--background-light); padding: 0.25rem 0.5rem; border-radius: 4px; font-family: monospace;">${key}</kbd>
+                            <span>${desc}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+                helpBody.appendChild(shortcutsSection);
+            }
+        }
+    }
+
+    function initializeAccessibility() {
+        // Add ARIA labels and roles
+        const buttons = document.querySelectorAll('button:not([aria-label])');
+        buttons.forEach(button => {
+            if (!button.getAttribute('aria-label')) {
+                const text = button.textContent.trim() || button.title || 'Button';
+                button.setAttribute('aria-label', text);
+            }
+        });
+
+        // Add role to custom elements
+        const cards = document.querySelectorAll('.project-card, .document-card, .mode-card');
+        cards.forEach(card => {
+            card.setAttribute('role', 'button');
+            card.setAttribute('tabindex', '0');
+
+            // Add keyboard support
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    card.click();
+                }
+            });
+        });
+
+        // Add live region for notifications
+        const liveRegion = document.createElement('div');
+        liveRegion.setAttribute('aria-live', 'polite');
+        liveRegion.setAttribute('aria-atomic', 'true');
+        liveRegion.style.cssText = 'position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;';
+        document.body.appendChild(liveRegion);
+
+        // Announce notifications to screen readers
+        const originalShowNotification = window.correspondenceManager.showNotification;
+        window.correspondenceManager.showNotification = function (message, type) {
+            originalShowNotification.call(this, message, type);
+            liveRegion.textContent = `${type}: ${message}`;
+        };
+    }
+    function updateConfidenceScore(confidence) {
+        const scoreFill = document.querySelector('.score-fill');
+        const scoreValue = document.querySelector('.score-value');
+
+        if (scoreFill && scoreValue) {
+            const confidencePercent = Math.round(confidence);
+
+            // Animate the score bar
+            scoreFill.style.width = `${confidencePercent}%`;
+            scoreValue.textContent = `${confidencePercent}%`;
+
+            // Color coding based on confidence level
+            if (confidencePercent >= 90) {
+                scoreFill.style.background = 'linear-gradient(90deg, #28a745, #20c997)';
+                scoreValue.style.color = '#28a745';
+            } else if (confidencePercent >= 75) {
+                scoreFill.style.background = 'linear-gradient(90deg, #ffc107, #28a745)';
+                scoreValue.style.color = '#ffc107';
+            } else if (confidencePercent >= 60) {
+                scoreFill.style.background = 'linear-gradient(90deg, #ff9800, #ffc107)';
+                scoreValue.style.color = '#ff9800';
+            } else {
+                scoreFill.style.background = 'linear-gradient(90deg, #dc3545, #ff9800)';
+                scoreValue.style.color = '#dc3545';
+            }
+        }
+    }
+    function updateProcessingTime(timeInSeconds) {
+        const timeElement = document.querySelector('.analysis-time span');
+        if (timeElement) {
+            timeElement.textContent = `Analysis completed in ${timeInSeconds.toFixed(1)} seconds`;
+        }
+    }
+
+    // =====================================================
+    // UPDATE: Source References Display
+    // =====================================================
+    function updateSourceReferences(sources) {
+        const referenceList = document.querySelector('.reference-list');
+        if (!referenceList) return;
+
+        if (!sources || sources.length === 0) {
+            referenceList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.875rem;">No source references available.</p>';
+            return;
+        }
+
+        referenceList.innerHTML = sources.map(source => {
+            const iconMap = {
+                'email': 'ti-mail',
+                'document': 'ti-file-text',
+                'contract': 'ti-file-certificate',
+                'pdf': 'ti-file-type-pdf',
+                'doc': 'ti-file-type-doc',
+                'docx': 'ti-file-type-doc'
+            };
+
+            const icon = iconMap[source.type] || 'ti-file-text';
+
+            return `
+            <div class="reference-item" data-source-id="${source.id}">
+                <i class="ti ${icon}"></i>
+                <span>${escapeHtml(source.name)} - ${escapeHtml(source.contract || 'Document')}</span>
+            </div>
+        `;
+        }).join('');
+    }
+
+    // =====================================================
+    // NEW: Display Recommendations
+    // =====================================================
+    function displayRecommendations(recommendations) {
+        const responseSection = document.getElementById('responseSection');
+        if (!responseSection) return;
+
+        // Remove existing recommendations section
+        const existing = responseSection.querySelector('.recommendations-section');
+        if (existing) existing.remove();
+
+        const recommendationsHtml = `
+        <div class="recommendations-section">
+            <h4><i class="ti ti-bulb"></i> Recommendations</h4>
+            <ul class="recommendation-list">
+                ${recommendations.map(rec => `<li>${escapeHtml(rec)}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+
+        responseSection.querySelector('.response-content').insertAdjacentHTML('beforeend', recommendationsHtml);
+    }
+
+    // =====================================================
+    // NEW: Display Key Points
+    // =====================================================
+    function displayKeyPoints(keyPoints) {
+        const responseSection = document.getElementById('responseSection');
+        if (!responseSection) return;
+
+        // Remove existing key points section
+        const existing = responseSection.querySelector('.key-points-section');
+        if (existing) existing.remove();
+
+        const keyPointsHtml = `
+        <div class="key-points-section">
+            <h4><i class="ti ti-key"></i> Key Points</h4>
+            <ul class="key-points-list">
+                ${keyPoints.map(point => `<li>${escapeHtml(point)}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+
+        responseSection.querySelector('.response-content').insertAdjacentHTML('beforeend', keyPointsHtml);
+    }
+
+    // =====================================================
+    // NEW: Display Suggested Actions
+    // =====================================================
+    function displaySuggestedActions(actions) {
+        const responseSection = document.getElementById('responseSection');
+        if (!responseSection) return;
+
+        // Remove existing actions section
+        const existing = responseSection.querySelector('.suggested-actions-section');
+        if (existing) existing.remove();
+
+        const actionsHtml = `
+        <div class="suggested-actions-section">
+            <h4><i class="ti ti-checklist"></i> Suggested Actions</h4>
+            <ul class="actions-list">
+                ${actions.map((action, idx) => `
+                    <li>
+                        <span class="action-number">${idx + 1}</span>
+                        ${escapeHtml(action)}
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+    `;
+
+        responseSection.querySelector('.response-content').insertAdjacentHTML('beforeend', actionsHtml);
+    }
+
+    // =====================================================
+    // NEW: Display Error Response
+    // =====================================================
+    function displayErrorResponse(errorMessage) {
+        const responseText = document.getElementById('responseText');
+        if (!responseText) return;
+
+        responseText.innerHTML = `
+        <div class="error-message">
+            <i class="ti ti-alert-circle"></i>
+            <strong>Analysis Error</strong>
+            <p>${escapeHtml(errorMessage)}</p>
+            <p style="margin-top: 0.5rem; font-size: 0.875rem;">Please try again or contact support if the issue persists.</p>
+        </div>
+    `;
+
+        // Set confidence to 0
+        updateConfidenceScore(0);
+
+        // Clear processing time
+        const timeElement = document.querySelector('.analysis-time span');
+        if (timeElement) {
+            timeElement.textContent = 'Analysis failed';
+        }
+
+        // Clear source references
+        const referenceList = document.querySelector('.reference-list');
+        if (referenceList) {
+            referenceList.innerHTML = '';
+        }
+    }
+
+    // Export for use in other modules
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = { CorrespondenceManager };
+    }
+</script>
+
 
 
 {% endblock %}

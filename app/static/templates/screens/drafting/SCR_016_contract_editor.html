@@ -2704,6 +2704,99 @@
 </div>
 
 
+
+<!-- MOD-029: Send for Internal Review Modal -->
+<div class="modal" id="internalApprovalModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Send for Approval</h3>
+            <button class="modal-close" onclick="closeModal('internalApprovalModal')">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div style="margin-bottom: 2rem;">
+                <label
+                    style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); display: block; margin-bottom: 0.75rem;">
+                    SEND TO SPECIFIC PERSONNEL:
+                </label>
+                <input type="text" id="specificPersonnel" placeholder="Enter email addresses (comma separated)"
+                    style="width: 100%; padding: 0.75rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem;">
+            </div>
+
+            <div style="text-align: center; margin: 2rem 0; position: relative;">
+                <div
+                    style="border-top: 1px solid var(--border-color); position: absolute; top: 50%; left: 0; right: 0;">
+                </div>
+                <span
+                    style="background: white; padding: 0 1rem; position: relative; color: var(--text-muted); font-weight: 500; font-size: 1rem;">OR</span>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.3s ease;"
+                    onmouseover="this.style.borderColor='var(--primary-color)'; this.style.background='var(--background-light)'"
+                    onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='white'">
+                    <input type="radio" name="reviewOption" id="masterWorkflow" value="masterWorkflow"
+                        style="margin-right: 0.75rem; width: 18px; height: 18px; cursor: pointer;">
+                    <div>
+                        <span
+                            style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); text-decoration: underline;">
+                            USE MASTER WORKFLOW
+                        </span>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            Automatically send to predefined approvers in sequence
+                        </p>
+                    </div>
+
+
+                </label>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <label
+                    style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.3s ease;"
+                    onmouseover="this.style.borderColor='var(--primary-color)'; this.style.background='var(--background-light)'"
+                    onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='white'">
+                    <input type="radio" name="reviewOption" id="customWorkflow" value="customWorkflow"
+                        style="margin-right: 0.75rem; width: 18px; height: 18px; cursor: pointer;">
+                    <div>
+                        <span
+                            style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); text-decoration: underline;">
+                            USE CUSTOM WORKFLOW
+                        </span>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);">
+                            Automatically send to predefined approvers in sequence
+                        </p>
+                    </div>
+
+
+                </label>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Additional
+                    Notes (Optional):</label>
+                <textarea id="reviewNotes" placeholder="Add any notes for the reviewers..."
+                    style="width: 100%; min-height: 80px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.875rem; resize: vertical;"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline-secondary" onclick="closeModal('internalReviewModal')">
+                Close
+            </button>
+            <button class="btn btn-primary" onclick="submitInternalApproval()">
+                Submit
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
 <!-- =====================================================
      LIVE NEGOTIATION CHAT MODAL
      ===================================================== -->
@@ -4198,12 +4291,41 @@
     // RENDERING FUNCTIONS
     // =====================================================
     function renderContractEditor(data) {
-        const { contract, workflow, versions, current_approver } = data;
-
+        const { contract, workflow, versions, current_approver, certificate } = data;
         console.log('Rendering contract:', contract);
         console.log('Contract content length:', contract.content ? contract.content.length : 0);
         console.log('Contract status:', contract.status);
-        // console.log('Contract status:', current_approver);
+        console.log('Certificate data:', certificate);
+        console.log('Certificate workflow:', workflow);
+
+        // Extract signatory data from certificate
+        let clientSignatory = { name: '[Name]', signer_type: '[Title]', email: '' };
+        let companySignatory = { name: '[Name]', signer_type: '[Title]', email: '' };
+
+        if (certificate && certificate.signatories) {
+            // Find client and company signatories
+            const clientSig = certificate.signatories.find(s => s.signer_type === 'client' || s.signer_type === 'party_a');
+            const companySig = certificate.signatories.find(s => s.signer_type === 'company' || s.signer_type === 'party_b');
+
+            if (clientSig) {
+                clientSignatory.name = clientSig.name || '[Name]';
+                clientSignatory.email = clientSig.email || '';
+                // Extract title from email domain or use default
+                clientSignatory.signer_type = clientSig.signer_type || '[Title]';
+            }
+
+            if (companySig) {
+                companySignatory.name = companySig.name || '[Name]';
+                companySignatory.email = companySig.email || '';
+                companySignatory.signer_type = companySig.signer_type || '[Title]';
+            }
+
+            // If no specific signatories found, try to use executed_by for company
+            if (!companySig && certificate.executed_by) {
+                companySignatory.name = certificate.executed_by;
+                companySignatory.email = certificate.executed_by_email || '';
+            }
+        }
 
         const signature_block = `
         <div style="margin-top: 3rem;">
@@ -4217,8 +4339,8 @@
                         </div>
                     </div>
                     <p style="margin-top: 1rem;"><strong>CLIENT</strong></p>
-                    <p>Name: <span class="editable-field" contenteditable="true">[Name]</span></p>
-                    <p>Title: <span class="editable-field" contenteditable="true">[Title]</span></p>
+                    <p>Name: <span class="editable-field" contenteditable="true">${clientSignatory.name}</span></p>
+                    <p>Title: <span class="editable-field" contenteditable="true">${clientSignatory.signer_type}</span></p>
                 </div>
                 <div style="flex: 1;">
                     <div class="signature-field" id="companySignature" onclick="openSignature('company')">
@@ -4228,8 +4350,8 @@
                         </div>
                     </div>
                     <p style="margin-top: 1rem;"><strong>COMPANY</strong></p>
-                    <p>Name: <span class="editable-field" contenteditable="true">[Name]</span></p>
-                    <p>Title: <span class="editable-field" contenteditable="true">[Title]</span></p>
+                    <p>Name: <span class="editable-field" contenteditable="true">${companySignatory.name}</span></p>
+                    <p>Title: <span class="editable-field" contenteditable="true">${companySignatory.signer_type}</span></p>
                 </div>
             </div>
         </div>`;
@@ -4238,19 +4360,20 @@
         let actionButtons = '';
 
         if (contract.status === 'draft') {
+
             // Draft stage
             actionButtons = `
             <button class="btn signature-btn" onclick="saveAsDraft()">
                 <i class="ti ti-device-floppy"></i> Save Draft
             </button>
-            <button class="btn btn-primary" onclick="submitForReview()">
-                <i class="ti ti-send"></i> Submit for Internal Review
-            </button>`;
+          <button class="btn btn-primary" onclick="submitForReview('${workflow ? workflow.status : 'nothing'}')">
+    <i class="ti ti-send"></i> Submit for Internal Review
+</button>`
         } else if ((contract.status === 'review')) {
             // Review stage
 
             if ((contract.is_initiator === true)) {
-                actionButtons = getApprovalBadge(current_approver, workflow,'review');
+                actionButtons = getApprovalBadge(current_approver, workflow, 'review');
             } else {
 
                 if ((workflow && workflow.is_my_workflow_turn === true) && (workflow && workflow.status != 'completed')) {
@@ -4264,7 +4387,7 @@
         </button>`;
                 } else {
                     //if I am not the current approver
-                    actionButtons = getApprovalBadge(current_approver, workflow,'review');
+                    actionButtons = getApprovalBadge(current_approver, workflow, 'review');
                 }
 
             }
@@ -4288,46 +4411,57 @@
 
             if (contract.is_counterparty === true) {
 
-                if ((workflow && workflow.status != 'active')) {
+                if (workflow) {
 
-                    actionButtons = `
+                    if ((workflow && workflow.status != 'active')) {
+
+                        actionButtons = `
         <button class="btn btn-success" onclick="markCounterpartyReviewComplete()">
             <i class="ti ti-check"></i> Quick Review
         </button>
-        <button class="btn btn-primary" onclick="submitForReview()">
+        <button class="btn btn-primary" onclick="submitForReview('${workflow.status}')">
                 <i class="ti ti-send"></i> Submit for Internal Review
             </button>`;
-                } else if ((workflow && workflow.status == 'active')) {
+                    } else if ((workflow && workflow.status == 'active')) {
 
-                    if ((workflow && workflow.is_my_workflow_turn === true) && (workflow && workflow.status != 'completed')) {
+                        if ((workflow && workflow.is_my_workflow_turn === true) && (workflow && workflow.status != 'completed')) {
 
-                        actionButtons = `
+                            actionButtons = `
         <button class="btn signature-btn" onclick="approveWorkflow(${contract.id})">
             <i class="ti ti-check"></i> Approve
         </button>
         <button class="btn btn-danger" onclick="rejectWorkflow(${contract.id})">
             <i class="ti ti-x"></i> Reject
         </button>`;
-                    } else {
-                        //if I am not the current approver
-                        actionButtons = getApprovalBadge(current_approver, workflow,'review');
+                        } else {
+                            //if I am not the current approver
+                            actionButtons = getApprovalBadge(current_approver, workflow, 'review');
+                        }
+                        //           actionButtons = `
+                        // <button class="btn btn-success" onclick="markCounterpartyReviewComplete()">
+                        //     <i class="ti ti-check"></i> Quick Review
+                        // </button>`;
+
                     }
-                    //           actionButtons = `
-                    // <button class="btn btn-success" onclick="markCounterpartyReviewComplete()">
-                    //     <i class="ti ti-check"></i> Quick Review
-                    // </button>`;
+
+                } else {
+
+                    actionButtons = `<span class="comment-count-badge" style="background: rgb(255, 243, 205); color: rgb(133, 100, 4); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; display: inline-flex; gap: 6px;">
+        <i class="ti ti-clock"></i> Please Setup Workflow to Continue
+    </span>`;
+
+
 
                 }
             }
-
 
         } else if (contract.status === 'negotiation') {
 
             if (contract.is_counterparty === true) {
                 // Negotiation stage
                 actionButtons = `
-            <button class="btn btn-default" onclick="quickApprove()">
-                <i class="ti ti-check-circle"></i> Skip Negotiation
+            <button class="btn btn-success" onclick="quickApprove()">
+                <i class="ti ti-check-circle"></i> Finalize Agreement
             </button>
             <button class="btn btn-primary" onclick="openNegotiationModal()">
                 <i class="ti ti-message-circle"></i> Initiate Negotiation
@@ -4365,74 +4499,74 @@
         </button>`;
                 } else {
 
-                    actionButtons = getApprovalBadge(current_approver, workflow,'approval');
+                    actionButtons = getApprovalBadge(current_approver, workflow, 'approval');
 
                 }
             }
 
-    } else if (contract.status === 'approved') {
+        } else if (contract.status === 'approved') {
 
-        if ((contract.is_counterparty === false)) {
-            if ((workflow && workflow.is_my_workflow_turn === false) && (workflow && workflow.status != 'completed')) {
+            if ((contract.is_counterparty === false)) {
+                if ((workflow && workflow.is_my_workflow_turn === false) && (workflow && workflow.status != 'completed')) {
 
-                actionButtons = `
+                    actionButtons = `
         <button class="btn signature-btn" onclick="approveWorkflow(${contract.id})">
             <i class="ti ti-check"></i> Approve
         </button>
         <button class="btn btn-danger" onclick="rejectWorkflow(${contract.id})">
             <i class="ti ti-x"></i> Reject
         </button>`;
-            } else {
+                } else {
 
-                if ((contract.is_initiator === true)) {
+                    if ((contract.is_initiator === true)) {
 
-                    if ((workflow && workflow.status === 'completed')) {
-                        // Approved stage
-                        actionButtons = `
+                        if ((workflow && workflow.status === 'completed')) {
+                            // Approved stage
+                            actionButtons = `
             <button class="btn btn-primary" onclick="sendForSignature()">
                 <i class="ti ti-writing-sign"></i> Send for Signature
             </button>`;
-                    } else if ((workflow && workflow.status === 'active')) {
-                        // Approved stage
-                        actionButtons = `
+                        } else if ((workflow && workflow.status === 'active')) {
+                            // Approved stage
+                            actionButtons = `
             <button class="btn btn-primary" onclick="initiateApprovalWorkflow()">
                 <i class="ti ti-writing-sign"></i> Initiate Approval Workflow
             </button>`;
-                    } else {
-                    actionButtons = getApprovalBadge(current_approver, workflow);
+                        } else {
+                            actionButtons = getApprovalBadge(current_approver, workflow);
+                        }
                     }
                 }
             }
-        }
 
 
-    } else if (contract.status === 'signature') {
-        // Signature stage
-        actionButtons = `
+        } else if (contract.status === 'signature') {
+            // Signature stage
+            actionButtons = `
             <button class="btn btn-success" onclick="openSignatureModal()">
                 <i class="ti ti-writing-sign"></i> Sign Contract
             </button>`;
-    } else if (contract.status === 'signed') {
-        // 🆕 SIGNED STAGE - READY FOR EXECUTION
-        actionButtons = `
+        } else if (contract.status === 'signed') {
+            // 🆕 SIGNED STAGE - READY FOR EXECUTION
+            actionButtons = `
             <button class="btn btn-success" onclick="openExecuteContractModal()" style="background: linear-gradient(135deg, var(--success-color), #20c997);">
                 <i class="ti ti-rocket"></i> Execute Contract
             </button>
             <button class="btn btn-outline-secondary" onclick="exportDocument()">
                 <i class="ti ti-download"></i> Download
             </button>`;
-    } else if (contract.status === 'executed') {
-        // Executed stage - Show certificate and download
-        actionButtons = `
+        } else if (contract.status === 'executed') {
+            // Executed stage - Show certificate and download
+            actionButtons = `
             <button class="btn btn-success" onclick="viewExecutionCertificate()">
                 <i class="ti ti-certificate"></i> View Certificate
             </button>
             <button class="btn btn-outline-secondary" onclick="exportDocument()">
                 <i class="ti ti-download"></i> Download Contract
             </button>`;
-    }
+        }
 
-    document.getElementById('contractEditor').innerHTML = `
+        document.getElementById('contractEditor').innerHTML = `
         <!-- Page Header -->
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; background: white; border-bottom: 1px solid var(--border-color); margin-bottom: 1rem;">
             <div class="page-header-left">
@@ -4460,13 +4594,13 @@ ${renderWorkflowStepper(contract.status)}
                     <i class="ti ti-settings-automation"></i> Setup Custom Workflow
                 </button>
                 ${!contract.is_counterparty ? `
-                <button class="ai-toolbar-btn" onclick="openRiviewModal()">
+                <button class="workflow-setup-btn" onclick="openRiviewModal()">
                     <i class="ti ti-alert-triangle"></i> Review Analysis
                 </button>
-                <button class="ai-toolbar-btn" onclick="openClauseAnalysisModal()">
+                <button class="workflow-setup-btn" onclick="openClauseAnalysisModal()">
                     <i class="ti ti-file-text"></i> Clause Analysis
                 </button>
-                ` : `<button class="ai-toolbar-btn" onclick="showRiskSummary()">
+                ` : `<button class="workflow-setup-btn" onclick="showRiskSummary()">
                     <i class="ti ti-file-text"></i> Risk Summary
                 </button>`}
             </div>
@@ -4481,8 +4615,8 @@ ${renderDocumentInfo(contract, versions)}
                 <div class="editor-content">
                     <div class="editor-paper" contenteditable="true" id="contractContent">
 ${contract.content && contract.content.trim() !== '' ?
-            (contract.content.includes('signature-field') ? contract.content : contract.content + signature_block)
-            : getDefaultContractContent()}
+                (contract.content.includes('signature-field') ? contract.content : contract.content + signature_block)
+                : getDefaultContractContent()}
                     </div>
                 </div>
             </div>
@@ -4854,9 +4988,17 @@ ${contract.content && contract.content.trim() !== '' ?
 
 
     // Submit for Review - CONNECTED TO BACKEND
-    async function submitForReview() {
-        openModal('internalReviewModal');
+    async function submitForReview(workflow_status) {
+
+        if (workflow_status != 'nothing') {
+            openModal('internalReviewModal');
+        } else {
+            showNotification('Please setup workflow before proceeding', 'warning');
+        }
+
     }
+
+
 
     async function submitInternalReview() {
         const reviewType = document.querySelector('input[name="reviewOption"]:checked')?.value || 'specific';
@@ -5209,14 +5351,7 @@ ${contract.content && contract.content.trim() !== '' ?
                         ${totalClauses} clause${totalClauses !== 1 ? 's' : ''} identified and analyzed
                     </p>
                 </div>
-                <div style="text-align: right;">
-                    <div style="background: rgba(255,255,255,0.2); padding: 0.5rem 1rem; border-radius: 8px;">
-                        <div style="font-size: 0.85rem; opacity: 0.9;">AI-Powered Analysis</div>
-                        <div style="font-size: 1.2rem; font-weight: 600;">
-                            <i class="ti ti-robot"></i> ${analysisData.ai_powered ? 'Claude AI' : 'Pattern Match'}
-                        </div>
-                    </div>
-                </div>
+               
             </div>
         </div>
         
@@ -6468,18 +6603,21 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
 
-    async function initiateApprovalWorkflow() {
-        if (!confirm('Send this contract for internal approval?')) {
-            return;
-        }
+async function initiateApprovalWorkflow() {
+      openModal('internalApprovalModal');
+}
 
+    async function submitInternalApproval() {
         showLoader();
         try {
             const response = await fetch('/api/contracts/initiate-approval-workflow', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contract_id: contractId
+               body: JSON.stringify({
+                    contract_id: contractId,
+                    review_type: reviewType,
+                    personnel_emails: personnelEmails,
+                    notes: notes,
                 })
             });
 
@@ -8803,7 +8941,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
 
     // Quick Approve - CONNECTED TO BACKEND
     async function quickApprove() {
-        if (confirm('Are you sure you want to approve this contract as-is? The initiator will be notified immediately.')) {
+        if (confirm('Press Yes if you have completed the Negotiation before finalizing the Agreement else Press No if you want to approve without Negotiation')) {
             showLoader();
             try {
                 const response = await fetch('/api/contracts/quick-approve', {
@@ -10202,7 +10340,7 @@ Generated by CALIM 360 Smart CLM
                 suggestionsDiv.style.display = 'block';
 
                 // Call API to search users
-                const response = await fetch(`/api/users/company?search=${encodeURIComponent(query)}&limit=10`, {
+                const response = await fetch(`/api/users/company?search=${encodeURIComponent(query)}&limit=10&type=counterparty`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'

@@ -135,6 +135,7 @@ def delete_expert_profile(db: Session, user_id: int):
 async def get_company_users(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
+    type: Optional[str] = Query(None, description="Filter by type"),
     search: Optional[str] = Query(None, description="Search by name or email"),
     status_filter: Optional[str] = Query(None, description="Filter by status"),
     role_filter: Optional[str] = Query(None, description="Filter by role"),
@@ -159,8 +160,9 @@ async def get_company_users(
         if current_user.user_type != 'internal':
             # Not internal user - filter by company_id
             if current_user.company_id:
-                query = query.filter(User.company_id == current_user.company_id)
-                logger.info(f"Filtering by company_id={current_user.company_id} for non-internal user")
+                if type!='counterparty':
+                  query = query.filter(User.company_id == current_user.company_id)
+                  logger.info(f"Filtering by company_id={current_user.company_id} for non-internal user")
             else:
                 # User has no company - return empty
                 logger.warning(f"User {current_user.id} has no company_id")

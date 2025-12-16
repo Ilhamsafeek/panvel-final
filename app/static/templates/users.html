@@ -1496,7 +1496,7 @@ function renderStatusBadge(user) {
     if (user.is_active && user.is_verified) {
         return '<span class="status-badge active"><i class="ti ti-check"></i> Active</span>';
     } else if (!user.is_verified) {
-        return '<span class="status-badge pending"><i class="ti ti-clock"></i> Pending</span>';
+        return '<span class="status-badge pending"><i class="ti ti-clock"></i> Email Activation Pending</span>';
     } else {
         return '<span class="status-badge inactive"><i class="ti ti-x"></i> Inactive</span>';
     }

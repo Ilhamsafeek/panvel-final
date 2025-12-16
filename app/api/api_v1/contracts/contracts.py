@@ -856,24 +856,19 @@ async def get_contracts(
     # Module filter
     if module == "drafting":
         query = query.filter(
-            or_(
-                Contract.workflow_status.in_(['draft','active','pending', 'internal_review','counterparty_internal_review', 'clause_analysis','in_progress']),
-                and_(
-                    Contract.workflow_status.is_(None),
-                    Contract.status.in_(['draft', 'pending_review', 'in_progress', 'review','review_completed','counterparty_internal_review'])
-                ),
-                Contract.status == 'draft'
-            )
+            # Displays all the contracts with any status
+            # Contract.status.in_(['draft', 'pending_review', 'in_progress', 'review','review_completed','counterparty_internal_review','negotiation_completed','negotiation'])
+
         )
     elif module == "negotiation":
         query = query.filter(
             or_(
-                Contract.workflow_status.in_(['external_review', 'negotiation', 'approval']),
-                and_(
-                    Contract.workflow_status.is_(None),
+                # Contract.workflow_status.in_(['external_review', 'negotiation', 'approval']),
+                # and_(
+                #     Contract.workflow_status.is_(None),
                     Contract.status.in_(['in_progress', 'pending_approval', 'negotiation'])
                 )
-            )
+            # )
         )
     elif module == "operations":
         query = query.filter(
@@ -1094,7 +1089,7 @@ async def get_contract_editor_data(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Get contract data for editor"""
+    """Get contract data for editor with execution certificate"""
     try:
         query = text("""
             SELECT 
@@ -1107,6 +1102,8 @@ async def get_contract_editor_data(
                 c.created_by as created_by_id,
                 c.updated_at,
                 c.party_b_id,
+                c.signed_date,
+                c.effective_date,
                 comp.company_name,
                 c.company_id,
                 CONCAT(u.first_name, ' ', u.last_name) as created_by_name,
@@ -1214,7 +1211,6 @@ async def get_contract_editor_data(
                         is_my_workflow_turn = True
                         break
         
-       
         # Get version history
         version_query = text("""
             SELECT 
@@ -1250,7 +1246,80 @@ async def get_contract_editor_data(
             "company_id": current_user.company_id
         }).fetchone()
         
-       
+        # ===== EXECUTION CERTIFICATE DATA =====
+        certificate_data = None
+        
+        # Check if contract is executed or signed
+        if result.status in ('executed', 'signed'):
+            try:
+                # Try to get from metadata table first
+                certificate_query = text("""
+                    SELECT metadata_value, created_at
+                    FROM contract_metadata
+                    WHERE contract_id = :contract_id
+                    AND metadata_key = 'execution_certificate'
+                    ORDER BY created_at DESC LIMIT 1
+                """)
+                
+                cert_result = db.execute(certificate_query, {"contract_id": contract_id}).fetchone()
+                
+                if cert_result:
+                    import json
+                    certificate_data = json.loads(cert_result.metadata_value)
+                    certificate_data["generated_at"] = cert_result.created_at.isoformat() if cert_result.created_at else None
+                else:
+                    # Fallback: Generate from current data
+                    executed_by_name = f"{current_user.first_name} {current_user.last_name}"
+                    
+                    # Get signatories
+                    signatories_query = text("""
+                        SELECT 
+                            s.signer_type,
+                            s.signed_at,
+                            s.ip_address,
+                            u.first_name,
+                            u.last_name,
+                            u.email
+                        FROM signatories s
+                        LEFT JOIN users u ON s.user_id = u.id
+                        WHERE s.contract_id = :contract_id AND s.has_signed = 1
+                        ORDER BY s.signing_order
+                    """)
+                    
+                    signatories = db.execute(signatories_query, {"contract_id": contract_id}).fetchall()
+                    
+                    certificate_data = {
+                        "contract_id": contract_id,
+                        "contract_number": result.contract_number,
+                        "contract_title": result.contract_title,
+                        "execution_date": result.effective_date.isoformat() if result.effective_date else None,
+                        "signed_date": result.signed_date.isoformat() if result.signed_date else None,
+                        "executed_by": executed_by_name,
+                        "executed_by_email": current_user.email,
+                        "signatories": []
+                    }
+                    
+                    for sig in signatories:
+                        # Construct full name
+                        signer_name = "External Signer"
+                        if sig.first_name and sig.last_name:
+                            signer_name = f"{sig.first_name} {sig.last_name}"
+                        elif sig.first_name:
+                            signer_name = sig.first_name
+                        
+                        certificate_data["signatories"].append({
+                            "signer_type": sig.signer_type,
+                            "name": signer_name,
+                            "email": sig.email or "",
+                            "signed_at": sig.signed_at.isoformat() if sig.signed_at else None,
+                            "ip_address": sig.ip_address or ""
+                        })
+                    
+            except Exception as cert_error:
+                logger.warning(f"⚠️ Could not retrieve certificate data: {str(cert_error)}")
+                certificate_data = None
+        
+        # ===== RETURN RESPONSE =====
         return {
             "success": True,
             "contract": {
@@ -1267,6 +1336,8 @@ async def get_contract_editor_data(
                 "created_by_id": result.created_by_id,
                 "created_at": result.created_at.isoformat() if result.created_at else None,
                 "updated_at": result.updated_at.isoformat() if result.updated_at else None,
+                "signed_date": result.signed_date.isoformat() if result.signed_date else None,
+                "effective_date": result.effective_date.isoformat() if result.effective_date else None,
                 "current_version": result.current_version if result.current_version else 1,
                 "is_initiator": is_initiator,
                 "is_counterparty": is_counterparty 
@@ -1294,7 +1365,7 @@ async def get_contract_editor_data(
                 "department": current_approver.department if current_approver else None,
                 "step_type": current_approver.step_type if current_approver else None
             } if current_approver else None,
-          
+            "certificate": certificate_data  # ✅ ADDED CERTIFICATE DATA
         }
         
     except HTTPException:
@@ -1303,7 +1374,7 @@ async def get_contract_editor_data(
         logger.error(f"Error fetching contract editor data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
         
-               
+                  
 @router.post("/save-draft/{contract_id}")
 async def save_contract_draft(
     contract_id: int,
@@ -1452,7 +1523,6 @@ async def initiate_approval_workflow(
             SET status = 'in_progress',
                 started_at = NOW()
             WHERE contract_id = :contract_id
-            AND status = 'active'
         """)
         
         db.execute(activate_workflow_query, {"contract_id": contract_id})

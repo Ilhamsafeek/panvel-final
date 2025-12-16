@@ -1480,7 +1480,7 @@ function showLoader(message = 'Please wait...') {
     loader.innerHTML = `
         <div class="loader-content">
             <div class="spinner-border text-primary" role="status">
-                <span class="sr-only">Please wait...</span>
+                
             </div>
             <p class="mt-3">${message}</p>
         </div>
