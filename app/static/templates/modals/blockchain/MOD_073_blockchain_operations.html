@@ -30,29 +30,7 @@
             </div>
         </div>
 
-        <!-- Network Status Bar -->
-        <div class="blockchain-network-status">
-            <div class="network-status-item">
-                <i class="ti ti-server"></i>
-                <span>Network:</span>
-                <strong id="networkStatusText">Hyperledger Fabric</strong>
-            </div>
-            <div class="network-status-item">
-                <i class="ti ti-activity"></i>
-                <span>Status:</span>
-                <strong id="networkHealthStatus" class="status-online">Operational</strong>
-            </div>
-            <div class="network-status-item">
-                <i class="ti ti-users"></i>
-                <span>Connected Peers:</span>
-                <strong id="connectedPeersCount">4</strong>
-            </div>
-            <div class="network-status-item">
-                <i class="ti ti-clock"></i>
-                <span>Last Block:</span>
-                <strong id="lastBlockTime">2 sec ago</strong>
-            </div>
-        </div>
+      
 
         <!-- Tab Navigation -->
         <div class="blockchain-ops-tabs">
@@ -64,10 +42,10 @@
                 <i class="ti ti-database-search"></i>
                 <span>Query Blockchain</span>
             </button>
-            <button class="blockchain-ops-tab" data-tab="verify-hash" onclick="switchTab('verify-hash')">
+            <!-- <button class="blockchain-ops-tab" data-tab="verify-hash" onclick="switchTab('verify-hash')">
                 <i class="ti ti-fingerprint"></i>
                 <span>Verify Transaction</span>
-            </button>
+            </button> -->
             <button class="blockchain-ops-tab" data-tab="blockchain-logs" onclick="switchTab('blockchain-logs')">
                 <i class="ti ti-file-text"></i>
                 <span>Blockchain Logs</span>
@@ -82,16 +60,16 @@
                 <div class="panel-header">
                     <div class="panel-info">
                         <h4><i class="ti ti-box"></i> Method 1: Check Docker Containers</h4>
-                        <p>View running Hyperledger Fabric containers to verify the blockchain network is operational.</p>
+                        <p>View running calim360-network containers to verify the blockchain network is operational.</p>
                     </div>
                     <button class="btn-run" onclick="runDockerCommand()">
                         <i class="ti ti-player-play"></i>
                         Run Command
                     </button>
                 </div>
-                <div class="command-preview">
+                <!-- <div class="command-preview">
                     {% raw %}<code><span class="cmd-prompt">$</span> docker ps --filter "name=calim" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"</code>{% endraw %}
-                </div>
+                </div> -->
                 <div class="terminal-container" id="terminal-docker">
                     <div class="terminal-header">
                         <div class="terminal-dots">
@@ -109,7 +87,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="expected-output">
+                <!-- <div class="expected-output">
                     <h5><i class="ti ti-info-circle"></i> Expected Output:</h5>
                     <ul>
                         <li><code>peer0.calim.calim360.com</code> - Blockchain Peer Node 1</li>
@@ -117,7 +95,7 @@
                         <li><code>peer0.client.calim360.com</code> - Client Peer Node</li>
                         <li><code>orderer.calim360.com</code> - Ordering Service</li>
                     </ul>
-                </div>
+                </div> -->
             </div>
 
             <!-- Tab 2: Query Blockchain -->
@@ -128,18 +106,18 @@
                         <p>Query the chaincode to retrieve actual blockchain data for a specific contract.</p>
                     </div>
                     <div class="input-group">
-                        <input type="text" id="queryContractId" placeholder="Contract ID (e.g., 203)" value="">
+                        <input type="hidden" id="queryContractId" placeholder="Contract ID (e.g., 203)" value="">
                         <button class="btn-run" onclick="runQueryCommand()">
                             <i class="ti ti-player-play"></i>
                             Query
                         </button>
                     </div>
                 </div>
-                <div class="command-preview">
+                <!-- <div class="command-preview">
                     <code>
                         <span class="cmd-prompt">$</span> docker exec -it cli bash -c "peer chaincode query -C calimchannel -n calim-contracts -c '{"Args":["GetContractRecord","<span id="queryIdPreview">CONTRACT_ID</span>"]}'"
                     </code>
-                </div>
+                </div> -->
                 <div class="terminal-container" id="terminal-query">
                     <div class="terminal-header">
                         <div class="terminal-dots">
@@ -157,10 +135,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="info-box">
+                <!-- <div class="info-box">
                     <i class="ti ti-bulb"></i>
                     <span>This returns the ACTUAL data stored on the blockchain ledger, not from MySQL database.</span>
-                </div>
+                </div> -->
             </div>
 
             <!-- Tab 3: Verify Transaction Hash -->
@@ -178,11 +156,11 @@
                         </button>
                     </div>
                 </div>
-                <div class="command-preview">
+                <!-- <div class="command-preview">
                     <code>
                         <span class="cmd-prompt">$</span> peer chaincode query -C calimchannel -n calim-contracts -c '{"Args":["GetTransactionByHash","<span id="txHashPreview">TX_HASH</span>"]}'
                     </code>
-                </div>
+                </div> -->
                 <div class="terminal-container" id="terminal-verify">
                     <div class="terminal-header">
                         <div class="terminal-dots">
@@ -232,11 +210,11 @@
                         </button>
                     </div>
                 </div>
-                <div class="command-preview">
+                <!-- <div class="command-preview">
                     <code>
                         <span class="cmd-prompt">$</span> docker logs <span id="peerNamePreview">peer0.calim.calim360.com</span> --tail 100 | grep -i "committed|endorsement|block"
                     </code>
-                </div>
+                </div> -->
                 <div class="terminal-container terminal-logs" id="terminal-logs">
                     <div class="terminal-header">
                         <div class="terminal-dots">
@@ -258,7 +236,7 @@
                     </div>
                 </div>
                 <div class="log-legend">
-                    <h5><i class="ti ti-tags"></i> Log Types:</h5>
+                    <!-- <h5><i class="ti ti-tags"></i> Log Types:</h5> -->
                     <div class="legend-items">
                         <span class="legend-item"><span class="log-badge committed">COMMITTED</span> Block committed to ledger</span>
                         <span class="legend-item"><span class="log-badge endorsement">ENDORSEMENT</span> Transaction endorsed</span>
@@ -271,18 +249,29 @@
         <!-- Modal Footer -->
         <div class="blockchain-ops-footer">
             <div class="footer-stats">
-                <div class="stat-item">
-                    <i class="ti ti-hash"></i>
-                    <span>Total Blocks: <strong id="totalBlocksCount">12,847</strong></span>
-                </div>
-                <div class="stat-item">
-                    <i class="ti ti-transfer"></i>
-                    <span>Total TXs: <strong id="totalTxCount">45,231</strong></span>
-                </div>
-                <div class="stat-item">
-                    <i class="ti ti-clock-hour-4"></i>
-                    <span>Uptime: <strong id="networkUptime">99.99%</strong></span>
-                </div>
+                <!-- Network Status Bar -->
+       
+            <div class="network-status-item">
+                <i class="ti ti-server"></i>
+                <span>Network:</span>
+                <strong id="networkStatusText">calim360-network</strong>
+            </div>
+            <div class="network-status-item">
+                <i class="ti ti-activity"></i>
+                <span>Status:</span>
+                <strong id="networkHealthStatus" class="status-online">Operational</strong>
+            </div>
+            <div class="network-status-item">
+                <i class="ti ti-users"></i>
+                <span>Connected Peers:</span>
+                <strong id="connectedPeersCount">4</strong>
+            </div>
+            <!-- <div class="network-status-item">
+                <i class="ti ti-clock"></i>
+                <span>Last Block:</span>
+                <strong id="lastBlockTime">2 sec ago</strong>
+            </div> -->
+       
             </div>
             <div class="footer-actions">
                 <button class="btn-secondary" onclick="exportTerminalLogs()">

@@ -700,7 +700,7 @@ async function saveContract() {
             return;
         }
 
-        showLoader('Saving contract...');
+        showLoader('AI is writing your contract...This may take a while');
 
         // Prepare contract data
         const contractData = {

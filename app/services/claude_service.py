@@ -197,222 +197,263 @@ Draft the clause now:"""
         language: str = "en"
     ) -> Dict:
         """
-        Generate a complete contract draft using Claude with HTML formatting
+        Generate a complete contract draft using Claude's advanced legal reasoning capabilities
         
-        Args:
-            contract_type: Type of contract
-            party_a: First party name
-            party_b: Second party name
-            jurisdiction: Legal jurisdiction
-            key_terms: Dict of key contract terms (value, duration, etc.)
-            language: Output language
-            
-        Returns:
-            Dict with full contract text (HTML formatted) and metadata
+        Leverages Claude's strengths:
+        - Deep legal analysis and risk awareness
+        - Contextual integration of requirements
+        - Balanced, enforceable language
+        - Jurisdictional intelligence
         """
         try:
-            # Build key terms section
-            key_terms_text = ""
-            for key, value in key_terms.items():
-                key_terms_text += f"- {key}: {value}\n"
+            # Extract special instructions if provided
+            special_instructions = key_terms.get("Additional Requirements", "")
             
-            prompt = f"""You are an expert contract lawyer specializing in {jurisdiction} law. Draft a complete, legally binding {contract_type} with the following details:
+            # Build key terms section
+            key_terms_text = "\n".join([
+                f"- {key}: {value}" 
+                for key, value in key_terms.items() 
+                if key != "Additional Requirements"
+            ])
+            
+            # Build comprehensive prompt leveraging Claude's strengths
+            prompt = f"""You are drafting a {contract_type} as an expert legal advisor with deep expertise in {jurisdiction} commercial law. Your approach combines legal precision with practical enforceability.
 
-    **Contract Parties:**
-    - **Party A (First Party):** {party_a}
-    - **Party B (Second Party):** {party_b}
+    **CONTRACT FUNDAMENTALS:**
+    Parties: {party_a} (Party A) and {party_b} (Party B)
+    Jurisdiction: {jurisdiction}
+    Language: {language}
 
-    **Jurisdiction:** {jurisdiction}
-    **Language:** {language}
-
-    **Key Terms:**
+    **KEY COMMERCIAL TERMS:**
     {key_terms_text}
 
-    **CRITICAL FORMATTING REQUIREMENTS:**
-    You MUST format the entire contract using clean, professional HTML markup. Use the following structure:
+    **CLIENT'S SPECIFIC REQUIREMENTS:**
+    {special_instructions if special_instructions else "Draft comprehensive, professionally detailed clauses appropriate for this contract type."}
 
-    1. **Document Structure:**
-    - Wrap the entire contract in a <div class="contract-document">
-    - Use semantic HTML5 tags (header, section, article, footer)
-    
-    2. **Typography & Styling:**
-    - Main title: <h1 class="contract-title">
-    - Section headings: <h2 class="section-heading">
-    - Subsection headings: <h3 class="subsection-heading">
-    - Paragraphs: <p class="contract-paragraph">
-    - Important terms: <strong> or <span class="highlight">
-    - Definitions: <dfn> tag
-    - Legal citations: <cite>
+    ---
 
-    3. **Content Organization:**
-    - Recitals section: <section class="recitals">
-    - Definitions: <section class="definitions"> with <dl>, <dt>, <dd> for term definitions
-    - Terms & Conditions: <section class="terms-conditions">
-    - Obligations: <section class="obligations">
-    - Payment terms: <section class="payment-terms">
-    - Duration & Termination: <section class="duration-termination">
-    - Dispute Resolution: <section class="dispute-resolution">
-    - Miscellaneous: <section class="miscellaneous">
+    **YOUR APPROACH TO DRAFTING:**
 
-    4. **Lists & Enumerations:**
-    - Ordered lists: <ol class="contract-list">
-    - Unordered lists: <ul class="contract-list">
-    - List items: <li class="list-item">
-    - Nested clauses: Use nested <ol> with proper numbering
+    As Claude, you excel at:
+    1. **Integrated Reasoning**: Weaving client requirements naturally into legal frameworks
+    2. **Risk-Aware Language**: Drafting clauses that protect both parties while enabling business objectives
+    3. **Contextual Intelligence**: Understanding how clauses interact and support each other
+    4. **Practical Enforceability**: Creating terms that courts in {jurisdiction} will uphold
 
-    5. **Tables (if needed):**
-    - Use <table class="contract-table"> for schedules, payment terms, deliverables
-    - Include <thead>, <tbody>, <th>, <td> with proper structure
+    **DRAFTING PRINCIPLES:**
 
-    6. **Signature Block:**
-    - Wrap in <section class="signature-block">
-    - Party details: <div class="party-signature">
-    - Signature lines: <div class="signature-line">
-    - Date fields: <div class="date-field">
+    When the client requests elaboration (like "elaborate term clause in details"), you should:
+    - Provide comprehensive legal definitions and scope
+    - Include procedural mechanisms (notification, cure periods, escalation)
+    - Enumerate specific examples and scenarios
+    - Detail rights, obligations, and consequences
+    - Address exceptions and limitations
+    - Integrate timelines and deadlines naturally
+    - Cross-reference related provisions
 
-    7. **Special Elements:**
-    - Witness section: <div class="witness-section">
-    - Notary section: <div class="notary-section">
-    - Annexures/Schedules: <section class="annexure">
+    **STRUCTURAL APPROACH:**
 
-    **Content Requirements:**
-    1. Include all standard contract sections:
-    - Preamble with contract title and date
-    - Recitals (WHEREAS clauses)
-    - Comprehensive definitions section
-    - Detailed terms and conditions
-    - Rights and obligations of both parties
-    - Payment terms and schedules
-    - Duration and renewal terms
-    - Termination clauses
-    - Confidentiality provisions
-    - Intellectual property rights (if applicable)
-    - Indemnification and liability
-    - Force majeure
-    - Dispute resolution and arbitration
-    - Governing law and jurisdiction
-    - Notices and communications
-    - General provisions (severability, amendment, waiver, etc.)
-    - Signature blocks for both parties with witness lines
+    Draft the contract with this logical flow:
 
-    2. Legal Requirements:
-    - Ensure compliance with {jurisdiction} laws and regulations
-    - Include Qatar-specific clauses if jurisdiction is Qatar
-    - Add QFCRA compliance statements if applicable
-    - Use legally binding language appropriate for {language}
-    - Include proper legal protections for both parties
-    - Add standard limitation of liability clauses
-    - Include assignment and succession clauses
+    1. **PREAMBLE & CONTEXT**
+    - Contract title and execution date
+    - Party identification with full legal details
+    - Background recitals (WHEREAS clauses) explaining business context and objectives
 
-    3. Professional Standards:
-    - Use formal, precise legal terminology
-    - Number all clauses and subclauses systematically (1, 1.1, 1.1.1)
-    - Cross-reference related clauses where appropriate
-    - Ensure internal consistency throughout
-    - Define all technical or industry-specific terms
-    - Use gender-neutral language
-    - Include proper date formats and currency specifications
+    2. **DEFINITIONS & INTERPRETATION**
+    - Comprehensive definitions of all key terms
+    - Interpretation rules (headings, singular/plural, time calculations)
+    - Include Business Day definition for {jurisdiction}
 
-    4. Design & Readability:
-    - Use clear hierarchical structure
-    - Add subtle visual separators between major sections
-    - Ensure proper spacing and indentation
-    - Make party names, dates, and amounts visually distinct
-    - Use consistent formatting throughout
+    3. **CORE COMMERCIAL TERMS**
+    Develop detailed sections for:
+    - Scope of Work/Services (what is being delivered)
+    - Contract Price and Payment Terms (how and when payment occurs)
+    - Term and Duration (start, end, renewal mechanisms)
+    - Deliverables and Acceptance Criteria
 
-    **Example HTML Structure to Follow:**
+    4. **OBLIGATIONS & PERFORMANCE**
+    For each party, detail:
+    - Affirmative obligations (what must be done)
+    - Negative obligations (what is prohibited)
+    - Performance standards and KPIs
+    - Cooperation and coordination duties
+    - Resource provision responsibilities
+
+    5. **LEGAL PROTECTIONS**
+    Draft comprehensive clauses for:
+    - Representations and Warranties (accuracy of information provided)
+    - Confidentiality and Data Protection
+    - Intellectual Property Rights (ownership and licensing)
+    - Insurance Requirements (types, amounts, evidence)
+    - Indemnification (who protects whom, from what, subject to what limits)
+    - Limitation of Liability (caps, carve-outs, consequential damages)
+
+    6. **RISK ALLOCATION**
+    Address:
+    - Force Majeure (comprehensive definition, procedures, remedies)
+    - Change Management (how to handle scope changes)
+    - Delays and Extensions of Time
+    - Quality Issues and Defects
+    - Third Party Claims
+
+    7. **CONTRACT GOVERNANCE**
+    Establish:
+    - Amendment procedures
+    - Assignment and subcontracting rules
+    - Notices (methods, addresses, deemed receipt)
+    - Relationship of parties (independent contractors, not partners)
+    - Audit and inspection rights
+
+    8. **TERMINATION & EXIT**
+    Detail:
+    - Termination for convenience (notice periods, costs)
+    - Termination for cause (material breach, insolvency, force majeure)
+    - Consequences of termination (wind-down, payment, return of property)
+    - Survival of obligations post-termination
+
+    9. **DISPUTE RESOLUTION**
+    Create escalation framework:
+    - Senior management negotiation
+    - Mediation procedures
+    - Arbitration (seat, rules, language, number of arbitrators)
+    - Governing law and jurisdiction specific to {jurisdiction}
+
+    10. **GENERAL PROVISIONS**
+        - Entire agreement and integration
+        - Severability and blue-pencil rule
+        - Waiver (no waiver by conduct)
+        - Counterparts and electronic signatures
+        - Further assurances
+
+    11. **EXECUTION**
+        - Signature blocks with proper legal authority
+        - Witness requirements per {jurisdiction} law
+        - Date and place of execution
+
+    **HANDLING SPECIAL INSTRUCTIONS:**
+
+    When client provides specific instructions like date ranges, elaboration requests, or custom requirements:
+
+    ✓ Integrate them organically into the relevant clauses
+    ✓ Don't just add as an appendix - weave into the legal fabric
+    ✓ Maintain professional legal tone while addressing specific needs
+    ✓ Use the instruction as a guide for the LEVEL of detail expected across ALL clauses
+
+    For example: If client says "elaborate Force Majeure clause with dates January 1, 2025 to December 31, 2028":
+    - Don't just mention the dates in passing
+    - Create a comprehensive Force Majeure framework that:
+    * Defines Force Majeure events with specificity
+    * Lists categories (natural disasters, political events, epidemics, etc.)
+    * Details notification requirements ("within 7 days of occurrence")
+    * Explains impact on performance obligations during the specified contract term
+    * Sets thresholds for prolonged events (90 days continuous/120 days aggregate)
+    * Addresses extensions of time and payment implications
+    * Covers termination rights if event persists
+    * Explicitly excludes financial hardship and ordinary business risks
+
+    **{jurisdiction.upper()}-SPECIFIC REQUIREMENTS:**
+
+    Apply relevant legal standards:
+    - Qatar Civil Code compliance for commercial contracts
+    - QFCRA regulations if applicable to parties
+    - Qatar Labor Law integration for service contracts
+    - Local dispute resolution mechanisms (Qatar International Court/QICDRC)
+    - Currency provisions (QAR as standard, exchange rate mechanisms)
+    - Arabic translation requirements for certain contract types
+    - Notarization and authentication requirements
+    - Force majeure aligned with Qatar law interpretation
+
+    **HTML FORMATTING:**
+
+    Structure the contract with semantic HTML:
+
     ```html
     <div class="contract-document">
-        <header class="contract-header">
-            <h1 class="contract-title">[CONTRACT TYPE]</h1>
-            <p class="contract-meta">Date: [DATE] | Reference: [REF]</p>
-        </header>
-        
-        <section class="parties">
-            <h2 class="section-heading">PARTIES</h2>
-            <div class="party-details">
-                <p><strong>Party A:</strong> {party_a}</p>
-                <p><strong>Party B:</strong> {party_b}</p>
-            </div>
-        </section>
-        
-        <section class="recitals">
-            <h2 class="section-heading">RECITALS</h2>
-            <p class="recital">WHEREAS...</p>
-        </section>
-        
-        <section class="definitions">
-            <h2 class="section-heading">1. DEFINITIONS</h2>
-            <dl class="definition-list">
-                <dt>"Term"</dt>
-                <dd>Definition of the term...</dd>
-            </dl>
-        </section>
-        
-        <!-- Continue with all other sections -->
-        
-        <section class="signature-block">
-            <h2 class="section-heading">SIGNATURES</h2>
-            <div class="signature-grid">
-                <div class="party-signature">
-                    <p><strong>Party A:</strong></p>
-                    <div class="signature-line">_______________________</div>
-                    <p>Name: {party_a}</p>
-                    <div class="date-field">Date: _______________________</div>
-                </div>
-                <div class="party-signature">
-                    <p><strong>Party B:</strong></p>
-                    <div class="signature-line">_______________________</div>
-                    <p>Name: {party_b}</p>
-                    <div class="date-field">Date: _______________________</div>
-                </div>
-            </div>
-        </section>
+    <header class="contract-header">
+        <h1 class="contract-title">[TITLE]</h1>
+        <p class="contract-date">Dated: [DATE]</p>
+    </header>
+    
+    <section class="recitals">
+        <h2>RECITALS</h2>
+        [WHEREAS clauses]
+    </section>
+    
+    <section class="definitions">
+        <h2>1. DEFINITIONS AND INTERPRETATION</h2>
+        <p>1.1 In this Agreement, unless the context otherwise requires:</p>
+        <dl>
+        <dt><strong>"Term"</strong></dt>
+        <dd>means definition...</dd>
+        </dl>
+    </section>
+    
+    <section class="scope">
+        <h2>2. SCOPE OF [WORK/SERVICES]</h2>
+        <p>2.1 First provision...</p>
+        <p>2.2 Second provision...</p>
+    </section>
+    
+    [Continue with logical section progression]
     </div>
     ```
 
-    **IMPORTANT:** 
-    - Output ONLY the HTML content, no markdown code blocks
-    - Do not include <!DOCTYPE>, <html>, <head>, or <body> tags
-    - Start directly with the <div class="contract-document"> wrapper
-    - Ensure all HTML tags are properly closed
-    - Use semantic, clean markup that can be easily styled with CSS
-    - Make the contract comprehensive, professional, and legally sound
+    **QUALITY BENCHMARKS:**
 
-    Generate the complete HTML-formatted contract now:"""
+    Your output should demonstrate:
+    ✓ Legal sophistication appropriate for commercial transactions
+    ✓ Balanced protection for both parties
+    ✓ Practical enforceability in {jurisdiction} courts
+    ✓ Comprehensive coverage without unnecessary verbosity
+    ✓ Clear cross-referencing between related provisions
+    ✓ Professional terminology and defined terms consistency
+    ✓ Proper numbering hierarchy (1, 1.1, 1.1.1)
+    ✓ Thorough treatment of standard commercial risks
+
+    **OUTPUT REQUIREMENTS:**
+
+    - Begin with: <div class="contract-document">
+    - NO markdown code blocks (```html)
+    - NO placeholder text like [INSERT] or [TBD]
+    - Use actual dates, values, and names provided
+    - Ensure all HTML tags properly closed
+    - Create a complete, execution-ready contract draft
+
+    Draft the comprehensive, professionally detailed contract now, leveraging your analytical depth and legal reasoning to create superior contract language:"""
 
             message = self.client.messages.create(
                 model=self.model,
-                max_tokens=self.max_tokens,
-                temperature=self.temperature,
+                max_tokens=16000,
+                temperature=0.4,  # Balanced for legal creativity and consistency
                 messages=[{"role": "user", "content": prompt}]
             )
             
             contract_text = message.content[0].text
             
-            # Clean up any potential markdown artifacts
+            # Clean up markdown artifacts
             contract_text = contract_text.strip()
-            if contract_text.startswith("```html"):
-                contract_text = contract_text[7:]
-            if contract_text.startswith("```"):
-                contract_text = contract_text[3:]
-            if contract_text.endswith("```"):
-                contract_text = contract_text[:-3]
-            contract_text = contract_text.strip()
+            for marker in ["```html", "```"]:
+                if contract_text.startswith(marker):
+                    contract_text = contract_text[len(marker):].strip()
+                if contract_text.endswith("```"):
+                    contract_text = contract_text[:-3].strip()
             
-            logger.info(f"Claude generated full {contract_type} contract with HTML formatting")
+            word_count = len(contract_text.split())
+            logger.info(f"✅ Claude generated superior {contract_type} using advanced legal reasoning ({word_count} words)")
             
             return {
                 "contract_text": contract_text,
                 "ai_generated": True,
                 "model_used": self.model,
-                "word_count": len(contract_text.split()),
+                "word_count": word_count,
                 "formatted": True,
-                "format_type": "html"
+                "format_type": "html",
+                "generation_approach": "claude_native_reasoning"
             }
             
         except Exception as e:
-            logger.error(f"Claude API error in full contract generation: {str(e)}")
+            logger.error(f"❌ Claude API error: {str(e)}")
             raise Exception(f"Failed to generate contract: {str(e)}")
     
     def analyze_contract_risks(

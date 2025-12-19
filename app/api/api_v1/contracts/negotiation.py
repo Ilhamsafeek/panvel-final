@@ -38,6 +38,10 @@ class MessageResponse(BaseModel):
 # =====================================================
 # START NEGOTIATION SESSION
 # =====================================================
+# =====================================================
+# START NEGOTIATION SESSION
+# =====================================================
+
 
 @router.post("/sessions/start")
 async def start_negotiation_session(
@@ -45,12 +49,13 @@ async def start_negotiation_session(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Start a new negotiation session"""
+    """Start a new negotiation session or join existing one"""
     try:
-        session_id = str(uuid.uuid4())
-        session_code = f"NEG-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        import logging
         
-        # Convert contract_id to integer and validate
+        logger = logging.getLogger(__name__)
+        
+        # Convert contract_id to integer
         try:
             contract_id = int(data.contract_id)
         except (ValueError, TypeError):
@@ -59,75 +64,88 @@ async def start_negotiation_session(
                 detail=f"Invalid contract_id format: '{data.contract_id}'. Expected integer."
             )
         
-        # Verify contract exists
-        contract_check = db.execute(
-            text("SELECT id, contract_title FROM contracts WHERE id = :contract_id"),
-            {"contract_id": contract_id}
-        ).fetchone()
-        
-        if not contract_check:
-            # Get list of available contracts for debugging
-            available = db.execute(
-                text("""
-                    SELECT id, contract_title, status 
-                    FROM contracts 
-                    WHERE created_by = :user_id OR company_id = :company_id
-                    ORDER BY id DESC LIMIT 5
-                """),
-                {"user_id": current_user.id, "company_id": current_user.company_id}
-            ).fetchall()
-            
-            available_ids = [str(c.id) for c in available] if available else []
-            
-            raise HTTPException(
-                status_code=404, 
-                detail=f"Contract ID {contract_id} not found. Available contracts: {', '.join(available_ids) if available_ids else 'None'}"
-            )
-        
-        # Check if an active session already exists for this contract
-        existing_session = db.execute(
+        # ✅ FETCH CONTRACT DETAILS FIRST TO DETERMINE ROLES
+        contract_data = db.execute(
             text("""
-                SELECT id, session_code, status 
-                FROM negotiation_sessions 
-                WHERE contract_id = :contract_id AND status = 'active'
+            SELECT created_by, company_id FROM contracts WHERE id = :contract_id
             """),
             {"contract_id": contract_id}
         ).fetchone()
         
+        if not contract_data:
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        # ✅ CHECK IF CURRENT USER IS THE CONTRACT CREATOR
+        is_contract_creator = (contract_data.created_by == current_user.id)
+        
+        session_id = str(uuid.uuid4())
+        session_code = f"NEG-{contract_id}-{data.session_type.upper()}"
+        
+        logger.info(f"Starting {data.session_type} negotiation for contract {contract_id}")
+        logger.info(f"Current user is contract creator: {is_contract_creator}")
+        
+        # Check if session already exists for this contract and type
+        existing_session = db.execute(
+            text("""
+            SELECT id, session_code FROM negotiation_sessions 
+            WHERE contract_id = :contract_id 
+            AND status = 'active'
+            AND session_code LIKE :session_pattern
+            LIMIT 1
+            """),
+            {
+                "contract_id": contract_id,
+                "session_pattern": f"NEG-{contract_id}-{data.session_type.upper()}%"
+            }
+        ).fetchone()
+        
+        # If session exists, add user as participant if not already added
         if existing_session:
             session_id = existing_session.id
             session_code = existing_session.session_code
             
-            # Check if current user is already a participant
+            logger.info(f"Joining existing session: {session_id}")
+            
+            # Check if user is already a participant
             is_participant = db.execute(
                 text("""
-                    SELECT id FROM negotiation_participants 
-                    WHERE session_id = :session_id AND user_id = :user_id
+                SELECT id FROM negotiation_participants 
+                WHERE session_id = :session_id AND user_id = :user_id
                 """),
                 {"session_id": session_id, "user_id": current_user.id}
             ).fetchone()
             
-            # If not a participant, add them
             if not is_participant:
+                # ✅ DETERMINE ROLE BASED ON CONTRACT CREATOR STATUS
+                if is_contract_creator:
+                    participant_role = 'initiator'
+                elif data.session_type == "internal":
+                    participant_role = 'participant'
+                else:  # external
+                    participant_role = 'counterparty'
+                
+                # Add user as participant with appropriate role
                 db.execute(
                     text("""
                     INSERT INTO negotiation_participants 
                     (id, session_id, user_id, company_id, role, is_active)
-                    VALUES (:id, :session_id, :user_id, :company_id, 'participant', 1)
+                    VALUES (:id, :session_id, :user_id, :company_id, :role, 1)
                     """),
                     {
                         "id": str(uuid.uuid4()),
                         "session_id": session_id,
                         "user_id": current_user.id,
-                        "company_id": current_user.company_id
+                        "company_id": current_user.company_id,
+                        "role": participant_role
                     }
                 )
                 
-                # Add system message
+                # Get user full name
                 user_full_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
                 if not user_full_name:
                     user_full_name = current_user.email
                 
+                # Add system message
                 db.execute(
                     text("""
                     INSERT INTO negotiation_messages 
@@ -149,10 +167,13 @@ async def start_negotiation_session(
                 "session_id": session_id,
                 "session_code": session_code,
                 "session_type": data.session_type,
+                "contract_id": str(contract_id),
                 "message": "Joined existing negotiation session"
             }
         
         # Create new session if none exists
+        logger.info(f"Creating new {data.session_type} session with ID: {session_id}")
+        
         db.execute(
             text("""
             INSERT INTO negotiation_sessions 
@@ -163,70 +184,90 @@ async def start_negotiation_session(
                 "session_id": session_id,
                 "contract_id": contract_id,
                 "session_code": session_code,
-                "initiator_id": current_user.id
+                "initiator_id": contract_data.created_by  # ✅ ALWAYS USE CONTRACT CREATOR AS INITIATOR
             }
         )
         
-        # Add initiator as participant
+        # ✅ ADD CURRENT USER AS PARTICIPANT WITH APPROPRIATE ROLE
+        if is_contract_creator:
+            current_user_role = 'initiator'
+        elif data.session_type == "internal":
+            current_user_role = 'participant'
+        else:  # external
+            current_user_role = 'counterparty'
+        
         db.execute(
             text("""
             INSERT INTO negotiation_participants 
             (id, session_id, user_id, company_id, role, is_active)
-            VALUES (:id, :session_id, :user_id, :company_id, 'initiator', 1)
+            VALUES (:id, :session_id, :user_id, :company_id, :role, 1)
             """),
             {
                 "id": str(uuid.uuid4()),
                 "session_id": session_id,
                 "user_id": current_user.id,
-                "company_id": current_user.company_id
+                "company_id": current_user.company_id,
+                "role": current_user_role
             }
         )
+        
+        logger.info(f"✅ Added current user with role: {current_user_role}")
         
         # Add other participants based on session type
         if data.session_type == "internal":
             # Get workflow participants
+            logger.info(f"Fetching workflow participants for contract {contract_id}")
+            
             workflow_users = db.execute(
                 text("""
-                SELECT DISTINCT ws.approver_user_id as user_id, u.company_id
-                FROM workflow_stages ws
-                JOIN workflow_instances wi ON ws.workflow_instance_id = wi.id
-                JOIN users u ON ws.approver_user_id = u.id
-                WHERE wi.contract_id = :contract_id AND ws.approver_user_id IS NOT NULL
+                SELECT DISTINCT ws.assignee_user_id as user_id, u.company_id, 
+                       CONCAT(u.first_name, ' ', u.last_name) as full_name
+                FROM workflow_steps ws
+                JOIN workflows w ON ws.workflow_id = w.id
+                JOIN workflow_instances wi ON wi.workflow_id = w.id
+                JOIN users u ON ws.assignee_user_id = u.id
+                WHERE wi.contract_id = :contract_id 
+                AND ws.assignee_user_id IS NOT NULL
+                AND u.company_id = :company_id
+                AND u.is_active = 1
                 """),
-                {"contract_id": contract_id}
+                {
+                    "contract_id": contract_id,
+                    "company_id": current_user.company_id
+                }
             ).fetchall()
+            
+            logger.info(f"✅ Found {len(workflow_users)} workflow participants for internal negotiation")
             
             for user in workflow_users:
                 if user.user_id != current_user.id:
+                    # ✅ CHECK IF THIS USER IS THE CONTRACT CREATOR
+                    user_role = 'initiator' if user.user_id == contract_data.created_by else 'participant'
+                    
                     db.execute(
                         text("""
                         INSERT INTO negotiation_participants 
                         (id, session_id, user_id, company_id, role, is_active)
-                        VALUES (:id, :session_id, :user_id, :company_id, 'participant', 1)
+                        VALUES (:id, :session_id, :user_id, :company_id, :role, 1)
                         """),
                         {
                             "id": str(uuid.uuid4()),
                             "session_id": session_id,
                             "user_id": user.user_id,
-                            "company_id": user.company_id
+                            "company_id": user.company_id,
+                            "role": user_role
                         }
                     )
+                    logger.info(f"✅ Added workflow participant: {user.full_name} (user_id={user.user_id}, role={user_role})")
         
         elif data.session_type == "external":
-            # Get contract initiator
-            contract_data = db.execute(
-                text("""
-                SELECT created_by, company_id FROM contracts WHERE id = :contract_id
-                """),
-                {"contract_id": contract_id}
-            ).fetchone()
-            
-            if contract_data and contract_data.created_by != current_user.id:
+            # ✅ ADD CONTRACT CREATOR AS INITIATOR IF NOT CURRENT USER
+            if not is_contract_creator:
                 db.execute(
                     text("""
                     INSERT INTO negotiation_participants 
                     (id, session_id, user_id, company_id, role, is_active)
-                    VALUES (:id, :session_id, :user_id, :company_id, 'counterparty', 1)
+                    VALUES (:id, :session_id, :user_id, :company_id, 'initiator', 1)
                     """),
                     {
                         "id": str(uuid.uuid4()),
@@ -235,6 +276,7 @@ async def start_negotiation_session(
                         "company_id": contract_data.company_id
                     }
                 )
+                logger.info(f"✅ Added contract creator (user_id={contract_data.created_by}) as initiator to external session")
         
         # Get user full name
         user_full_name = f"{current_user.first_name or ''} {current_user.last_name or ''}".strip()
@@ -258,17 +300,26 @@ async def start_negotiation_session(
         
         db.commit()
         
+        logger.info(f"🎉 Negotiation session created successfully: {session_id}")
+        
         return {
             "success": True,
             "session_id": session_id,
             "session_code": session_code,
-            "session_type": data.session_type
+            "session_type": data.session_type,
+            "contract_id": str(contract_id)
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
+        logger.error(f"❌ Error starting negotiation session: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Failed to start session: {str(e)}")
 
+        
 # =====================================================
 # GET SESSION DETAILS
 # =====================================================

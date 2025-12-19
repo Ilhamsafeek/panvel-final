@@ -27,58 +27,50 @@ router = APIRouter()
 class VerifyTransactionRequest(BaseModel):
     transaction_hash: str
 
-
 @router.get("/blockchain-records")
 async def get_blockchain_records(
-    limit: int = Query(20, ge=1, le=100),
+    limit: int = 20,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get real blockchain records from database"""
+    """Get blockchain records with contract details"""
     try:
-        sql = """
+        # ✅ Fixed: Added COLLATE to JOIN condition
+        query = text("""
             SELECT 
                 br.id, br.entity_type, br.entity_id, br.transaction_hash,
                 br.block_number, br.blockchain_network, br.status, br.created_at,
                 c.contract_number, c.contract_title
             FROM blockchain_records br
-            LEFT JOIN contracts c ON br.entity_id = CAST(c.id AS CHAR)
+            LEFT JOIN contracts c ON br.entity_id COLLATE utf8mb4_unicode_ci = CAST(c.id AS CHAR) COLLATE utf8mb4_unicode_ci
             ORDER BY br.created_at DESC
             LIMIT :limit
-        """
-        result = db.execute(text(sql), {"limit": limit})
+        """)
         
+        result = db.execute(query, {"limit": limit})
         records = []
+        
         for row in result:
             records.append({
                 "id": row.id,
                 "entity_type": row.entity_type,
                 "entity_id": row.entity_id,
                 "transaction_hash": row.transaction_hash,
-                "block_number": str(row.block_number) if row.block_number else "Pending",
-                "network": row.blockchain_network or "hyperledger-fabric",
-                "status": row.status or "confirmed",
+                "block_number": str(row.block_number) if row.block_number else None,
+                "blockchain_network": row.blockchain_network,
+                "status": row.status,
                 "created_at": row.created_at.isoformat() if row.created_at else None,
-                "contract_number": row.contract_number,
-                "contract_title": row.contract_title
+                "contract_number": row.contract_number if row.contract_number else None,
+                "contract_title": row.contract_title if row.contract_title else None
             })
         
-        count_result = db.execute(text("SELECT COUNT(*) FROM blockchain_records"))
-        total_count = count_result.scalar() or 0
+        return {"success": True, "records": records}
         
-        return {
-            "success": True,
-            "records": records,
-            "count": len(records),
-            "total": total_count,
-            "source": "mysql_database",
-            "table": "blockchain_records"
-        }
     except Exception as e:
         logger.error(f"❌ Error fetching blockchain records: {str(e)}")
-        return {"success": False, "records": [], "error": str(e)}
+        return {"success": False, "error": str(e), "records": []}
 
-
+        
 @router.get("/query-contract/{contract_id}")
 async def query_contract_blockchain(
     contract_id: int,
@@ -87,31 +79,34 @@ async def query_contract_blockchain(
 ):
     """Query blockchain data for a specific contract"""
     try:
+        # ✅ Fixed: Added COLLATE to handle collation mismatch
         blockchain_sql = """
             SELECT br.id, br.transaction_hash, br.block_number, br.blockchain_network,
                    br.status, br.created_at
             FROM blockchain_records br
-            WHERE br.entity_type = 'contract'
-            AND (br.entity_id = :contract_id OR br.entity_id = CAST(:contract_id AS CHAR))
+            WHERE br.entity_type COLLATE utf8mb4_unicode_ci = 'contract'
+            AND br.entity_id COLLATE utf8mb4_unicode_ci = CAST(:contract_id AS CHAR)
             ORDER BY br.created_at DESC LIMIT 1
         """
         blockchain_result = db.execute(text(blockchain_sql), {"contract_id": str(contract_id)})
         blockchain_record = blockchain_result.fetchone()
         
+        # ✅ Fixed: Added COLLATE to handle collation mismatch
         integrity_sql = """
             SELECT di.id, di.document_hash, di.hash_algorithm, di.blockchain_hash,
                    di.verification_status, di.last_verified_at
             FROM document_integrity di
-            WHERE di.document_id = :contract_id OR di.document_id = CAST(:contract_id AS CHAR)
+            WHERE di.document_id COLLATE utf8mb4_unicode_ci = CAST(:contract_id AS CHAR)
             ORDER BY di.created_at DESC LIMIT 1
         """
         integrity_result = db.execute(text(integrity_sql), {"contract_id": str(contract_id)})
         integrity_record = integrity_result.fetchone()
         
+        # Contract query doesn't need COLLATE since it's using = with int
         contract_sql = "SELECT id, contract_number, contract_title, contract_type, status FROM contracts WHERE id = :contract_id"
         contract_result = db.execute(text(contract_sql), {"contract_id": contract_id})
         contract = contract_result.fetchone()
-        
+
         if not blockchain_record and not integrity_record:
             return {
                 "success": False,
@@ -119,7 +114,7 @@ async def query_contract_blockchain(
                 "contract_exists": contract is not None,
                 "contract_number": contract.contract_number if contract else None
             }
-        
+
         return {
             "success": True,
             "source": "mysql_database",
@@ -143,6 +138,7 @@ async def query_contract_blockchain(
                 "last_verified_at": integrity_record.last_verified_at.isoformat() if integrity_record.last_verified_at else None
             } if integrity_record else None
         }
+        
     except Exception as e:
         logger.error(f"❌ Error querying contract: {str(e)}")
         return {"success": False, "error": str(e)}
@@ -190,7 +186,6 @@ async def verify_transaction(
         logger.error(f"❌ Error verifying transaction: {str(e)}")
         return {"success": False, "verified": False, "error": str(e)}
 
-
 @router.get("/activity-logs")
 async def get_activity_logs(
     limit: int = Query(50, ge=1, le=200),
@@ -201,7 +196,7 @@ async def get_activity_logs(
     try:
         sql = """
             SELECT al.id, al.action_type, al.action_details, al.created_at,
-                   u.full_name as user_name, c.contract_number
+                   CONCAT(u.first_name, ' ', u.last_name) as user_name, c.contract_number
             FROM audit_logs al
             LEFT JOIN users u ON al.user_id = u.id
             LEFT JOIN contracts c ON al.contract_id = c.id
@@ -212,8 +207,8 @@ async def get_activity_logs(
             ORDER BY al.created_at DESC LIMIT :limit
         """
         result = db.execute(text(sql), {"limit": limit})
-        
         logs = []
+        
         for row in result:
             details = {}
             if row.action_details:
@@ -223,7 +218,6 @@ async def get_activity_logs(
                     details = {}
             
             log_type = "COMMITTED" if "storage" in (row.action_type or "") else "BLOCK"
-            
             logs.append({
                 "id": row.id,
                 "timestamp": row.created_at.strftime("%H:%M:%S") if row.created_at else None,
@@ -236,10 +230,12 @@ async def get_activity_logs(
             })
         
         return {"success": True, "logs": logs, "count": len(logs), "source": "audit_logs"}
+        
     except Exception as e:
         logger.error(f"❌ Error fetching activity logs: {str(e)}")
         return {"success": False, "logs": [], "error": str(e)}
 
+        
 
 @router.get("/network-stats")
 async def get_network_statistics(
@@ -265,39 +261,36 @@ async def get_network_statistics(
         logger.error(f"❌ Error getting network stats: {str(e)}")
         return {"success": True, "display": {"total_blocks": 12847, "total_txs": 45231, "uptime": "99.99%", "connected_peers": 4}}
 
-
 @router.get("/recent-hashes")
 async def get_recent_hashes(
-    limit: int = Query(10, ge=1, le=50),
+    limit: int = 5,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get recent transaction hashes"""
+    """Get recent blockchain transaction hashes"""
     try:
-        sql = """
+        # ✅ Fixed: Added COLLATE to JOIN condition
+        query = text("""
             SELECT br.transaction_hash, br.entity_type, br.entity_id, br.created_at, c.contract_number
             FROM blockchain_records br
-            LEFT JOIN contracts c ON br.entity_id = CAST(c.id AS CHAR)
+            LEFT JOIN contracts c ON br.entity_id COLLATE utf8mb4_unicode_ci = CAST(c.id AS CHAR) COLLATE utf8mb4_unicode_ci
             ORDER BY br.created_at DESC LIMIT :limit
-        """
-        result = db.execute(text(sql), {"limit": limit})
+        """)
         
+        result = db.execute(query, {"limit": limit})
         hashes = []
+        
         for row in result:
-            now = datetime.utcnow()
-            diff = (now - row.created_at).total_seconds() if row.created_at else 0
-            if diff < 60: time_ago = f"{int(diff)}s ago"
-            elif diff < 3600: time_ago = f"{int(diff/60)}m ago"
-            elif diff < 86400: time_ago = f"{int(diff/3600)}h ago"
-            else: time_ago = f"{int(diff/86400)}d ago"
-            
             hashes.append({
                 "hash": row.transaction_hash,
-                "contract_number": row.contract_number,
-                "time_ago": time_ago
+                "entity_type": row.entity_type,
+                "entity_id": row.entity_id,
+                "contract_number": row.contract_number if row.contract_number else None,
+                "timestamp": row.created_at.isoformat() if row.created_at else None
             })
         
-        return {"success": True, "hashes": hashes, "count": len(hashes)}
+        return {"success": True, "hashes": hashes}
+        
     except Exception as e:
         logger.error(f"❌ Error fetching recent hashes: {str(e)}")
-        return {"success": False, "hashes": [], "error": str(e)}
+        return {"success": False, "error": str(e), "hashes": []}

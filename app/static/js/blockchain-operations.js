@@ -29,7 +29,7 @@ function openBlockchainOperations() {
     const queryInput = document.getElementById('queryContractId');
     if (queryInput && currentContractId) {
         queryInput.value = currentContractId;
-        document.getElementById('queryIdPreview').textContent = currentContractId;
+        // document.getElementById('queryIdPreview').textContent = currentContractId;
     }
     
     // Show modal
@@ -82,7 +82,7 @@ async function runDockerCommand() {
     
     terminal.innerHTML = `
         <div class="terminal-line command">$ Fetching blockchain records from database...</div>
-        <div class="terminal-line dim">Querying blockchain_records table...</div>
+        <div class="terminal-line dim">Querying blockchain_records...</div>
     `;
     
     try {
@@ -116,8 +116,8 @@ function displayBlockchainRecords(terminalId, data) {
     
     // Header
     terminal.innerHTML = `
-        <div class="terminal-line success">✓ Retrieved ${data.count} blockchain records (Total: ${data.total})</div>
-        <div class="terminal-line dim">Source: ${data.source} | Table: ${data.table}</div>
+        <div class="terminal-line success">✓ Retrieved blockchain records </div>
+       
         <div class="terminal-line dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
         <div class="terminal-line" style="color: #00d9ff; font-weight: bold;">
             ${'TX HASH'.padEnd(22)} ${'BLOCK'.padEnd(12)} ${'STATUS'.padEnd(12)} CONTRACT
@@ -152,7 +152,6 @@ function displayBlockchainRecords(terminalId, data) {
     
     terminal.innerHTML += `
         <div class="terminal-line dim">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
-        <div class="terminal-line info">ℹ Data retrieved from MySQL blockchain_records table</div>
     `;
 }
 
@@ -168,14 +167,14 @@ async function runQueryCommand() {
         return;
     }
     
-    document.getElementById('queryIdPreview').textContent = contractId;
+    // document.getElementById('queryIdPreview').textContent = contractId;
     
     const terminalId = 'terminal-query-output';
     const terminal = document.getElementById(terminalId);
     
     terminal.innerHTML = `
-        <div class="terminal-line command">$ Querying blockchain for contract ${contractId}...</div>
-        <div class="terminal-line dim">Searching blockchain_records and document_integrity tables...</div>
+        <div class="terminal-line command">$ Querying blockchain for this Contract...</div>
+        <div class="terminal-line dim">Searching blockchain_records and document_integrity records...</div>
     `;
     
     try {
@@ -259,7 +258,6 @@ function displayContractData(terminalId, data, contractId) {
     
     terminal.innerHTML += `
         <div class="terminal-line"></div>
-        <div class="terminal-line info">ℹ Source: ${data.source} (Real Database)</div>
     `;
 }
 
@@ -286,7 +284,7 @@ async function runVerifyCommand() {
     `;
     
     try {
-        const response = await fetch('/api/blockchain/verify-transaction', {
+        const response = await fetch('/api/blockchain/terminal/verify-transaction', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`,
@@ -340,7 +338,7 @@ function displayVerificationResult(terminalId, data, txHash) {
         
         terminal.innerHTML += `
             <div class="terminal-line"></div>
-            <div class="terminal-line info">ℹ Transaction exists in the ${data.source} table</div>
+            <div class="terminal-line info">ℹ Transaction exists in the ${data.source}</div>
         `;
     } else {
         terminal.innerHTML = `
@@ -375,7 +373,7 @@ async function runLogsCommand() {
     
     terminal.innerHTML = `
         <div class="terminal-line command">$ Fetching blockchain activity logs...</div>
-        <div class="terminal-line dim">Querying audit_logs table for blockchain operations...</div>
+        <div class="terminal-line dim">Querying audit_logs for blockchain operations...</div>
         <div class="terminal-line"></div>
     `;
     
@@ -391,7 +389,7 @@ async function runLogsCommand() {
 
 async function loadActivityLogs(terminalId, append = false) {
     try {
-        const response = await fetch('/api/blockchain/activity-logs?limit=50', {
+        const response = await fetch('/api/blockchain/terminal/activity-logs?limit=50', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${getAuthToken()}`,
@@ -618,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const queryInput = document.getElementById('queryContractId');
     if (queryInput) {
         queryInput.addEventListener('input', function() {
-            document.getElementById('queryIdPreview').textContent = this.value || 'CONTRACT_ID';
+            // document.getElementById('queryIdPreview').textContent = this.value || 'CONTRACT_ID';
         });
     }
     

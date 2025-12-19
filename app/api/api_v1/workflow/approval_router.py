@@ -6,6 +6,8 @@ from typing import Optional
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 import logging
+import json
+
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -14,7 +16,6 @@ class ApprovalRequest(BaseModel):
     contract_id: int
     action: str  # 'approve' or 'reject'
     comments: Optional[str] = None
-
 
 
 @router.post("/approve-reject")
@@ -27,13 +28,18 @@ async def approve_reject_workflow(
     Handle workflow approval or rejection.
     - Approval: Move to next step, or complete if last step
     - Rejection: Just save comment, workflow stays at same step
+    
+    NOTE: approval_requests table has broken schema (CHAR(36) FK to INT columns)
+    so we only log to audit_logs which works correctly
     """
     try:
+        logger.info(f"Received approval request: {request.dict()}")
+        
         # Get user ID and company ID from User object
         user_id = current_user.id
         company_id = current_user.company_id
         
-        # 🔥 Get workflow instance FILTERED BY COMPANY (join through workflows table)
+        # Get workflow instance FILTERED BY COMPANY
         workflow_query = text("""
             SELECT wi.id, wi.current_step, wi.workflow_id
             FROM workflow_instances wi
@@ -47,7 +53,6 @@ async def approve_reject_workflow(
             "contract_id": request.contract_id,
             "company_id": company_id
         }).first()
-        db.commit()
         
         if not workflow:
             raise HTTPException(status_code=404, detail="No active workflow found for this contract in your company")
@@ -68,53 +73,53 @@ async def approve_reject_workflow(
                 update_workflow = text("""
                     UPDATE workflow_instances
                     SET status = 'completed',
-                        current_step = 1,
-                        completed_at = NOW()
+                        current_step = :next_step
                     WHERE id = :workflow_id
                 """)
-                db.execute(update_workflow, {"workflow_id": workflow.id})
+                db.execute(update_workflow, {
+                    "next_step": workflow.current_step + 1,
+                    "workflow_id": workflow.id
+                })
                 
-                # 🔥 CHECK IF CONTRACT BELONGS TO CURRENT USER'S COMPANY
-                check_contract_company = text("""
-                    SELECT company_id, status FROM contracts WHERE id = :contract_id
-                """)
-                contract_result = db.execute(check_contract_company, {
-                    "contract_id": request.contract_id
-                }).first()
-                
-                if contract_result and contract_result.company_id == company_id:
-                    # Contract belongs to user's company → 'review_completed'
-                    if contract_result.status == 'approval':
-                        new_status = 'approved'
-                    else: 
-                        new_status = 'review_completed'
-                    
-                    message = "Workflow completed successfully"
-
-                else:
-                    # Contract belongs to counterparty → 'negotiation'
-                    new_status = 'negotiation'
-                    message = "Workflow completed - Contract moved to negotiation stage"
-                
-                # 🔥 UPDATE CONTRACT STATUS based on ownership
-                update_contract_status = text("""
+                # Update contract status to approved
+                update_contract = text("""
                     UPDATE contracts
-                    SET status = :new_status,
-                        updated_at = NOW()
+                    SET approval_status = 'approved',
+                        workflow_status = 'completed'
                     WHERE id = :contract_id
                 """)
-                db.execute(update_contract_status, {
-                    "contract_id": request.contract_id,
-                    "new_status": new_status
-                })
+                db.execute(update_contract, {"contract_id": request.contract_id})
+                
+                message = "Contract fully approved!"
+                
+                # Create notification for contract owner
+                contract_query = text("""
+                    SELECT created_by, contract_title, contract_number
+                    FROM contracts
+                    WHERE id = :contract_id
+                """)
+                contract_info = db.execute(contract_query, {"contract_id": request.contract_id}).first()
+                
+                if contract_info and contract_info.created_by:
+                    notification_query = text("""
+                        INSERT INTO notifications 
+                        (user_id, title, message, notification_type, is_read, created_at)
+                        VALUES 
+                        (:user_id, :title, :message, 'workflow', 0, NOW())
+                    """)
+                    db.execute(notification_query, {
+                        "user_id": contract_info.created_by,
+                        "title": "Contract Approved",
+                        "message": f"Contract {contract_info.contract_number} - {contract_info.contract_title} has been fully approved."
+                    })
                 
             else:
                 # Move to next step
                 next_step = workflow.current_step + 1
                 
-                # 🔥 GET NEXT APPROVER'S NAME (from same company)
+                # GET NEXT APPROVER'S NAME
                 next_approver_query = text("""
-                    SELECT u.first_name, u.last_name, u.email
+                    SELECT u.first_name, u.last_name, u.email, u.id
                     FROM workflow_steps ws
                     INNER JOIN users u ON ws.assignee_user_id = u.id
                     WHERE ws.workflow_id = :workflow_id
@@ -139,52 +144,194 @@ async def approve_reject_workflow(
                     "workflow_id": workflow.id
                 })
                 
-                # 🔥 CREATE MESSAGE WITH USER'S NAME
                 if next_approver:
                     approver_name = f"{next_approver.first_name} {next_approver.last_name}".strip()
-                    if not approver_name:  # If no name, use email
+                    if not approver_name:
                         approver_name = next_approver.email
                     message = f"Sent to {approver_name} for further approval"
+                    
+                    # Create notification for next approver
+                    contract_query = text("""
+                        SELECT contract_title, contract_number
+                        FROM contracts
+                        WHERE id = :contract_id
+                    """)
+                    contract_info = db.execute(contract_query, {"contract_id": request.contract_id}).first()
+                    
+                    notification_query = text("""
+                        INSERT INTO notifications 
+                        (user_id, title, message, notification_type, is_read, created_at)
+                        VALUES 
+                        (:user_id, :title, :message, 'workflow', 0, NOW())
+                    """)
+                    db.execute(notification_query, {
+                        "user_id": next_approver.id,
+                        "title": "Contract Requires Your Approval",
+                        "message": f"Contract {contract_info.contract_number} - {contract_info.contract_title} is waiting for your approval."
+                    })
                 else:
-                    # Fallback if no user found
                     message = f"Approved and moved to step {next_step}"
             
-            # Save approval record
-            if request.comments:
-                save_comment = text("""
-                    INSERT INTO approval_requests 
-                    (workflow_stage_id, contract_id, approver_id, action, comments, responded_at)
-                    VALUES (NULL, :contract_id, :user_id, 'approve', :comments, NOW())
-                """)
-                db.execute(save_comment, {
-                    "contract_id": request.contract_id,
-                    "user_id": user_id,
-                    "comments": request.comments
-                })
-            
-            db.commit()
-            return {"success": True, "message": message}
-            
-        elif request.action == "reject":
-            # Just save the rejection comment, nothing else changes
-            save_rejection = text("""
-                INSERT INTO approval_requests 
-                (workflow_stage_id, contract_id, approver_id, action, comments, responded_at)
-                VALUES (NULL, :contract_id, :user_id, 'reject', :comments, NOW())
+            # Log approval in audit_logs (this works correctly with INT IDs)
+            audit_log = text("""
+                INSERT INTO audit_logs 
+                (user_id, contract_id, action_type, action_details, created_at)
+                VALUES (:user_id, :contract_id, 'approve', :action_details, NOW())
             """)
-            db.execute(save_rejection, {
-                "contract_id": request.contract_id,
+            db.execute(audit_log, {
                 "user_id": user_id,
-                "comments": request.comments or "Rejected"
+                "contract_id": request.contract_id,
+                "action_details": json.dumps({
+                    "comment": request.comments or "Approved",
+                    "action": "workflow_approval",
+                    "workflow_step": workflow.current_step
+                })
             })
             
             db.commit()
+            logger.info(f"✅ Approval processed for contract {request.contract_id}")
+            return {"success": True, "message": message}
+            
+        elif request.action == "reject":
+            # Log rejection in audit_logs (this works correctly with INT IDs)
+            audit_log = text("""
+                INSERT INTO audit_logs 
+                (user_id, contract_id, action_type, action_details, created_at)
+                VALUES (:user_id, :contract_id, 'reject', :action_details, NOW())
+            """)
+            db.execute(audit_log, {
+                "user_id": user_id,
+                "contract_id": request.contract_id,
+                "action_details": json.dumps({
+                    "comment": request.comments or "Rejected",
+                    "action": "workflow_rejection",
+                    "workflow_step": workflow.current_step
+                })
+            })
+            
+            # Note: We do NOT insert into approval_requests because it has broken foreign keys
+            # The audit_logs table is the authoritative record
+            
+            db.commit()
+            logger.info(f"✅ Rejection saved for contract {request.contract_id}")
             return {"success": True, "message": "Rejection comment saved"}
         
         else:
             raise HTTPException(status_code=400, detail="Invalid action")
             
+    except HTTPException:
+        raise
     except Exception as e:
         db.rollback()
-        logger.error(f"Error in approve/reject: {e}")
+        logger.error(f"❌ Error in approve/reject: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/workflow-history/{contract_id}")
+async def get_workflow_history(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """
+    Get workflow history (approvals/rejections) for a contract from audit_logs
+    WITH COMPANY-LEVEL ISOLATION - Users can only see history for their company's contracts
+    """
+    try:
+        # Get user's company ID
+        user_company_id = current_user.company_id
+        
+        # First, verify the contract belongs to the user's company
+        contract_check = text("""
+            SELECT id, company_id, contract_number, contract_title
+            FROM contracts
+            WHERE id = :contract_id
+            AND company_id = :company_id
+        """)
+        
+        contract = db.execute(contract_check, {
+            "contract_id": contract_id,
+            "company_id": user_company_id
+        }).first()
+        
+        if not contract:
+            raise HTTPException(
+                status_code=403, 
+                detail="Access denied: This contract does not belong to your company"
+            )
+        
+        # Get workflow history from audit_logs - ONLY for users from the same company
+        history_query = text("""
+            SELECT 
+                al.id,
+                al.action_type,
+                al.action_details,
+                al.created_at,
+                al.user_id,
+                u.first_name,
+                u.last_name,
+                u.email,
+                u.user_role,
+                u.department
+            FROM audit_logs al
+            LEFT JOIN users u ON al.user_id = u.id
+            INNER JOIN contracts c ON al.contract_id = c.id
+            WHERE al.contract_id = :contract_id
+            AND c.company_id = :company_id
+            AND u.company_id = :company_id
+            AND al.action_type IN ('approve', 'reject', 'workflow_approval', 'workflow_rejection')
+            ORDER BY al.created_at DESC
+        """)
+        
+        results = db.execute(history_query, {
+            "contract_id": contract_id,
+            "company_id": user_company_id
+        }).fetchall()
+        
+        logger.info(f"✅ User {current_user.email} (Company {user_company_id}) accessed workflow history for contract {contract_id}")
+        
+        history = []
+        for row in results:
+            # Parse JSON action_details
+            try:
+                action_details = json.loads(row.action_details) if row.action_details else {}
+            except:
+                action_details = {"comment": str(row.action_details)}
+            
+            # Build user display name
+            user_name = f"{row.first_name or ''} {row.last_name or ''}".strip()
+            if not user_name:
+                user_name = row.email or "Unknown User"
+            
+            history.append({
+                "id": row.id,
+                "action": row.action_type,
+                "comment": action_details.get("comment", "No comment provided"),
+                "workflow_step": action_details.get("workflow_step"),
+                "timestamp": row.created_at.strftime("%Y-%m-%d %H:%M:%S") if row.created_at else None,
+                "user": {
+                    "id": row.user_id,
+                    "name": user_name,
+                    "email": row.email,
+                    "role": row.user_role,
+                    "department": row.department
+                }
+            })
+        
+        return {
+            "success": True,
+            "contract": {
+                "id": contract.id,
+                "number": contract.contract_number,
+                "title": contract.contract_title
+            },
+            "data": history,
+            "total": len(history)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error fetching workflow history for contract {contract_id} by user {current_user.email}: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+

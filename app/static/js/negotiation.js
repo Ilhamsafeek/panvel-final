@@ -93,8 +93,14 @@ async function startInternalNegotiation() {
             currentNegotiationSession = data;
             
             // Show appropriate message
+            // if (data.message === "Joined existing negotiation session") {
+            //     showNotification('Joined ongoing negotiation session', 'success');
+            // } else {
+            //     showNotification('Negotiation session started', 'success');
+            // }
+
             if (data.message === "Joined existing negotiation session") {
-                showNotification('Joined ongoing negotiation session', 'success');
+                showNotification('Joining negotiation session', 'success');
             } else {
                 showNotification('Negotiation session started', 'success');
             }
@@ -121,6 +127,12 @@ async function startInternalNegotiation() {
 // =====================================================
 
 async function startExternalNegotiation() {
+
+    const openNegotiationBtn = document.getElementById('openNegotiationBtn');
+        const originalContent = openNegotiationBtn.innerHTML;
+        openNegotiationBtn.disabled = true;
+        openNegotiationBtn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Opening…';
+
     try {
         const contractId = getContractId();
         if (!contractId) {
@@ -151,16 +163,27 @@ async function startExternalNegotiation() {
             currentNegotiationSession = data;
             
             // Show appropriate message
-            if (data.message === "Joined existing negotiation session") {
-                showNotification('Joined ongoing negotiation session', 'success');
+            // if (data.message === "Joined existing negotiation session") {
+            //     showNotification('Joined ongoing negotiation session', 'success');
+            // } else {
+            //     showNotification('Negotiation session started', 'success');
+            // }
+
+              if (data.message === "Joined existing negotiation session") {
+                showNotification('Joining negotiation session', 'success');
             } else {
                 showNotification('Negotiation session started', 'success');
             }
             
             // Open live negotiation modal
             setTimeout(() => {
-                openLiveNegotiationModal('Negotiation with Initiator', 'external');
+                
+                openLiveNegotiationModal('Negotiation Panel', 'external');
+               
             }, 300);
+
+             openNegotiationBtn.innerHTML = originalContent;
+             openNegotiationBtn.disabled = false;
             
         } else {
             showNotification(data.message || data.detail || 'Failed to start negotiation', 'error');
@@ -177,7 +200,6 @@ async function startExternalNegotiation() {
 // =====================================================
 // OPEN LIVE NEGOTIATION MODAL
 // =====================================================
-
 async function openLiveNegotiationModal(title, type) {
     try {
         // Update modal title
@@ -186,10 +208,19 @@ async function openLiveNegotiationModal(title, type) {
             modalTitleElement.innerHTML = `<i class="ti ti-video"></i> ${title}`;
         }
         
-        // Load messages
-        await loadNegotiationMessages();
+        // IMPORTANT: Clear messages area first to prevent duplicates
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = ``;
+        }
         
-        // Load participants
+        // Clear displayed messages tracking
+        displayedMessageIds.clear();
+        
+        // Load messages (initial load)
+        await loadNegotiationMessagesInitial();
+        
+        // Load participants (including workflow participants)
         await loadNegotiationParticipants();
         
         // Open modal
@@ -209,6 +240,27 @@ async function openLiveNegotiationModal(title, type) {
     } catch (error) {
         console.error('Error opening live negotiation:', error);
         showNotification('Failed to load negotiation session', 'error');
+    }
+}
+
+
+async function loadNegotiationMessagesInitial() {
+    if (!currentNegotiationSession) return;
+    
+    try {
+        const response = await fetch(`/api/negotiation/messages/${currentNegotiationSession.session_id}`, {
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.messages.length > 0) {
+            // Use displayMessages for initial load (clears and loads all)
+            displayMessages(data.messages);
+        }
+        
+    } catch (error) {
+        console.error('Error loading initial messages:', error);
     }
 }
 
@@ -298,24 +350,22 @@ function displayNewMessages(messages) {
 // =====================================================
 // DISPLAY MESSAGES (INITIAL LOAD ONLY)
 // =====================================================
-
 function displayMessages(messages) {
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
     
+    // Keep the welcome message, clear only the chat messages
+    const welcomeMsg = chatMessages.querySelector('.welcome-message');
     chatMessages.innerHTML = '';
-    displayedMessageIds.clear(); // Reset tracking
     
-    // Add welcome message first
-    chatMessages.innerHTML = `
-        <div class="welcome-message">
-            <div class="welcome-icon">
-                <i class="ti ti-handshake"></i>
-            </div>
-            <h4>Negotiation Session Started</h4>
-            <p>You can now discuss contract terms in real-time.</p>
-        </div>
-    `;
+    if (welcomeMsg) {
+        chatMessages.appendChild(welcomeMsg);
+    } else {
+        chatMessages.innerHTML = ``;
+    }
+    
+    // Clear tracking
+    displayedMessageIds.clear();
     
     // Add each message without animation (initial load)
     messages.forEach(msg => {
@@ -328,6 +378,7 @@ function displayMessages(messages) {
     // Instant scroll to bottom
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
 
 // =====================================================
 // CREATE MESSAGE ELEMENT (HELPER)
@@ -366,22 +417,28 @@ function createMessageElement(message) {
     
     return messageDiv;
 }
-
 // =====================================================
-// ADD MESSAGE TO CHAT
+// ADD MESSAGE TO CHAT - FIXED (Track message ID)
 // =====================================================
 
 function addMessageToChat(message) {
     const chatMessages = document.getElementById('chatMessages');
     if (!chatMessages) return;
     
+    // Check if already displayed (prevent duplicates)
+    if (displayedMessageIds.has(message.id)) {
+        console.log('⏭️ Message already displayed:', message.id);
+        return;
+    }
+    
     const messageDiv = document.createElement('div');
+    messageDiv.setAttribute('data-message-id', message.id);
     
     if (message.message_type === 'system') {
         messageDiv.className = 'system-message';
         messageDiv.innerHTML = `
             <div class="system-icon"><i class="ti ti-info-circle"></i></div>
-            <div class="system-text">${message.message_content}</div>
+            <div class="system-text">${escapeHtml(message.message_content)}</div>
         `;
     } else {
         const isCurrentUser = message.sender_type === 'current_user';
@@ -396,7 +453,7 @@ function addMessageToChat(message) {
             ${!isCurrentUser ? '<div class="message-avatar"><i class="ti ti-user"></i></div>' : ''}
             <div class="message-content">
                 <div class="message-header">
-                    <span class="sender">${message.sender_name}</span>
+                    <span class="sender">${escapeHtml(message.sender_name)}</span>
                     <span class="timestamp">${timestamp}</span>
                 </div>
                 <div class="message-text">${escapeHtml(message.message_content)}</div>
@@ -404,9 +461,24 @@ function addMessageToChat(message) {
         `;
     }
     
+    // Add with fade-in animation
+    messageDiv.style.opacity = '0';
     chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // IMPORTANT: Track this message as displayed
+    displayedMessageIds.add(message.id);
+    console.log('✅ Message displayed and tracked:', message.id);
+    
+    // Animate in
+    setTimeout(() => {
+        messageDiv.style.transition = 'opacity 0.3s ease';
+        messageDiv.style.opacity = '1';
+    }, 10);
+    
+    // Smooth scroll to bottom
+    smoothScrollToBottom(chatMessages);
 }
+
 
 // =====================================================
 // SEND MESSAGE (FIXED)
@@ -484,22 +556,67 @@ function handleMessageKeyPress(event) {
 }
 
 // =====================================================
-// LOAD PARTICIPANTS
+// LOAD PARTICIPANTS (INCLUDING WORKFLOW PARTICIPANTS)
 // =====================================================
 
 async function loadNegotiationParticipants() {
     if (!currentNegotiationSession) return;
     
     try {
-        const response = await fetch(`/api/negotiation/sessions/${currentNegotiationSession.session_id}`, {
+        // Get negotiation session participants
+        const sessionResponse = await fetch(`/api/negotiation/sessions/${currentNegotiationSession.session_id}`, {
             credentials: 'include'
         });
         
-        const data = await response.json();
+        const sessionData = await sessionResponse.json();
         
-        if (data.success) {
-            updateParticipantsDisplay(data.participants);
+        let allParticipants = [];
+        
+        if (sessionData.success && sessionData.participants) {
+            allParticipants = sessionData.participants;
         }
+        
+        // Also fetch workflow participants from the contract
+        if (currentNegotiationSession.contract_id) {
+            try {
+                // CORRECTED ENDPOINT: /api/contract/workflow/{contract_id}
+                const workflowResponse = await fetch(`/api/contract/workflow/${currentNegotiationSession.contract_id}`, {
+                    credentials: 'include'
+                });
+                
+                const workflowData = await workflowResponse.json();
+                
+                if (workflowData.success && workflowData.workflow && workflowData.workflow.steps) {
+                    console.log('📋 Workflow steps found:', workflowData.workflow.steps.length);
+                    
+                    // Extract users from workflow steps
+                    workflowData.workflow.steps.forEach(step => {
+                        // Each step can have multiple users
+                        if (step.users && Array.isArray(step.users)) {
+                            step.users.forEach(user => {
+                                // Check if not already in participants
+                                const exists = allParticipants.some(p => p.user_id === user.id);
+                                if (!exists) {
+                                    allParticipants.push({
+                                        user_id: user.id,
+                                        full_name: user.name || user.email,
+                                        email: user.email,
+                                        role: step.step_name || step.assignee_role,
+                                        status: 'online'
+                                    });
+                                    console.log('➕ Added workflow participant:', user.name);
+                                }
+                            });
+                        }
+                    });
+                }
+            } catch (workflowError) {
+                console.log('Could not fetch workflow participants:', workflowError);
+            }
+        }
+        
+        console.log('👥 Total participants to display:', allParticipants.length);
+        updateParticipantsDisplay(allParticipants);
         
     } catch (error) {
         console.error('Error loading participants:', error);
@@ -509,23 +626,82 @@ async function loadNegotiationParticipants() {
 // =====================================================
 // UPDATE PARTICIPANTS DISPLAY
 // =====================================================
-
 function updateParticipantsDisplay(participants) {
     const participantsContainer = document.querySelector('.participants');
     if (!participantsContainer) return;
     
+    // Clear existing participants
     participantsContainer.innerHTML = '';
+    
+    if (!participants || participants.length === 0) {
+        participantsContainer.innerHTML = '<div class="participant"><span>No participants</span></div>';
+        return;
+    }
+    
+    // Get current user ID - try multiple sources
+    let currentUserId = window.currentUserId || 
+                        document.body.dataset.userId || 
+                        sessionStorage.getItem('userId');
+    
+    // Convert to string for comparison
+    currentUserId = String(currentUserId);
+    
+    console.log('Current User ID:', currentUserId); // Debug log
+    console.log('Participants:', participants); // Debug log
+    
+    // Check if current user is initiator
+    const currentUserParticipant = participants.find(p => String(p.user_id) === currentUserId);
+    const isCurrentUserInitiator = currentUserParticipant && currentUserParticipant.role === 'initiator';
+    
+    console.log('Current user is initiator:', isCurrentUserInitiator); // Debug log
     
     participants.forEach(participant => {
         const participantDiv = document.createElement('div');
         participantDiv.className = 'participant online';
+        
+        // Determine if this is the current user (string comparison)
+        const isCurrentUser = String(participant.user_id) === currentUserId;
+        
+        // Determine display name and role
+        let displayName = participant.full_name || 'User';
+        let displayRole = '';
+        
+        if (isCurrentUser) {
+            // Current user shows as "You"
+            displayName = 'You';
+            if (participant.role === 'initiator') {
+                displayRole = '(Initiator)';
+            } else if (participant.role === 'participant') {
+                displayRole = '(Participant)';
+            } else if (participant.role === 'counterparty') {
+                displayRole = '(Counter-Party)';
+            }
+        } else {
+            // Other participants
+            if (isCurrentUserInitiator) {
+                // If current user is initiator, show others as Counter-Party
+                displayRole = '(Counter-Party)';
+            } else {
+                // Show actual role
+                if (participant.role === 'initiator') {
+                    displayRole = '(Initiator)';
+                } else if (participant.role === 'participant') {
+                    displayRole = '';
+                } else if (participant.role === 'counterparty') {
+                    displayRole = '(Counter-Party)';
+                }
+            }
+        }
+        
         participantDiv.innerHTML = `
             <div class="status-dot"></div>
-            <span>${participant.full_name} ${participant.role === 'initiator' ? '(You)' : ''}</span>
+            <span>${displayName} ${displayRole}</span>
         `;
+        
         participantsContainer.appendChild(participantDiv);
     });
 }
+
 
 // =====================================================
 // START MESSAGE POLLING

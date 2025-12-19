@@ -147,7 +147,7 @@ async def login(
         response.set_cookie(
             key="session_token",
             value=access_token,
-            max_age=1800,  # 30 minutes
+            max_age=86400,  # 4 hours (in seconds)
             httponly=True,  # Prevent XSS attacks
             secure=False,   # Set to True in production with HTTPS
             samesite="lax"  # CSRF protection
@@ -228,7 +228,7 @@ async def verify_2fa(
         response.set_cookie(
             key="session_token",
             value=access_token,
-            max_age=1800,
+            max_age=86400,
             httponly=True,
             secure=False,
             samesite="lax"
@@ -304,7 +304,7 @@ async def verify_security_question(
         response.set_cookie(
             key="session_token",
             value=access_token,
-            max_age=1800,
+            max_age=86400,
             httponly=True,
             secure=False,
             samesite="lax"

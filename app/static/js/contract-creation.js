@@ -1097,7 +1097,7 @@ async function saveContract() {
         }
 
         // Show loader overlay
-        showLoader('Saving contract...');
+        showLoader('AI is writing your contract...This may take a while...');
 
         let contractId = null;
 

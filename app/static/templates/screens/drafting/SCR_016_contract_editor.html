@@ -2097,7 +2097,7 @@
         padding: 0.75rem 1rem;
         background: white;
         border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05); */
         font-size: 0.9rem;
         line-height: 1.5;
         color: var(--text-color);
@@ -2110,8 +2110,8 @@
 
     /* Input Area */
     .input-area {
-        padding: 1rem 1.5rem;
-        background: white;
+        /* padding: 1rem 1.5rem; */
+        /* background: white; */
         border-top: 1px solid var(--border-color);
         display: flex;
         gap: 0.75rem;
@@ -2250,13 +2250,190 @@
     }
 
 
-     @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+
+
+<style>
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
     }
 
+    .workflow-history-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
 
-    
+    .workflow-history-timeline::before {
+        content: '';
+        position: absolute;
+        left: 0.5rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: var(--border-color);
+    }
+
+    .workflow-history-item {
+        position: relative;
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        background: var(--background-light);
+        border-radius: 8px;
+        border-left: 3px solid transparent;
+    }
+
+    .workflow-history-item.approved {
+        border-left-color: var(--success-color);
+    }
+
+    .workflow-history-item.rejected {
+        border-left-color: var(--danger-color);
+    }
+
+    .workflow-history-item::before {
+        content: '';
+        position: absolute;
+        left: -2.5rem;
+        top: 1.25rem;
+        width: 1rem;
+        height: 1rem;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid var(--border-color);
+    }
+
+    .workflow-history-item.approved::before {
+        background: var(--success-color);
+        border-color: var(--success-color);
+    }
+
+    .workflow-history-item.rejected::before {
+        background: var(--danger-color);
+        border-color: var(--danger-color);
+    }
+
+    .workflow-history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+
+    .workflow-history-user {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .workflow-history-avatar {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .workflow-history-user-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .workflow-history-user-name {
+        font-weight: 600;
+        color: var(--text-color);
+        font-size: 0.95rem;
+    }
+
+    .workflow-history-user-role {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .workflow-history-timestamp {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .workflow-history-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .workflow-history-action.approved {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .workflow-history-action.rejected {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    .workflow-history-comment {
+        margin-top: 0.75rem;
+        padding: 0.75rem;
+        background: white;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+        color: var(--text-color);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .workflow-history-step {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        background: rgba(99, 102, 241, 0.1);
+        color: var(--primary-color);
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    .workflow-history-empty {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--text-muted);
+    }
+
+    .workflow-history-empty i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
 </style>
 
 
@@ -2303,14 +2480,12 @@
             <button type="button" class="blockchain-btn blockchain-btn-secondary" onclick="showBlockchainInfo()">
                 <i data-lucide="info"></i>
                 What is this?
-            </button>    
-<button 
-    id="openBlockchainMonitorBtn"
-    onclick="openBlockchainOperations()"
-    class="blockchain-btn blockchain-btn-info">
-    <i class="ti ti-cube-3d-sphere"></i>
-    View Blockchain Operations
-</button>
+            </button>
+            <button id="openBlockchainMonitorBtn" onclick="openBlockchainOperations()"
+                class="blockchain-btn blockchain-btn-info">
+                <i class="ti ti-cube-3d-sphere"></i>
+                View Blockchain Operations
+            </button>
 
 
         </div>
@@ -2671,12 +2846,7 @@
                     <div class="participants">
                         <!-- Participants will be loaded dynamically -->
                     </div>
-                    <div class="session-actions">
-                        <button class="session-btn" onclick="downloadMinutes()">
-                            <i class="ti ti-download"></i>
-                            Download Minutes
-                        </button>
-                    </div>
+
                 </div>
 
                 <!-- Messages Area -->
@@ -2684,41 +2854,61 @@
                     <!-- Messages will be loaded dynamically -->
                 </div>
 
+
+            </div>
+        </div>
+        <div class="modal-footer" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem;">
+            <!-- Row 1: Input Area and Suggestions -->
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
                 <!-- Input Area -->
-                <div class="input-area">
+                <div class="input-area" style="flex: 1; display: flex; gap: 0.5rem;">
                     <textarea id="messageInput" placeholder="Type your message here..."
                         onkeypress="handleMessageKeyPress(event)"
                         style="flex: 1; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 8px; resize: none; min-height: 60px; font-family: inherit; font-size: 0.9rem;"></textarea>
-                    <button class="send-btn" onclick="sendMessage()">
+                    <button class="send-btn" onclick="sendMessage()" style="align-self: flex-end;">
                         <i class="ti ti-send"></i>
                     </button>
                 </div>
 
-                <!-- Quick Suggestions -->
-                <div class="suggestions"
-                    style="padding: 0.75rem 1.5rem; border-top: 1px solid var(--border-color); background: var(--background-light);">
-                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                        <button class="suggestion-btn" onclick="insertSuggestion('I agree with the proposed terms.')">I
-                            agree</button>
-                        <button class="suggestion-btn"
-                            onclick="insertSuggestion('Can we modify the payment schedule?')">Modify payment</button>
-                        <button class="suggestion-btn"
-                            onclick="insertSuggestion('What about liability limits?')">Liability limits</button>
-                        <button class="suggestion-btn"
-                            onclick="insertSuggestion('Let me consult with my team.')">Consult team</button>
-                    </div>
+
+            </div>
+
+            <!-- Quick Suggestions -->
+            <div class="suggestions">
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="suggestion-btn" onclick="insertSuggestion('I agree with the proposed terms.')">
+                        I agree
+                    </button>
+                    <button class="suggestion-btn" onclick="insertSuggestion('Can we modify the payment schedule?')">
+                        Modify payment
+                    </button>
+                    <button class="suggestion-btn" onclick="insertSuggestion('What about liability limits?')">
+                        Liability limits
+                    </button>
+                    <button class="suggestion-btn" onclick="insertSuggestion('Let me consult with my team.')">
+                        Consult team
+                    </button>
                 </div>
             </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline-secondary"
-                onclick="closeModal('liveNegotiationModal'); stopMessagePolling();">
-                End Session
-            </button>
-            <button class="btn btn-success" onclick="finalizeNegotiation()">
-                <i class="ti ti-check"></i>
-                Finalize Agreement
-            </button>
+
+            <!-- Row 2: Action Buttons -->
+            <div
+                style="display: flex; gap: 1rem; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <div class="session-actions">
+                    <button class="session-btn" onclick="downloadMinutes()">
+                        <i class="ti ti-download"></i>
+                        Download Minutes
+                    </button>
+                </div>
+
+                <button class="btn btn-outline-secondary"
+                    onclick="closeModal('liveNegotiationModal'); stopMessagePolling();">
+                    <i class="ti ti-x"></i>
+                    End Session
+                </button>
+
+
+            </div>
         </div>
     </div>
 </div>
@@ -2994,6 +3184,39 @@
     </div>
 </div>
 
+<!-- Approval History Modal -->
+<div class="modal" id="workflowHistoryModal">
+    <div class="modal-content" style="max-width: 800px; max-height: 80vh;">
+        <div class="modal-header">
+            <div>
+                <h3 class="modal-title">
+                    <i class="ti ti-history"></i> Approval History & Comments
+                </h3>
+                <p id="workflowHistoryContractInfo" style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: white;">
+                </p>
+            </div>
+            <button class="modal-close" onclick="closeModal('workflowHistoryModal')">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
+            <div id="workflowHistoryContent">
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <i class="ti ti-loader" style="font-size: 2rem; animation: spin 1s linear infinite;"></i>
+                    <p>Loading approval history...</p>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline-secondary" onclick="closeModal('workflowHistoryModal')">
+                Close
+            </button>
+        </div>
+    </div>
+</div>
+
+
+
 <style>
     /* Export Modal Hover Effects */
     .export-option-label:hover {
@@ -3124,7 +3347,7 @@
 
     .session-btn {
         padding: 0.5rem 1rem;
-        background: var(--background-light);
+        background: #196c28;
         border: 1px solid var(--border-color);
         border-radius: 6px;
         cursor: pointer;
@@ -3132,7 +3355,7 @@
         align-items: center;
         gap: 0.5rem;
         font-size: 0.8125rem;
-        color: var(--text-color);
+        color: #ffffff;
         transition: all 0.3s ease;
     }
 
@@ -3575,8 +3798,6 @@
     .btn-outline-secondary:hover {
         background: #f8f9fa;
     }
-
-
 </style>
 
 <!-- MOD-021: Risk Assessment Modal -->
@@ -3659,9 +3880,9 @@
             <button class="btn btn-warning" onclick="editClauseManually()">
                 <i class="ti ti-edit"></i> Edit Manually
             </button>
-            <button class="btn btn-success" onclick="acceptSuggestion()">
+            <!-- <button class="btn btn-success" onclick="acceptSuggestion()">
                 <i class="ti ti-check"></i> Accept Suggestion
-            </button>
+            </button> -->
         </div>
     </div>
 </div>
@@ -3927,7 +4148,8 @@
                             <i class="ti ti-video" style="font-size: 24px;"></i>
                         </div>
                         <div>
-                            <div class="action-btn-title" style="font-size: 1rem;">Negotiation with Initiator</div>
+                            <div class="action-btn-title" style="font-size: 1rem;">Negotiation with
+                                Initiator/Counter-Party</div>
                             <div class="action-btn-desc">Real-time discussion with the contract initiator</div>
                         </div>
                     </div>
@@ -4099,12 +4321,15 @@
     let riskAnalysisData = null;
     let uploadedFiles = [];
 
+
+
     // =====================================================
     // PAGE INITIALIZATION
     // =====================================================
     document.addEventListener('DOMContentLoaded', async function () {
         console.log('Loading contract ID:', contractId);
         await loadContractData();
+        await saveAsDraft();
     });
 
     // =====================================================
@@ -4198,7 +4423,7 @@
                     <p>Title: <span class="editable-field" contenteditable="true">${clientSignatory.signer_type}</span></p>
                 </div>
                 <div style="flex: 1;">
-                    <div class="signature-field" id="companySignature" onclick="openSignature('company')">
+<div class="signature-field" id="clientSignature" onclick="${(contract.status === 'signature' && !contract.is_counterparty) ? "openSignature('company')" : "void(0)"}">                        
                         <div>
                             <i class="ti ti-writing-sign" style="font-size: 2rem; display: block; margin-bottom: 0.5rem;"></i>
                             <span>Click to Sign (Company)</span>
@@ -4241,9 +4466,13 @@
             <i class="ti ti-x"></i> Reject
         </button>`;
                 } else {
-                    //if I am not the current approver
                     actionButtons = getApprovalBadge(current_approver, workflow, 'review');
+
                 }
+
+                actionButtons += `<button class="workflow-setup-btn" onclick="openWorkflowHistoryModal()" style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="ti ti-history"></i> Approval History
+                                    </button>`;
 
             }
         } else if ((contract.status === 'review_completed')) {
@@ -4292,10 +4521,9 @@
                             //if I am not the current approver
                             actionButtons = getApprovalBadge(current_approver, workflow, 'review');
                         }
-                        //           actionButtons = `
-                        // <button class="btn btn-success" onclick="markCounterpartyReviewComplete()">
-                        //     <i class="ti ti-check"></i> Quick Review
-                        // </button>`;
+                        actionButtons += `<button class="workflow-setup-btn" onclick="openWorkflowHistoryModal()" style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="ti ti-history"></i> Approval History
+                                      </button>`;
 
                     }
 
@@ -4318,17 +4546,20 @@
             <button class="btn btn-success" onclick="quickApprove()">
                 <i class="ti ti-check-circle"></i> Finalize Agreement
             </button>
-            <button class="btn btn-primary" onclick="openNegotiationModal()">
+            <button class="btn btn-primary" id="openNegotiationBtn" onclick="openNegotiationModal()">
                 <i class="ti ti-message-circle"></i> Initiate Negotiation
             </button>
             <button class="btn btn-outline-secondary" onclick="openDocumentsModal()">
                 <i class="ti ti-paperclip"></i> Attach Documents
             </button>`;
             } else {
-                actionButtons = `
-            <button class="btn btn-primary" onclick="openNegotiationModal()">
+
+                if (contract.is_initiator === true) {
+                    actionButtons = `
+            <button class="btn btn-primary" id="openNegotiationBtn" onclick="startExternalNegotiation()">
                 <i class="ti ti-message-circle"></i> Open Negotiation
             </button>`;
+                }
             }
         } else if (contract.status === 'negotiation_completed') {
             if ((contract.is_initiator === true)) {
@@ -4357,6 +4588,10 @@
                     actionButtons = getApprovalBadge(current_approver, workflow, 'approval');
 
                 }
+
+                actionButtons += `<button class="workflow-setup-btn" onclick="openWorkflowHistoryModal()" style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="ti ti-history"></i> Approval History
+                                        </button>`;
             }
 
         } else if (contract.status === 'approved') {
@@ -4389,7 +4624,12 @@
             </button>`;
                         } else {
                             actionButtons = getApprovalBadge(current_approver, workflow);
+
                         }
+
+                        actionButtons += `<button class="workflow-setup-btn" onclick="openWorkflowHistoryModal()" style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="ti ti-history"></i> Approval History
+                                        </button>`;
                     }
                 }
             }
@@ -4443,11 +4683,14 @@ ${renderWorkflowStepper(contract.status)}
                     <i class="ti ti-git-branch"></i>
                     <span id="workflowStatusText">${workflow ? workflow.status : 'Not Configured'}</span>
                 </span>
+
+           
             </div>
              <div class="ai-toolbar-group">
                  <button class="workflow-setup-btn" onclick="openWorkflowSetupModal()">
                     <i class="ti ti-settings-automation"></i> Setup Custom Workflow
                 </button>
+               
                 ${!contract.is_counterparty ? `
                 <button class="workflow-setup-btn" onclick="openRiviewModal()">
                     <i class="ti ti-alert-triangle"></i> Review Analysis
@@ -4456,7 +4699,7 @@ ${renderWorkflowStepper(contract.status)}
                     <i class="ti ti-file-text"></i> Clause Analysis
                 </button>
                 ` : `<button class="workflow-setup-btn" onclick="showRiskSummary()">
-                    <i class="ti ti-file-text"></i> Risk Summary
+                    <i class="ti ti-file-text"></i> Generate Risk Summary
                 </button>`}
             </div>
         </div>
@@ -4774,96 +5017,96 @@ ${contract.content && contract.content.trim() !== '' ?
     // =====================================================
 
     // Save Draft
-   async function saveAsDraft() {
-    // ✅ GET BUTTON AND SHOW LOADING
-    const saveBtn = document.getElementById('saveDraftBtn');
-    const originalContent = saveBtn.innerHTML;
-    saveBtn.disabled = true;
-    saveBtn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Saving...';
+    async function saveAsDraft() {
+        // ✅ GET BUTTON AND SHOW LOADING
+        const saveBtn = document.getElementById('saveDraftBtn');
+        const originalContent = saveBtn.innerHTML;
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Saving...';
 
-    try {
-        console.log('💾 Saving draft...');
-        
-        // ✅ FIX: Get content directly from the editor element
-        const editor = document.getElementById('contractContent');
-        if (!editor) {
-            console.error('❌ Contract editor not found!');
-            saveBtn.innerHTML = originalContent;
-            saveBtn.disabled = false;
-            showNotification('Contract editor not found', 'error');
-            return;
-        }
+        try {
+            console.log('💾 Saving draft...');
 
-        // Get the content (innerHTML for contenteditable div, or value for textarea)
-        const contractContent = editor.innerHTML || editor.value || '';
-        
-        if (!contractContent || contractContent.trim() === '') {
-            console.warn('⚠️ Contract content is empty!');
-            saveBtn.innerHTML = originalContent;
-            saveBtn.disabled = false;
-            showNotification('Cannot save empty contract', 'warning');
-            return;
-        }
-
-        console.log('📝 Content length:', contractContent.length, 'characters');
-
-        // Prepare data to save
-        const data = {
-            content: contractContent
-        };
-
-        // Save draft
-        const response = await fetch(`/api/contracts/save-draft/${contractId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
-            },
-            credentials: 'include',
-            body: JSON.stringify(data)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
-        console.log('✅ Save response:', result);
-
-        if (result.success) {
-            // ✅ SHOW SUCCESS STATE
-            saveBtn.innerHTML = '<i class="ti ti-check"></i> Saved!';
-            
-            // Display blockchain activities if available
-            if (result.blockchain_activities && result.blockchain_activities.length > 0) {
-                console.log('🔗 Blockchain activities received:', result.blockchain_activities.length);
-                if (typeof displayBlockchainActivities === 'function') {
-                    displayBlockchainActivities(result.blockchain_activities);
-                }
-            }
-
-            showNotification('Draft saved successfully', 'success');
-            
-            // ✅ RESTORE BUTTON AFTER 2 SECONDS
-            setTimeout(() => {
+            // ✅ FIX: Get content directly from the editor element
+            const editor = document.getElementById('contractContent');
+            if (!editor) {
+                console.error('❌ Contract editor not found!');
                 saveBtn.innerHTML = originalContent;
                 saveBtn.disabled = false;
-            }, 2000);
+                showNotification('Contract editor not found', 'error');
+                return;
+            }
 
-        } else {
-            throw new Error(result.message || 'Save failed');
+            // Get the content (innerHTML for contenteditable div, or value for textarea)
+            const contractContent = editor.innerHTML || editor.value || '';
+
+            if (!contractContent || contractContent.trim() === '') {
+                console.warn('⚠️ Contract content is empty!');
+                saveBtn.innerHTML = originalContent;
+                saveBtn.disabled = false;
+                showNotification('Cannot save empty contract', 'warning');
+                return;
+            }
+
+            console.log('📝 Content length:', contractContent.length, 'characters');
+
+            // Prepare data to save
+            const data = {
+                content: contractContent
+            };
+
+            // Save draft
+            const response = await fetch(`/api/contracts/save-draft/${contractId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+                },
+                credentials: 'include',
+                body: JSON.stringify(data)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log('✅ Save response:', result);
+
+            if (result.success) {
+                // ✅ SHOW SUCCESS STATE
+                saveBtn.innerHTML = '<i class="ti ti-check"></i> Saved!';
+
+                // Display blockchain activities if available
+                if (result.blockchain_activities && result.blockchain_activities.length > 0) {
+                    console.log('🔗 Blockchain activities received:', result.blockchain_activities.length);
+                    if (typeof displayBlockchainActivities === 'function') {
+                        displayBlockchainActivities(result.blockchain_activities);
+                    }
+                }
+
+                showNotification('Draft saved successfully', 'success');
+
+                // ✅ RESTORE BUTTON AFTER 2 SECONDS
+                setTimeout(() => {
+                    saveBtn.innerHTML = originalContent;
+                    saveBtn.disabled = false;
+                }, 2000);
+
+            } else {
+                throw new Error(result.message || 'Save failed');
+            }
+
+        } catch (error) {
+            console.error('❌ Error saving draft:', error);
+
+            // ✅ RESTORE BUTTON IMMEDIATELY ON ERROR
+            saveBtn.innerHTML = originalContent;
+            saveBtn.disabled = false;
+
+            showNotification('Error saving draft: ' + error.message, 'error');
         }
-
-    } catch (error) {
-        console.error('❌ Error saving draft:', error);
-        
-        // ✅ RESTORE BUTTON IMMEDIATELY ON ERROR
-        saveBtn.innerHTML = originalContent;
-        saveBtn.disabled = false;
-        
-        showNotification('Error saving draft: ' + error.message, 'error');
     }
-}
 
     // Submit for Review - CONNECTED TO BACKEND
     async function submitForReview(workflow_status) {
@@ -5356,11 +5599,7 @@ ${contract.content && contract.content.trim() !== '' ?
                 
                 ${!isReplaced ? `
                 <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
-                    <button class="btn btn-success btn-sm" 
-                            onclick="acceptClauseSuggestion(${index}, '${escapeHtml(clause.clause_name)}', '${escapeHtml(clause.improved_version || '')}', '${escapeHtml(clause.clause_text)}')"
-                            style="flex: 1;">
-                        <i class="ti ti-check"></i> Accept Suggestion
-                    </button>
+                   
                     <button class="btn btn-outline-primary btn-sm" 
                             onclick="editClauseManually(${index}, '${escapeHtml(clause.clause_name)}', '${escapeHtml(clause.clause_text)}')"
                             style="flex: 1;">
@@ -5503,7 +5742,7 @@ ${contract.content && contract.content.trim() !== '' ?
 
                 // Hide action buttons
                 const buttonContainer = clauseItem.querySelector('div[style*="display: flex"]');
-                if (buttonContainer && buttonContainer.textContent.includes('Accept Suggestion')) {
+                if (buttonContainer) {
                     buttonContainer.innerHTML = `
                     <div style="background: #4caf50; color: white; padding: 0.75rem; border-radius: 8px; text-align: center;">
                         <i class="ti ti-check"></i> Suggestion Applied to Contract
@@ -6481,17 +6720,21 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
 
-async function initiateApprovalWorkflow() {
-      openModal('internalApprovalModal');
-}
+    async function initiateApprovalWorkflow() {
+        openModal('internalApprovalModal');
+    }
 
     async function submitInternalApproval() {
+        const reviewType = document.querySelector('input[name="reviewOption"]:checked')?.value || 'specific';
+        const personnelEmails = document.getElementById('specificPersonnel')?.value.split(',').map(e => e.trim()).filter(Boolean) || [];
+        const notes = document.getElementById('reviewNotes')?.value || '';
+
         showLoader();
         try {
             const response = await fetch('/api/contracts/initiate-approval-workflow', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({
+                body: JSON.stringify({
                     contract_id: contractId,
                     review_type: reviewType,
                     personnel_emails: personnelEmails,
@@ -6522,9 +6765,15 @@ async function initiateApprovalWorkflow() {
 
     // Open Signature Modal - Enhanced version
     function openSignatureModal() {
+        // ✅ PREVENT MODAL IF NOT IN SIGNATURE STATUS
+        if (contractData?.contract?.status !== 'signature') {
+            showNotification('Contract must be in Signature stage before signing. Current status: ' +
+                (contractData?.contract?.status || 'unknown').toUpperCase(), 'warning');
+            return;
+        }
+
         // Determine the party based on current user context
-        // This should ideally come from your backend/session
-        const isInitiator = true; // Replace with actual logic: contractData?.is_initiator
+        const isInitiator = contractData?.is_initiator || true;
         const party = isInitiator ? 'company' : 'client';
 
         currentSignatureField = party;
@@ -6584,6 +6833,13 @@ async function initiateApprovalWorkflow() {
 
     // Alternative: Open signature for specific party (used when clicking signature fields)
     function openSignature(party) {
+        // ✅ PREVENT MODAL IF NOT IN SIGNATURE STATUS
+        if (contractData?.contract?.status !== 'signature') {
+            showNotification('Contract must be in Signature stage before signing. Current status: ' +
+                (contractData?.contract?.status || 'unknown').toUpperCase(), 'warning');
+            return;
+        }
+
         currentSignatureField = party;
         const modal = document.getElementById('signatureModal');
 
@@ -6592,7 +6848,6 @@ async function initiateApprovalWorkflow() {
             showNotification('Signature modal not available', 'error');
             return;
         }
-
         const signerNameEl = document.getElementById('signerName');
         const signerRoleEl = document.getElementById('signerRole');
         const partyIndicatorEl = document.getElementById('partyIndicator');
@@ -6724,6 +6979,14 @@ async function initiateApprovalWorkflow() {
         }
 
         console.log('🔄 Saving workflow...');
+
+
+
+        const saveWorkflowBtn = document.getElementById('saveWorkflowBtn');
+        const originalContent = saveWorkflowBtn.innerHTML;
+        saveWorkflowBtn.disabled = true;
+        saveWorkflowBtn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Saving...';
+
         console.log('Selected workflow type:', selectedContractWorkflow);
 
         const workflowData = {
@@ -6766,7 +7029,15 @@ async function initiateApprovalWorkflow() {
                         assigned_email: email,
                         department: department
                     });
+
+                    saveWorkflowBtn.innerHTML = originalContent;
+                    saveWorkflowBtn.disabled = false;
+
                 } else {
+
+                    saveWorkflowBtn.innerHTML = originalContent;
+                    saveWorkflowBtn.disabled = false;
+
                     console.warn(`⚠️ Skipping row ${index + 1}: missing role or email`);
                 }
             });
@@ -6777,6 +7048,10 @@ async function initiateApprovalWorkflow() {
             console.log(`📦 Prepared ${steps.length} steps for backend:`, steps);
 
             if (steps.length === 0) {
+
+                saveWorkflowBtn.innerHTML = originalContent;
+                saveWorkflowBtn.disabled = false;
+
                 showNotification('Please add at least one workflow step with role and email.', 'warning');
 
                 return;
@@ -6801,18 +7076,36 @@ async function initiateApprovalWorkflow() {
             console.log('📥 Response data:', data);
 
             if (data.success) {
+
+                saveWorkflowBtn.innerHTML = originalContent;
+                saveWorkflowBtn.disabled = false;
+
                 showNotification('Workflow configured successfully', 'success');
                 closeModal('contractWorkflowModal');
+
+
 
                 // Update status text
                 document.getElementById('workflowStatusText').textContent =
                     selectedContractWorkflow === 'master' ?
                         'Master Workflow Applied' :
                         'Custom Workflow Applied';
+
+                setTimeout(() => {
+                    location.reload();
+                }, 2000);
+
             } else {
+
+                saveWorkflowBtn.innerHTML = originalContent;
+                saveWorkflowBtn.disabled = false;
                 showNotification(data.message || 'Failed to configure workflow', 'error');
             }
         } catch (error) {
+
+            saveWorkflowBtn.innerHTML = originalContent;
+            saveWorkflowBtn.disabled = false;
+
             console.error('❌ Error saving workflow:', error);
             showNotification('Failed to save workflow', 'error');
         } finally {
@@ -8384,9 +8677,6 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         console.log('✅ Step numbers updated, total:', contractWorkflowStepCount);
     }
 
-
-
-
     // Search users function
     async function searchWorkflowUsers(input, suggestionsId) {
         const query = input.value.trim();
@@ -8430,7 +8720,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
                 } else {
                     suggestionsDiv.innerHTML = users.map(user => {
                         const fullName = `${user.first_name} ${user.last_name}`.trim();
-                        const badge = user.user_type ? `<span style="font-size: 0.75rem; padding: 0.125rem 0.375rem; background: var(--primary-color); color: white; border-radius: 4px; margin-left: 0.25rem;">${user.user_type}</span>` : '';
+                        const badge = user.department ? `<span style="font-size: 0.75rem; padding: 0.125rem 0.375rem; background: var(--primary-color); color: white; border-radius: 4px; margin-left: 0.25rem;">${user.department}</span>` : '';
 
                         return `
                         <div onclick="selectWorkflowUser('${user.email}', '${input.id}', '${suggestionsId}')" 
@@ -8818,8 +9108,15 @@ ${(riskAnalysisData.risk_items || []).map(item => `
     // =====================================================
 
     // Quick Approve - CONNECTED TO BACKEND
+
     async function quickApprove() {
-        if (confirm('Press Yes if you have completed the Negotiation before finalizing the Agreement else Press No if you want to approve without Negotiation')) {
+        // Create custom confirmation modal
+        const userConfirmed = await showCustomConfirm(
+            'Finalize Agreement?',
+            'Press "Yes" if you have completed the Negotiation before finalizing the Agreement else Press "No" if you want to approve without Negotiation'
+        );
+
+        if (userConfirmed) {
             showLoader();
             try {
                 const response = await fetch('/api/contracts/quick-approve', {
@@ -8829,9 +9126,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
                         contract_id: contractId
                     })
                 });
-
                 const data = await response.json();
-
                 if (data.success) {
                     showNotification('Contract approved successfully!', 'success');
                     setTimeout(() => location.reload(), 1500);
@@ -8847,10 +9142,59 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         }
     }
 
+    // Custom confirmation function where both buttons proceed
+    function showCustomConfirm(title, message) {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'modal modal-blur fade show';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+            <div class="modal-dialog modal-sm modal-dialog-centered" id="quickfinalizeModal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">${title}</h5>
+                         <button class="modal-close" onclick="closeModal('quickfinalizeModal')"
+                style="background: rgba(255, 255, 255, 0.2); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <i class="ti ti-x"></i>
+            </button>
+                    </div>
+                    <div class="modal-body">
+                        <p>${message}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-success" id="confirmYes">
+                            <i class="ti ti-check icon"></i> Yes
+                        </button>
+                        <button type="button" class="btn btn-primary" id="confirmNo">
+                            <i class="ti ti-x icon"></i> No
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+            document.body.appendChild(modal);
+
+            // Both buttons do the same thing - proceed with approval
+            const yesBtn = modal.querySelector('#confirmYes');
+            const noBtn = modal.querySelector('#confirmNo');
+
+            const handleClick = () => {
+                modal.remove();
+                resolve(true); // Both buttons return true to proceed
+            };
+
+            yesBtn.addEventListener('click', handleClick);
+            noBtn.addEventListener('click', handleClick);
+        });
+    }
+
+
     // Open Negotiation Modal
     function openNegotiationModal() {
         openModal('negotiationModal');
     }
+
 
     // Open Documents Modal
     function openDocumentsModal() {
@@ -8931,7 +9275,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
                     console.log('Full response:', result);
                 }
 
-                showNotification('✅ Contract saved and secured on blockchain', 'success');
+                showNotification('Contract saved and secured on blockchain', 'success');
             } else {
                 showNotification('❌ Failed to save contract', 'error');
             }
@@ -9315,6 +9659,7 @@ How it works:
         content.innerHTML = `
         <div class="text-center" style="padding: 3rem;">
             <div class="spinner-border" role="status" style="width: 3rem; height: 3rem; border-width: 0.25rem;">
+                <div class="ai-loader"></div>
                 <span class="visually-hidden">Loading...</span>
             </div>
             <h4 style="margin-top: 1.5rem; color: var(--text-color);">Analyzing Contract</h4>
@@ -9426,7 +9771,7 @@ How it works:
             </div>
             
             <div class="risk-stat-card safety" style="background: linear-gradient(135deg, rgba(0, 123, 255, 0.1) 0%, rgba(0, 123, 255, 0.05) 100%); padding: 1.25rem; border-radius: 12px; border: 2px solid rgba(0, 123, 255, 0.2); text-align: center;">
-                <div class="risk-stat-value" style="font-size: 2.5rem; font-weight: 700; color: #007bff; margin-bottom: 0.5rem;">${safetyScore}</div>
+                <div class="risk-stat-value" style="font-size: 2.5rem; font-weight: 700; color: #007bff; margin-bottom: 0.5rem;">${safetyScore}%</div>
                 <div class="risk-stat-label" style="font-size: 0.875rem; color: #6c757d; text-transform: uppercase; font-weight: 600;">SAFETY SCORE</div>
             </div>
         </div>
@@ -9514,12 +9859,7 @@ How it works:
                             ` : ''}
                         </div>
                         
-                        <div style="display: flex; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid #dee2e6;">
-                           
-                            <button class="btn btn-sm btn-outline-secondary" onclick="viewClause('${risk.clause_reference}')" style="padding: 0.5rem 1rem; border-radius: 6px;">
-                                <i class="ti ti-file-text"></i> View Clause
-                            </button>
-                        </div>
+                      
                     </div>
                 </div>
                 `;
@@ -9801,7 +10141,7 @@ Generated by CALIM 360 Smart CLM
                 <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Low Risk</div>
             </div>
             <div style="background: rgba(39, 98, 203, 0.05); padding: 1.25rem; border-radius: 8px; text-align: center; border: 1px solid var(--primary-color);">
-                <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">${analysis.overall_score || 0}</div>
+                <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">${analysis.overall_score || 0}%</div>
                 <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Safety Score</div>
             </div>
         </div>
@@ -9827,78 +10167,56 @@ Generated by CALIM 360 Smart CLM
     // Activity tracking
     let activityLog = [];
 
-
-        // Format timestamp
-   function formatTimestamp(timestamp) {
-    if (!timestamp) return 'Just now';
-    
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-
-    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-}
-
-
-
     // Open Blockchain Operations Monitor Modal
- function openBlockchainMonitor() {
-    console.log('🔍 Opening blockchain monitor...');
-    
-    const modal = document.getElementById('blockchainMonitorModal');
-    if (!modal) {
-        console.error('❌ Blockchain monitor modal not found');
-        showNotification('Blockchain monitor not available', 'error');
-        return;
+    function openBlockchainMonitor() {
+        console.log('🔍 Opening blockchain monitor...');
+
+        const modal = document.getElementById('blockchainMonitorModal');
+        if (!modal) {
+            console.error('❌ Blockchain monitor modal not found');
+            showNotification('Blockchain monitor not available', 'error');
+            return;
+        }
+
+        // Show modal
+        modal.classList.add('show');
+        modal.style.display = 'flex';
+
+        // Load blockchain history
+        loadBlockchainHistory();
+
+        // Start auto-refresh
+        startBlockchainMonitoring();
     }
-    
-    // Show modal
-    modal.classList.add('show');
-    modal.style.display = 'flex';
-    
-    // Load blockchain history
-    loadBlockchainHistory();
-    
-    // Start auto-refresh
-    startBlockchainMonitoring();
-}
 
     // Close Blockchain Operations Monitor Modal
-   function closeBlockchainMonitor() {
-    const modal = document.getElementById('blockchainMonitorModal');
-    if (modal) {
-        modal.classList.remove('show');
-        modal.style.display = 'none';
-        
-        // Stop monitoring when modal closes
-        stopBlockchainMonitoring();
+    function closeBlockchainMonitor() {
+        const modal = document.getElementById('blockchainMonitorModal');
+        if (modal) {
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+
+            // Stop monitoring when modal closes
+            stopBlockchainMonitoring();
+        }
     }
-}
 
     // Start monitoring (auto-refresh)
-   function startBlockchainMonitoring() {
-    if (blockchainMonitorInterval) {
-        clearInterval(blockchainMonitorInterval);
-    }
-    
-    // Initial load
-    loadBlockchainHistory();
-    
-    // Auto-refresh every 15 seconds
-    blockchainMonitorInterval = setInterval(() => {
+    function startBlockchainMonitoring() {
+        if (blockchainMonitorInterval) {
+            clearInterval(blockchainMonitorInterval);
+        }
+
+        // Initial load
         loadBlockchainHistory();
-    }, 15000);
-    
-    console.log('✅ Blockchain monitoring started (15s interval)');
-}
+
+        // Auto-refresh every 15 seconds
+        blockchainMonitorInterval = setInterval(() => {
+            loadBlockchainHistory();
+        }, 15000);
+
+        console.log('✅ Blockchain monitoring started (15s interval)');
+    }
 
     // Stop monitoring
     function stopBlockchainMonitoring() {
@@ -10015,154 +10333,154 @@ Generated by CALIM 360 Smart CLM
     }
 
     // Get activity icon based on action type
-   function getActivityIcon(action) {
-    const icons = {
-        'blockchain_storage': 'ti ti-database-export',
-        'blockchain_verification': 'ti ti-shield-check',
-        'contract_created': 'ti ti-file-plus',
-        'contract_updated': 'ti ti-edit',
-        'contract_signed': 'ti ti-signature',
-        'document_uploaded': 'ti ti-cloud-upload'
-    };
-    return icons[action] || 'ti ti-activity';
-}
+    function getActivityIcon(action) {
+        const icons = {
+            'blockchain_storage': 'ti ti-database-export',
+            'blockchain_verification': 'ti ti-shield-check',
+            'contract_created': 'ti ti-file-plus',
+            'contract_updated': 'ti ti-edit',
+            'contract_signed': 'ti ti-signature',
+            'document_uploaded': 'ti ti-cloud-upload'
+        };
+        return icons[action] || 'ti ti-activity';
+    }
     // Get activity title
     function getActivityTitle(action) {
-    const titles = {
-        'blockchain_storage': 'Contract Stored on Blockchain',
-        'blockchain_verification': 'Blockchain Verification',
-        'contract_created': 'Contract Created',
-        'contract_updated': 'Contract Updated',
-        'contract_signed': 'Contract Signed',
-        'document_uploaded': 'Document Uploaded'
-    };
-    return titles[action] || action.split('_').map(word => 
-        word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
-}
-
-
-
-async function loadBlockchainHistory() {
-    console.log('🔄 Loading complete blockchain history...');
-
-    const contractId = getContractId();
-    if (!contractId) {
-        console.error('❌ No contract ID found');
-        showEmptyActivityState();
-        return;
+        const titles = {
+            'blockchain_storage': 'Contract Stored on Blockchain',
+            'blockchain_verification': 'Blockchain Verification',
+            'contract_created': 'Contract Created',
+            'contract_updated': 'Contract Updated',
+            'contract_signed': 'Contract Signed',
+            'document_uploaded': 'Document Uploaded'
+        };
+        return titles[action] || action.split('_').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
     }
 
-    try {
-        // Show loading state
-        showLoadingState();
 
-        // Fetch complete history from API
-        const token = getAuthToken();
-        const response = await fetch(`/api/blockchain/activity/${contractId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+    async function loadBlockchainHistory() {
+        console.log('🔄 Loading complete blockchain history...');
 
-        const data = await response.json();
-        console.log('✅ Blockchain history loaded:', data);
-
-        // Update network status
-        if (data.network_status) {
-            updateNetworkStatus(data.network_status);
-        }
-
-        // Display activities
-        if (data.activities && data.activities.length > 0) {
-            displayBlockchainActivities(data.activities);
-            
-            // Update statistics
-            if (data.statistics) {
-                updateStatistics(data.statistics);
-            }
-        } else {
+        const contractId = getContractId();
+        if (!contractId) {
+            console.error('❌ No contract ID found');
             showEmptyActivityState();
+            return;
         }
 
-    } catch (error) {
-        console.error('❌ Error loading blockchain history:', error);
-        showErrorState();
+        try {
+            // Show loading state
+            showLoadingState();
+
+            // Fetch complete history from API
+            const token = getAuthToken();
+            const response = await fetch(`/api/blockchain/activity/${contractId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ Blockchain history loaded:', data);
+
+            // Update network status
+            if (data.network_status) {
+                updateNetworkStatus(data.network_status);
+            }
+
+            // Display activities
+            if (data.activities && data.activities.length > 0) {
+                displayBlockchainActivities(data.activities);
+
+                // Update statistics
+                if (data.statistics) {
+                    updateStatistics(data.statistics);
+                }
+            } else {
+                showEmptyActivityState();
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading blockchain history:', error);
+            showErrorState();
+        }
     }
-}
 
 
 
 
-function showLoadingState() {
-    const stream = document.getElementById('activityStreamModal');
-    const emptyState = document.getElementById('emptyActivityState');
-    
-    if (emptyState) {
-        emptyState.style.display = 'none';
-    }
-    
-    if (stream) {
-        stream.innerHTML = `
+    function showLoadingState() {
+        const stream = document.getElementById('activityStreamModal');
+        const emptyState = document.getElementById('emptyActivityState');
+
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+
+        if (stream) {
+            stream.innerHTML = `
             <div style="text-align: center; padding: 3rem 1rem; color: #3b82f6;">
                 <div class="progress-spinner" style="width: 40px; height: 40px; border: 3px solid #e2e8f0; border-top-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
                 <p style="margin: 0; font-size: 1rem; font-weight: 500;">Loading blockchain history...</p>
             </div>
         `;
+        }
     }
-}
 
 
 
     // Update statistics
-   function updateStatistics(stats) {
-    if (!stats) return;
+    function updateStatistics(stats) {
+        if (!stats) return;
 
-    const totalTx = document.getElementById('totalTransactions');
-    const lastHash = document.getElementById('lastBlockHash');
-    const lastActivity = document.getElementById('lastActivityTime');
+        const totalTx = document.getElementById('totalTransactions');
+        const lastHash = document.getElementById('lastBlockHash');
+        const lastActivity = document.getElementById('lastActivityTime');
 
-    if (totalTx) totalTx.textContent = stats.total_transactions || '0';
-    if (lastHash) {
-        const hash = stats.last_block_hash;
-        lastHash.textContent = hash ? `${hash.substring(0, 16)}...` : 'N/A';
+        if (totalTx) totalTx.textContent = stats.total_transactions || '0';
+        if (lastHash) {
+            const hash = stats.last_block_hash;
+            lastHash.textContent = hash ? `${hash.substring(0, 16)}...` : 'N/A';
+        }
+        if (lastActivity) lastActivity.textContent = stats.last_activity_time || 'Just now';
     }
-    if (lastActivity) lastActivity.textContent = stats.last_activity_time || 'Just now';
-}
 
     // Show empty activity state
-   function showEmptyActivityState() {
-    const emptyState = document.getElementById('emptyActivityState');
-    if (emptyState) {
-        emptyState.style.display = 'block';
+    function showEmptyActivityState() {
+        const emptyState = document.getElementById('emptyActivityState');
+        if (emptyState) {
+            emptyState.style.display = 'block';
+        }
+
+        // Clear any existing activities
+        const stream = document.getElementById('activityStreamModal');
+        if (stream) {
+            const existingActivities = stream.querySelectorAll('.activity-item');
+            existingActivities.forEach(item => item.remove());
+        }
     }
-    
-    // Clear any existing activities
-    const stream = document.getElementById('activityStreamModal');
-    if (stream) {
-        const existingActivities = stream.querySelectorAll('.activity-item');
-        existingActivities.forEach(item => item.remove());
-    }
-}
 
 
     // Show error state
-   function showErrorState() {
-    const stream = document.getElementById('activityStreamModal');
-    const emptyState = document.getElementById('emptyActivityState');
-    
-    if (emptyState) {
-        emptyState.style.display = 'none';
-    }
-    
-    if (stream) {
-        stream.innerHTML = `
+    function showErrorState() {
+        const stream = document.getElementById('activityStreamModal');
+        const emptyState = document.getElementById('emptyActivityState');
+
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+
+        if (stream) {
+            stream.innerHTML = `
             <div style="text-align: center; padding: 3rem 1rem; color: #ef4444;">
                 <i class="ti ti-alert-circle" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
                 <p style="margin: 0; font-size: 1rem; font-weight: 500;">Failed to load blockchain activity</p>
@@ -10174,8 +10492,8 @@ function showLoadingState() {
                 </button>
             </div>
         `;
+        }
     }
-}
 
     // Refresh blockchain activity manually
     function refreshBlockchainActivity() {
@@ -10189,21 +10507,21 @@ function showLoadingState() {
     }
 
     // Get contract ID from URL or form
-    
+
     function getContractId() {
-    // Try URL parameter first
-    const urlParams = new URLSearchParams(window.location.search);
-    let contractId = urlParams.get('id') || urlParams.get('contract_id');
+        // Try URL parameter first
+        const urlParams = new URLSearchParams(window.location.search);
+        let contractId = urlParams.get('id') || urlParams.get('contract_id');
 
-    // Try form input
-    if (!contractId) {
-        const contractIdInput = document.querySelector('[name="contract_id"]') || 
-                               document.querySelector('#contract_id');
-        contractId = contractIdInput ? contractIdInput.value : null;
+        // Try form input
+        if (!contractId) {
+            const contractIdInput = document.querySelector('[name="contract_id"]') ||
+                document.querySelector('#contract_id');
+            contractId = contractIdInput ? contractIdInput.value : null;
+        }
+
+        return contractId;
     }
-
-    return contractId;
-}
 
     // Close modal when clicking outside
     window.addEventListener('click', function (event) {
@@ -10248,19 +10566,19 @@ function showLoadingState() {
     }
 
     // Update network status display
-   function updateNetworkStatus(status) {
-    const statusValue = document.getElementById('networkStatusValueModal');
-    const peersCount = document.getElementById('peersCountModal');
+    function updateNetworkStatus(status) {
+        const statusValue = document.getElementById('networkStatusValueModal');
+        const peersCount = document.getElementById('peersCountModal');
 
-    if (statusValue) {
-        statusValue.textContent = status.status || 'Operational';
-        statusValue.style.color = status.status === 'Operational' ? '#10b981' : '#ef4444';
-    }
+        if (statusValue) {
+            statusValue.textContent = status.status || 'Operational';
+            statusValue.style.color = status.status === 'Operational' ? '#10b981' : '#ef4444';
+        }
 
-    if (peersCount) {
-        peersCount.textContent = status.peers_count || '3';
+        if (peersCount) {
+            peersCount.textContent = status.peers_count || '3';
+        }
     }
-}
 
     // Add activity to stream
     function addBlockchainActivity(activity) {
@@ -10395,19 +10713,19 @@ function showLoadingState() {
     }
 
     // Get icon for activity step
-   function getBlockchainIcon(step) {
-    const icons = {
-        'data_extraction': 'ti ti-file-search',
-        'hash_generation': 'ti ti-hash',
-        'transaction_preparation': 'ti ti-file-code',
-        'blockchain_submission': 'ti ti-cloud-upload',
-        'database_storage': 'ti ti-database',
-        'audit_logging': 'ti ti-history',
-        'completion': 'ti ti-circle-check',
-        'error': 'ti ti-alert-triangle'
-    };
-    return icons[step] || 'ti ti-point';
-}
+    function getBlockchainIcon(step) {
+        const icons = {
+            'data_extraction': 'ti ti-file-search',
+            'hash_generation': 'ti ti-hash',
+            'transaction_preparation': 'ti ti-file-code',
+            'blockchain_submission': 'ti ti-cloud-upload',
+            'database_storage': 'ti ti-database',
+            'audit_logging': 'ti ti-history',
+            'completion': 'ti ti-circle-check',
+            'error': 'ti ti-alert-triangle'
+        };
+        return icons[step] || 'ti ti-point';
+    }
 
     // Format step name for display
     function formatStepName(step) {
@@ -10419,6 +10737,7 @@ function showLoadingState() {
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', function () {
         loadBlockchainNetworkStatus();
+        saveAsDraft();
 
         // Refresh network status every 30 seconds
         setInterval(loadBlockchainNetworkStatus, 30000);
@@ -10455,100 +10774,100 @@ function showLoadingState() {
      * Display blockchain activities in the panel
      */
 
-     let blockchainMonitorInterval = null;
-function displayBlockchainActivities(activities) {
-    console.log('📊 Displaying blockchain activities:', activities.length, 'items');
+    let blockchainMonitorInterval = null;
+    function displayBlockchainActivities(activities) {
+        console.log('📊 Displaying blockchain activities:', activities.length, 'items');
 
-    // ✅ FIX: Use correct element ID
-    const stream = document.getElementById('activityStreamModal');
-    if (!stream) {
-        console.error('❌ Activity stream element not found');
-        return;
+        // ✅ FIX: Use correct element ID
+        const stream = document.getElementById('activityStreamModal');
+        if (!stream) {
+            console.error('❌ Activity stream element not found');
+            return;
+        }
+
+        // Hide empty state
+        const emptyState = document.getElementById('emptyActivityState');
+        if (emptyState) {
+            emptyState.style.display = 'none';
+        }
+
+        // Clear existing activity items (but keep empty state)
+        const existingActivities = stream.querySelectorAll('.activity-item');
+        existingActivities.forEach(item => item.remove());
+
+        // Display each activity with animation
+        activities.forEach((activity, index) => {
+            setTimeout(() => {
+                addBlockchainActivityToStream(activity);
+            }, index * 100); // Reduced delay for faster display
+        });
+
+        console.log('✅ Successfully displayed', activities.length, 'blockchain activities');
     }
 
-    // Hide empty state
-    const emptyState = document.getElementById('emptyActivityState');
-    if (emptyState) {
-        emptyState.style.display = 'none';
-    }
-
-    // Clear existing activity items (but keep empty state)
-    const existingActivities = stream.querySelectorAll('.activity-item');
-    existingActivities.forEach(item => item.remove());
-
-    // Display each activity with animation
-    activities.forEach((activity, index) => {
-        setTimeout(() => {
-            addBlockchainActivityToStream(activity);
-        }, index * 100); // Reduced delay for faster display
-    });
-
-    console.log('✅ Successfully displayed', activities.length, 'blockchain activities');
-}
 
 
+    function addBlockchainActivityToStream(activity) {
+        const stream = document.getElementById('activityStreamModal');
+        if (!stream) return;
 
-function addBlockchainActivityToStream(activity) {
-    const stream = document.getElementById('activityStreamModal');
-    if (!stream) return;
+        console.log('➕ Adding activity to stream:', activity);
 
-    console.log('➕ Adding activity to stream:', activity);
+        const item = document.createElement('div');
+        item.className = 'activity-item';
 
-    const item = document.createElement('div');
-    item.className = 'activity-item';
+        // Determine icon and title based on activity type
+        let icon, title, details;
 
-    // Determine icon and title based on activity type
-    let icon, title, details;
-    
-    if (activity.step) {
-        // New format from save operation
-        icon = getBlockchainIcon(activity.step);
-        title = formatStepName(activity.step);
-        details = activity.details || 'Blockchain operation completed';
-    } else if (activity.action) {
-        // Format from API history
-        icon = getActivityIcon(activity.action);
-        title = getActivityTitle(activity.action);
-        details = activity.details?.details || activity.details || 'Blockchain operation completed';
-    } else {
-        // Fallback
-        icon = 'ti ti-point';
-        title = 'Blockchain Operation';
-        details = 'Operation completed successfully';
-    }
+        if (activity.step) {
+            // New format from save operation
+            icon = getBlockchainIcon(activity.step);
+            title = formatStepName(activity.step);
+            details = activity.details || 'Blockchain operation completed';
+        } else if (activity.action) {
+            // Format from API history
+            icon = getActivityIcon(activity.action);
+            title = getActivityTitle(activity.action);
+            details = activity.details?.details || activity.details || 'Blockchain operation completed';
+        } else {
+            // Fallback
+            icon = 'ti ti-point';
+            title = 'Blockchain Operation';
+            details = 'Operation completed successfully';
+        }
 
-    const timestamp = formatTimestamp(activity.timestamp);
+        const timestamp = formatTimestamp(activity.timestamp);
 
-    // Build metadata display
-    let metadataHtml = '';
-    const metadata = activity.metadata || activity.details;
-    if (metadata && typeof metadata === 'object' && Object.keys(metadata).length > 0) {
-        metadataHtml = '<div class="stream-metadata">';
-        for (const [key, value] of Object.entries(metadata)) {
-            if (key !== 'full_hash' && key !== 'data_size' && value && key !== 'details') {
-                metadataHtml += `
+        // Build metadata display
+        let metadataHtml = '';
+        const metadata = activity.metadata || activity.details;
+        if (metadata && typeof metadata === 'object' && Object.keys(metadata).length > 0) {
+            metadataHtml = '<div class="stream-metadata">';
+            for (const [key, value] of Object.entries(metadata)) {
+                if (key !== 'full_hash' && key !== 'data_size' && value && key !== 'details') {
+                    metadataHtml += `
                     <span class="metadata-tag">
                         <i class="ti ti-point"></i> 
                         <strong>${key}:</strong> ${value}
                     </span>
                 `;
+                }
             }
+            metadataHtml += '</div>';
         }
-        metadataHtml += '</div>';
-    }
 
-    // Add transaction hash display if available
-    let hashHtml = '';
-    const txHash = activity.details?.transaction_hash || metadata?.transaction_hash || metadata?.transaction_id;
-    if (txHash) {
-        hashHtml = `
+        // Add transaction hash display if available
+        let hashHtml = '';
+        const txHash = activity.details?.transaction_hash || metadata?.transaction_hash || metadata?.transaction_id;
+        if (txHash) {
+            hashHtml = `
             <div class="activity-item-hash">
                 TX: ${txHash.substring(0, 20)}...
             </div>
         `;
-    }
+        }
 
-    item.innerHTML = `
+        item.innerHTML = `
         <div class="activity-item-header">
             <div class="activity-item-type">
                 <i class="ti ${icon}" style="font-size: 1.25rem; color: #3b82f6;"></i>
@@ -10563,9 +10882,9 @@ function addBlockchainActivityToStream(activity) {
         ${metadataHtml}
     `;
 
-    // Insert at top of stream (newest first)
-    stream.insertBefore(item, stream.firstChild);
-}
+        // Insert at top of stream (newest first)
+        stream.insertBefore(item, stream.firstChild);
+    }
 
 
 
@@ -10863,10 +11182,12 @@ function addBlockchainActivityToStream(activity) {
             }
         } catch (error) {
             console.error('Error approving workflow:', error);
+
             showNotification('Error approving contract. Please try again.', 'error');
 
         }
     }
+
 
     // Function to reject workflow
     function rejectWorkflow(contractId) {
@@ -10876,40 +11197,40 @@ function addBlockchainActivityToStream(activity) {
     // Function to open rejection modal
     function openRejectionModal(contractId) {
         const modalHtml = `
-        <div class="modal-overlay" id="rejectionModal" style="display: flex;">
-            <div class="modal-content" style="max-width: 500px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #e0e0e0;">
-                    <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="ti ti-x"></i> Reject Contract
-                    </h3>
-                    <button class="modal-close" onclick="closeRejectionModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.25rem;">
-                        <i class="ti ti-x"></i>
-                    </button>
-                </div>
-                <div class="modal-body" style="padding: 1.5rem;">
-                    <div class="form-group" style="margin-bottom: 1rem;">
-                        <label for="rejectionComment" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Reason for Rejection *</label>
-                        <textarea 
-                            id="rejectionComment" 
-                            class="form-control" 
-                            rows="4" 
-                            placeholder="Please provide a reason for rejecting this contract..."
-                            required
-                            style="width: 100%; padding: 0.5rem; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 0.9rem; font-family: inherit;"
-                        ></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 1rem;">
-                    <button class="btn btn-outline-secondary" onclick="closeRejectionModal()" style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #e0e0e0; background: white; cursor: pointer;">
-                        Cancel
-                    </button>
-                    <button class="btn btn-danger" onclick="submitRejection()" style="padding: 0.5rem 1rem; border-radius: 6px; border: none; background: #dc3545; color: white; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-                        <i class="ti ti-x"></i> Submit Rejection
-                    </button>
+    <div class="modal-overlay" id="rejectionModal" style="display: flex;">
+        <div class="modal-content" style="max-width: 500px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; border-bottom: 1px solid #e0e0e0;">
+                <h3 class="modal-title" style="margin: 0; font-size: 1.25rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ti ti-x"></i> Reject Contract
+                </h3>
+                <button class="modal-close" onclick="closeRejectionModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.25rem;">
+                    <i class="ti ti-x"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 1.5rem;">
+                <div class="form-group" style="margin-bottom: 1rem;">
+                    <label for="rejectionComment" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Reason for Rejection *</label>
+                    <textarea 
+                        id="rejectionComment" 
+                        class="form-control" 
+                        rows="4" 
+                        placeholder="Please provide a reason for rejecting this contract..."
+                        required
+                        style="width: 100%; padding: 0.5rem; border: 1px solid #e0e0e0; border-radius: 6px; font-size: 0.9rem; font-family: inherit;"
+                    ></textarea>
                 </div>
             </div>
+            <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid #e0e0e0; display: flex; justify-content: flex-end; gap: 1rem;">
+                <button class="btn btn-outline-secondary" onclick="closeRejectionModal()" style="padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid #e0e0e0; background: white; cursor: pointer;">
+                    Cancel
+                </button>
+                <button class="btn btn-danger" onclick="submitRejection(${contractId})" style="padding: 0.5rem 1rem; border-radius: 6px; border: none; background: #dc3545; color: white; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ti ti-x"></i> Submit Rejection
+                </button>
+            </div>
         </div>
-    `;
+    </div>
+`;
 
         const existingModal = document.getElementById('rejectionModal');
         if (existingModal) {
@@ -10931,6 +11252,81 @@ function addBlockchainActivityToStream(activity) {
         modal.style.justifyContent = 'center';
         modal.style.zIndex = '10000';
     }
+
+    // Function to close rejection modal
+    function closeRejectionModal() {
+        const modal = document.getElementById('rejectionModal');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    // Function to submit rejection
+    async function submitRejection(contractId) {
+        console.log('🔍 Submitting rejection for contract ID:', contractId);
+
+        if (!contractId) {
+            console.error('❌ Contract ID is missing!');
+            showNotification('Error: Contract ID not found', 'error');
+            return;
+        }
+
+        const comment = document.getElementById('rejectionComment').value.trim();
+
+        if (!comment) {
+            showNotification('Please provide a reason for rejection', 'warning');
+            return;
+        }
+
+        try {
+            console.log('📤 Sending rejection request...', {
+                contract_id: contractId,
+                action: 'reject',
+                comments: comment
+            });
+
+            const response = await fetch('/api/v1/workflow/approve-reject', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    contract_id: contractId,
+                    action: 'reject',
+                    comments: comment
+                })
+            });
+
+            const result = await response.json();
+            console.log('📥 Response:', response.status, result);
+
+            if (response.ok) {
+                closeRejectionModal();
+                showNotification('Rejection comment has been saved.', 'success');
+
+                // Reload page after short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            } else {
+                console.error('❌ Error response:', result);
+                showNotification('Error: ' + (result.detail || 'Failed to reject contract'), 'error');
+            }
+        } catch (error) {
+            console.error('❌ Error rejecting workflow:', error);
+            showNotification('Error rejecting contract. Please try again.', 'error');
+        }
+    }
+
+    // Helper function to get current contract ID from URL
+    function getCurrentContractId() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = parseInt(urlParams.get('id'));
+        console.log('📌 Current contract ID from URL:', id);
+        return id;
+    }
+
+
 
     // Function to close rejection modal
     function closeRejectionModal() {
@@ -10999,6 +11395,217 @@ function addBlockchainActivityToStream(activity) {
         return `<span class="comment-count-badge" style="background: rgb(255, 243, 205); color: rgb(133, 100, 4); padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; margin-left: 8px; display: inline-flex; gap: 6px;">
         <i class="ti ti-clock"></i> Awaiting ${approverName} ${approvalType} (${approverDepartment})
     </span>`;
+    }
+</script>
+
+
+<script>
+    // Function to open workflow history modal
+    async function openWorkflowHistoryModal() {
+
+        if (!contractId) {
+            showNotification('Contract ID not found', 'error');
+            return;
+        }
+
+        // Open modal
+        openModal('workflowHistoryModal');
+
+        // Fetch history
+        await loadWorkflowHistory(contractId);
+    }
+
+    // Function to load workflow history
+    async function loadWorkflowHistory(contractId) {
+        const contentDiv = document.getElementById('workflowHistoryContent');
+
+        try {
+            const response = await fetch(`/api/v1/workflow/workflow-history/${contractId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include'
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                // Display contract info
+                if (result.contract) {
+                    const contractInfo = document.getElementById('workflowHistoryContractInfo');
+                    contractInfo.textContent = `Contract: ${result.contract.number} - ${result.contract.title}`;
+                }
+
+                displayWorkflowHistory(result.data);
+            } else if (response.status === 403) {
+                // Access denied
+                contentDiv.innerHTML = `
+                <div class="workflow-history-empty">
+                    <i class="ti ti-lock"></i>
+                    <p style="color: var(--danger-color); font-weight: 600;">Access Denied</p>
+                    <small>You don't have permission to view this contract's workflow history</small>
+                </div>
+            `;
+            } else {
+                contentDiv.innerHTML = `
+                <div class="workflow-history-empty">
+                    <i class="ti ti-alert-circle"></i>
+                    <p>Failed to load workflow history</p>
+                </div>
+            `;
+            }
+        } catch (error) {
+            console.error('Error loading workflow history:', error);
+            contentDiv.innerHTML = `
+            <div class="workflow-history-empty">
+                <i class="ti ti-alert-circle"></i>
+                <p>Error loading workflow history</p>
+            </div>
+        `;
+        }
+    }
+
+    // Function to display workflow history
+    function displayWorkflowHistory(history) {
+        const contentDiv = document.getElementById('workflowHistoryContent');
+
+        if (!history || history.length === 0) {
+            contentDiv.innerHTML = `
+            <div class="workflow-history-empty">
+                <i class="ti ti-file-text"></i>
+                <p>No workflow history yet</p>
+                <small>Approval and rejection comments will appear here</small>
+            </div>
+        `;
+            return;
+        }
+
+        // Build timeline HTML
+        let html = '<div class="workflow-history-timeline">';
+
+        history.forEach(item => {
+            const actionClass = item.action.toLowerCase().includes('approve') ? 'approved' : 'rejected';
+            const actionIcon = item.action.toLowerCase().includes('approve') ? 'ti-check' : 'ti-x';
+            const actionText = item.action.toLowerCase().includes('approve') ? 'Approved' : 'Rejected';
+
+            // Get user initials
+            const nameParts = item.user.name.split(' ');
+            const initials = nameParts.map(n => n.charAt(0)).join('').substring(0, 2).toUpperCase();
+
+            html += `
+            <div class="workflow-history-item ${actionClass}">
+                <div class="workflow-history-header">
+                    <div class="workflow-history-user">
+                        <div class="workflow-history-avatar">${initials}</div>
+                        <div class="workflow-history-user-info">
+                            <span class="workflow-history-user-name">${item.user.name}</span>
+                            <span class="workflow-history-user-role">${item.user.role || item.user.department || 'Team Member'}</span>
+                        </div>
+                    </div>
+                   
+                </div>
+                
+                <div class="workflow-history-action ${actionClass}">
+                    <i class="ti ${actionIcon}"></i>
+                    ${actionText}
+                </div>
+                
+                ${item.comment ? `
+                    <div class="workflow-history-comment">
+                        ${escapeHtml(item.comment)}
+                    </div>
+                ` : ''}
+                
+                ${item.workflow_step ? `
+                    <div class="workflow-history-step">
+                        <i class="ti ti-folder"></i>
+                        Step ${item.workflow_step}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+        });
+
+        html += '</div>';
+        contentDiv.innerHTML = html;
+    }
+
+    // Helper function to format timestamp
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'Unknown time';
+
+        // Parse the timestamp - handle both ISO format and MySQL datetime format
+        let date;
+        if (timestamp.includes('T')) {
+            // ISO format: 2025-01-15T10:30:00
+            date = new Date(timestamp);
+        } else {
+            // MySQL datetime format: 2025-01-15 10:30:00
+            // Add 'T' to make it ISO-compatible, then parse
+            date = new Date(timestamp.replace(' ', 'T'));
+        }
+
+        const now = new Date();
+        const diff = now - date;
+
+        // If timestamp seems to be in the future or more than 1 day in past due to timezone issues,
+        // try to adjust by assuming server is in UTC
+        if (diff < -3600000 || diff > 86400000) {
+            // Get timezone offset in milliseconds
+            const timezoneOffset = now.getTimezoneOffset() * 60000;
+            date = new Date(date.getTime() - timezoneOffset);
+            const adjustedDiff = now - date;
+
+            // Use adjusted diff if it makes more sense
+            if (adjustedDiff >= 0 && adjustedDiff < diff) {
+                return formatRelativeTime(adjustedDiff, date);
+            }
+        }
+
+        return formatRelativeTime(diff, date);
+    }
+
+    // Helper function to format relative time
+    function formatRelativeTime(diff, date) {
+        // Less than 1 minute
+        if (diff < 60000) {
+            return 'Just now';
+        }
+
+        // Less than 1 hour
+        if (diff < 3600000) {
+            const minutes = Math.floor(diff / 60000);
+            return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+        }
+
+        // Less than 24 hours
+        if (diff < 86400000) {
+            const hours = Math.floor(diff / 3600000);
+            return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+        }
+
+        // Less than 7 days
+        if (diff < 604800000) {
+            const days = Math.floor(diff / 86400000);
+            return `${days} day${days > 1 ? 's' : ''} ago`;
+        }
+
+        // Format as date
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 </script>
 

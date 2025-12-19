@@ -153,7 +153,6 @@ async def process_chatbot_query(
             detail=f"Failed to process query: {str(e)}"
         )
 
-
 @router.post("/sessions", response_model=ChatSessionResponse)
 async def create_chat_session(
     request: ChatSessionCreate,
@@ -174,14 +173,14 @@ async def create_chat_session(
         
         logger.info(f"Creating chat session for user {current_user.id}: {session_code}")
         
-        # Create session in database
+        # Create session in database - REMOVED 'subject' field
         session = ExpertSession(
             session_code=session_code,
             user_id=current_user.id,
             session_type="ai_chatbot",
             status="active",
             contract_id=request.contract_id,
-            subject=request.subject or "AI Chatbot Consultation"
+            query_text=request.subject or "AI Chatbot Consultation"  # ✅ Use query_text instead
         )
         
         db.add(session)
@@ -192,43 +191,46 @@ async def create_chat_session(
         welcome_text = f"""👋 Hello {current_user.first_name}! I'm your CALIM360 AI Assistant.
 
 I'm here to help you with:
-• Contract questions and analysis
-• Risk assessment and compliance
-• Workflow and approval guidance
-• CLM system features
-• Legal and contractual guidance
+- Contract questions and analysis
+- Risk assessment and compliance
+- Workflow and approval guidance
+- CLM system features
+- Legal and contractual guidance
 
 How can I assist you today?"""
         
-        welcome_msg = ExpertSessionMessage(
+        welcome_message = ExpertSessionMessage(
             session_id=session.id,
             sender_id=current_user.id,
             sender_type="system",
             message_type="text",
             message_content=welcome_text,
-            is_ai_generated=True
+            is_ai_generated=True,
+            ai_confidence=1.0
         )
-        db.add(welcome_msg)
+        
+        db.add(welcome_message)
         db.commit()
         
         logger.info(f"✅ Chat session created: {session.id}")
         
         return ChatSessionResponse(
             success=True,
-            message="Chat session created successfully",
             session_id=session.id,
-            session_code=session_code,
-            created_at=session.created_at
+            session_code=session.session_code,
+            message="Chat session created successfully",
+            welcome_message=welcome_text
         )
         
     except Exception as e:
-        logger.error(f"❌ Session creation error: {str(e)}", exc_info=True)
         db.rollback()
+        logger.error(f"❌ Session creation error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create session: {str(e)}"
         )
 
+        
 
 @router.get("/sessions/{session_id}/history", response_model=ConversationHistoryResponse)
 async def get_conversation_history(
