@@ -1262,33 +1262,141 @@
             showToast('Failed to load obligation details', 'error');
         }
     }
+async function deleteObligation(id) {
+    try {
+        const obligation = obligationsData.find(o => o.id === id);
+        const obligationName = obligation ? obligation.obligation_title : 'this obligation';
 
-    async function deleteObligation(id) {
-        if (!confirm('Are you sure you want to delete this obligation?')) {
+        if (!confirm(`Are you sure you want to delete "${obligationName}"?`)) {
             return;
         }
 
-        try {
-            showLoading(true);
+        showLoading(true);
+        console.log('🗑️ Deleting obligation:', id);
 
-            const response = await fetch(`${API_BASE}/${id}`, {
-                method: 'DELETE'
-            });
+        const response = await fetch(`${API_BASE}/${id}`, {
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-            if (!response.ok) throw new Error('Failed to delete obligation');
-
-            showToast('Obligation deleted successfully', 'success');
-            loadObligations();
-
-        } catch (error) {
-            console.error('Error deleting obligation:', error);
-            showToast('Failed to delete obligation', 'error');
-        } finally {
-            showLoading(false);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Delete failed');
         }
-    }
 
-    // =====================================================
+        const result = await response.json();
+        console.log('✅ Delete successful:', result);
+        
+        // Remove from local data array
+        obligationsData = obligationsData.filter(o => o.id !== id);
+        
+        // Immediately remove the row from the table
+        const row = document.querySelector(`tr[data-id="${id}"]`);
+        if (row) {
+            row.remove();
+        }
+        
+        // Show tooltip/toast message
+        showToast('Obligation deleted', 'success');
+        
+        // Reload to refresh stats and ensure clean state
+        await loadObligations();
+
+    } catch (error) {
+        console.error('❌ Delete error:', error);
+        showToast(error.message || 'Failed to delete obligation', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+   
+
+// =====================================================
+// BULK DELETE OBLIGATIONS
+// =====================================================
+
+async function deleteSelectedObligations() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+    
+    if (checkboxes.length === 0) {
+        showToast('Please select obligations to delete', 'warning');
+        return;
+    }
+    
+    const count = checkboxes.length;
+    if (!confirm(`Delete ${count} obligation(s)? This cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        showLoading(true);
+        
+        const obligationIds = Array.from(checkboxes).map(cb => parseInt(cb.dataset.id));
+        
+        console.log('🗑️ Bulk deleting obligations:', obligationIds);
+        
+        const response = await fetch(`${API_BASE}/bulk-delete`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(obligationIds)
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Bulk delete failed');
+        }
+        
+        const result = await response.json();
+        console.log('✅ Bulk delete result:', result);
+        
+        // Remove from local data
+        obligationsData = obligationsData.filter(o => !obligationIds.includes(o.id));
+        
+        // Remove rows from table
+        obligationIds.forEach(id => {
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            if (row) {
+                row.remove();
+            }
+        });
+        
+        // Show success message
+        showToast(`${result.deleted_count} obligation(s) deleted`, 'success');
+        
+        // Uncheck select-all
+        const selectAllCheckbox = document.querySelector('.select-all-checkbox');
+        if (selectAllCheckbox) {
+            selectAllCheckbox.checked = false;
+        }
+        
+        // Reload data
+        await loadObligations();
+        
+    } catch (error) {
+        console.error('❌ Bulk delete error:', error);
+        showToast(error.message || 'Failed to delete obligations', 'error');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// Add bulk delete button handler
+document.addEventListener('DOMContentLoaded', function() {
+    const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+    if (bulkDeleteBtn) {
+        bulkDeleteBtn.addEventListener('click', deleteSelectedObligations);
+    }
+});
+
+
+
+// =====================================================
     // UTILITY FUNCTIONS
     // =====================================================
     function formatStatus(status) {

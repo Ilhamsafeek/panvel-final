@@ -692,86 +692,305 @@ async def update_obligation(
 # =====================================================
 # DELETE OBLIGATION
 # =====================================================
-
-@router.delete("/{obligation_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{obligation_id}")
 async def delete_obligation(
     obligation_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Delete an obligation and all related records"""
+    """
+    Delete an obligation with proper foreign key handling
+    Manually deletes related records to avoid constraint errors
+    """
     try:
         logger.info(f"🗑️ Deleting obligation {obligation_id}")
         
+        # Get the obligation first
         obligation = db.query(Obligation).filter(Obligation.id == obligation_id).first()
-        if not obligation:
-            raise HTTPException(status_code=404, detail="Obligation not found")
         
-        # Disable foreign key checks temporarily (MySQL specific)
+        if not obligation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Obligation not found"
+            )
+        
+        # Verify user has access
+        contract = db.query(Contract).filter(Contract.id == obligation.contract_id).first()
+        if contract and contract.company_id != current_user.company_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+        
+        # ✅ MANUALLY DELETE RELATED RECORDS IN CORRECT ORDER
+        logger.info(f"🗑️ Deleting related records for obligation {obligation_id}")
+        
         try:
-            db.execute(text("SET FOREIGN_KEY_CHECKS = 0"))
-            logger.info(f"  ⚙️ Disabled foreign key checks")
+            # 1. Delete obligation_updates
+            db.execute(
+                text("DELETE FROM obligation_updates WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
             
-            # Delete from all related tables
-            tables_to_clean = [
-                'obligation_tracking',
-                'obligation_updates',
-                'obligation_escalations',
-                'obligation_reminders',
-                'obligation_attachments'
-            ]
+            # 2. Delete obligation_kpis
+            db.execute(
+                text("DELETE FROM obligation_kpis WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
             
-            for table in tables_to_clean:
-                try:
-                    result = db.execute(
-                        text(f"DELETE FROM {table} WHERE obligation_id = :id"), 
-                        {"id": obligation_id}
-                    )
-                    deleted_count = result.rowcount
-                    if deleted_count > 0:
-                        logger.info(f"  ✅ Deleted {deleted_count} records from {table}")
-                except Exception as e:
-                    # Table might not exist or no records, continue
-                    logger.info(f"  ⚠️ {table}: {str(e)}")
-                    continue
+            # 3. Delete obligation_alerts
+            db.execute(
+                text("DELETE FROM obligation_alerts WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
             
-            # Now delete the obligation itself
-            db.execute(text("DELETE FROM obligations WHERE id = :id"), {"id": obligation_id})
-            logger.info(f"  ✅ Deleted obligation {obligation_id}")
+            # 4. Delete obligation_escalations
+            db.execute(
+                text("DELETE FROM obligation_escalations WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
             
-            # Re-enable foreign key checks
-            db.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
-            logger.info(f"  ⚙️ Re-enabled foreign key checks")
+            # 5. Delete obligation_documents
+            db.execute(
+                text("DELETE FROM obligation_documents WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
             
-            # Commit all changes
+            # 6. Finally, delete the obligation itself
+            db.delete(obligation)
             db.commit()
             
-            logger.info(f"✅ Obligation {obligation_id} and all related records deleted successfully")
-        
+            logger.info(f"✅ Obligation {obligation_id} deleted successfully")
+            
+            return {
+                "success": True,
+                "message": "Obligation deleted successfully",
+                "id": obligation_id
+            }
+            
         except Exception as e:
-            # Make sure to re-enable foreign key checks even if error occurs
-            try:
-                db.execute(text("SET FOREIGN_KEY_CHECKS = 1"))
-                db.commit()
-            except:
-                pass
-            raise e
+            db.rollback()
+            logger.error(f"❌ Error during cascading delete: {str(e)}")
+            raise
         
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
         logger.error(f"❌ Error deleting obligation: {str(e)}")
-        
-        # Check if it's a foreign key error
-        error_message = str(e)
-        if "foreign key constraint" in error_message.lower():
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Cannot delete this obligation because it has related records. Please contact support for assistance."
-            )
-        
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete obligation: {str(e)}"
         )
+
+
+@router.delete("/{obligation_id}")
+async def delete_obligation(
+    obligation_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Delete an obligation - CORRECTED VERSION
+    Only deletes from tables that actually exist in your database
+    """
+    try:
+        logger.info(f"🗑️ Deleting obligation {obligation_id}")
+        
+        # Get the obligation first
+        obligation = db.query(Obligation).filter(Obligation.id == obligation_id).first()
+        
+        if not obligation:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Obligation not found"
+            )
+        
+        # Verify user has access
+        contract = db.query(Contract).filter(Contract.id == obligation.contract_id).first()
+        if contract and contract.company_id != current_user.company_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+        
+        # ✅ DELETE RELATED RECORDS FROM ACTUAL TABLES ONLY
+        logger.info(f"🗑️ Deleting related records for obligation {obligation_id}")
+        
+        try:
+            # 1. Delete from obligation_updates (exists)
+            result = db.execute(
+                text("DELETE FROM obligation_updates WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
+            logger.info(f"✅ Deleted {result.rowcount} records from obligation_updates")
+            
+            # 2. Delete from obligation_escalations (exists)
+            result = db.execute(
+                text("DELETE FROM obligation_escalations WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
+            logger.info(f"✅ Deleted {result.rowcount} records from obligation_escalations")
+            
+            # 3. Delete from obligation_tracking (exists)
+            result = db.execute(
+                text("DELETE FROM obligation_tracking WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
+            logger.info(f"✅ Deleted {result.rowcount} records from obligation_tracking")
+            
+            # 4. Delete from kpis table (NOT obligation_kpis)
+            result = db.execute(
+                text("DELETE FROM kpis WHERE obligation_id = :id"),
+                {"id": obligation_id}
+            )
+            logger.info(f"✅ Deleted {result.rowcount} records from kpis")
+            
+            # 5. Finally, delete the obligation itself
+            db.delete(obligation)
+            db.commit()
+            
+            logger.info(f"✅ Obligation {obligation_id} and all related records deleted successfully")
+            
+            return {
+                "success": True,
+                "message": "Obligation deleted successfully",
+                "id": obligation_id
+            }
+            
+        except Exception as e:
+            db.rollback()
+            logger.error(f"❌ Error during cascading delete: {str(e)}")
+            raise
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error deleting obligation: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete obligation: {str(e)}"
+        )
+
+
+@router.post("/bulk-delete")
+async def bulk_delete_obligations(
+    obligation_ids: List[int],
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Bulk delete obligations - CORRECTED VERSION
+    Only deletes from tables that actually exist
+    """
+    try:
+        logger.info(f"🗑️ Bulk deleting {len(obligation_ids)} obligations")
+        
+        deleted_count = 0
+        errors = []
+        
+        for obligation_id in obligation_ids:
+            try:
+                obligation = db.query(Obligation).filter(Obligation.id == obligation_id).first()
+                
+                if not obligation:
+                    errors.append(f"Obligation {obligation_id} not found")
+                    continue
+                
+                # Verify access
+                contract = db.query(Contract).filter(Contract.id == obligation.contract_id).first()
+                if contract and contract.company_id != current_user.company_id:
+                    errors.append(f"Access denied for obligation {obligation_id}")
+                    continue
+                
+                # Delete related records from actual tables
+                try:
+                    # Delete from obligation_updates
+                    db.execute(
+                        text("DELETE FROM obligation_updates WHERE obligation_id = :id"),
+                        {"id": obligation_id}
+                    )
+                    
+                    # Delete from obligation_escalations
+                    db.execute(
+                        text("DELETE FROM obligation_escalations WHERE obligation_id = :id"),
+                        {"id": obligation_id}
+                    )
+                    
+                    # Delete from obligation_tracking
+                    db.execute(
+                        text("DELETE FROM obligation_tracking WHERE obligation_id = :id"),
+                        {"id": obligation_id}
+                    )
+                    
+                    # Delete from kpis table
+                    db.execute(
+                        text("DELETE FROM kpis WHERE obligation_id = :id"),
+                        {"id": obligation_id}
+                    )
+                    
+                    # Delete the obligation
+                    db.delete(obligation)
+                    deleted_count += 1
+                    
+                except Exception as e:
+                    errors.append(f"Error deleting obligation {obligation_id}: {str(e)}")
+                    db.rollback()
+                    continue
+                
+            except Exception as e:
+                errors.append(f"Error processing obligation {obligation_id}: {str(e)}")
+        
+        # Commit all successful deletions
+        if deleted_count > 0:
+            db.commit()
+            logger.info(f"✅ Successfully deleted {deleted_count} obligations")
+        
+        logger.info(f"✅ Bulk delete completed: {deleted_count} deleted, {len(errors)} errors")
+        
+        return {
+            "success": True,
+            "deleted_count": deleted_count,
+            "total_requested": len(obligation_ids),
+            "errors": errors if errors else None
+        }
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Bulk delete failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Bulk delete failed: {str(e)}"
+        )
+
+
+# =====================================================
+# HELPER FUNCTION - Check which tables exist
+# =====================================================
+
+async def get_related_obligation_tables(db: Session) -> list:
+    """
+    Query database to find which obligation-related tables actually exist
+    Useful for debugging and future-proofing
+    """
+    try:
+        result = db.execute(
+            text("""
+                SELECT TABLE_NAME 
+                FROM information_schema.TABLES 
+                WHERE TABLE_SCHEMA = 'lpeclk_smart_clm' 
+                AND TABLE_NAME LIKE 'obligation%'
+                OR TABLE_NAME = 'kpis'
+            """)
+        )
+        tables = [row[0] for row in result.fetchall()]
+        logger.info(f"📊 Found obligation-related tables: {tables}")
+        return tables
+    except Exception as e:
+        logger.error(f"❌ Error checking tables: {str(e)}")
+        return []

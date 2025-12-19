@@ -1046,6 +1046,32 @@
                 <span id="tableTitle">Obligations List</span>
             </div>
             <div class="table-controls">
+                <div class="bulk-actions" style="margin: 1rem 0; display: none;" id="bulkActionsBar">
+                    <button class="btn btn-danger" id="bulkDeleteBtn">
+                        <i class="ti ti-trash"></i>
+                        Delete Selected
+                    </button>
+                    <span class="selected-count" id="selectedCount">0 selected</span>
+                </div>
+
+                <script>
+                    // Show/hide bulk actions based on selection
+                    document.addEventListener('change', function (e) {
+                        if (e.target.classList.contains('row-checkbox') || e.target.classList.contains('select-all-checkbox')) {
+                            const checkedCount = document.querySelectorAll('.row-checkbox:checked').length;
+                            const bulkActionsBar = document.getElementById('bulkActionsBar');
+                            const selectedCount = document.getElementById('selectedCount');
+
+                            if (checkedCount > 0) {
+                                bulkActionsBar.style.display = 'flex';
+                                selectedCount.textContent = `${checkedCount} selected`;
+                            } else {
+                                bulkActionsBar.style.display = 'none';
+                            }
+                        }
+                    });
+                </script>
+
                 <div class="search-box">
                     <i class="ti ti-search search-icon"></i>
                     <input type="text" class="search-input" id="searchInput" placeholder="Search obligations...">
@@ -2271,7 +2297,7 @@
     function editAIObligation(id) {
         const obligation = window.aiObligations.find(o => o.id === id);
         if (!obligation) return;
-                showNotification(`Edit functionality for: ${obligation.title}`, 'success');
+        showNotification(`Edit functionality for: ${obligation.title}`, 'success');
 
     }
 

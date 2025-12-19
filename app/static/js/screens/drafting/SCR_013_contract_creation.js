@@ -428,11 +428,17 @@ async function generateContractWithAI(contractData) {
 // =====================================================
 // AI Contract Generation (Fixed for Content Save with Clauses)
 // =====================================================
+let aiGenerationController = null; // Global controller for AI generation
 
 async function generateContract() {
     try {
         console.log('🤖 Starting AI contract generation...');
-        showLoader('AI is generating your contract...');
+        
+        // Show specific loading message
+        showLoader('AI is writing your contract…This may take a while.');
+
+        // Create a new AbortController for this generation
+        aiGenerationController = new AbortController();
 
         // Get contract details
         const contractTitle = document.getElementById('contractTitle')?.value ||
@@ -451,13 +457,10 @@ async function generateContract() {
             return;
         }
 
-        // Get clause selections - INTEGRATED FROM DEVELOP
+        // Get clause selections
         const clauseData = getClauseSelections();
 
-        console.log('📋 Clause selections:', clauseData.selections);
-        console.log('📋 Number of clauses selected:', clauseData.count);
-
-        // Prepare AI request with clause support
+        // Prepare AI request
         const requestData = {
             contract_title: contractTitle,
             contract_type: contractType || selectedTemplate || 'Service Agreement',
@@ -467,22 +470,23 @@ async function generateContract() {
             end_date: endDate,
             contract_value: contractValue ? parseFloat(contractValue) : null,
             currency: 'QAR',
-            selected_clauses: clauseData.selections,      // ✅ INCLUDED
-            clause_descriptions: clauseData.descriptions,  // ✅ FOR AI CONTEXT
+            selected_clauses: clauseData.selections,
+            clause_descriptions: clauseData.descriptions,
             jurisdiction: 'Qatar',
             language: 'en'
         };
 
         console.log('📤 Sending request to AI endpoint:', requestData);
 
-        // Call AI generation endpoint (using correct API_BASE)
+        // Call AI generation endpoint with AbortController
         const response = await fetch(`${API_BASE}/ai-generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${getAuthToken()}`
             },
-            body: JSON.stringify(requestData)
+            body: JSON.stringify(requestData),
+            signal: aiGenerationController.signal // Add signal for cancellation
         });
 
         if (!response.ok) {
@@ -493,7 +497,7 @@ async function generateContract() {
         const result = await response.json();
         console.log('✅ AI Contract generated successfully:', result);
 
-        // Store the generated content - CRITICAL FIX
+        // Store the generated content
         generatedContractContent = result.contract_content ||
             result.contract_body ||
             result.ai_result?.contract_text ||
@@ -514,19 +518,47 @@ async function generateContract() {
         hideLoader();
         showSuccess('Contract generated successfully! Review and save when ready.');
 
-        // Show the save contract modal after a brief delay
-        setTimeout(() => {
-            openSaveContractModal();
-        }, 1000);
-
-        return result;
+        // Clear the controller
+        aiGenerationController = null;
 
     } catch (error) {
         hideLoader();
-        showError('Error generating contract: ' + error.message);
-        console.error('Generation error:', error);
+        
+        // Check if error was due to abort
+        if (error.name === 'AbortError') {
+            showError('AI generation was stopped due to session timeout or navigation.');
+            console.log('⚠️ AI generation aborted');
+        } else {
+            showError(`Failed to generate contract: ${error.message}`);
+            console.error('❌ AI generation error:', error);
+        }
+        
+        // Clear the controller
+        aiGenerationController = null;
     }
 }
+
+
+// =====================================================
+// CANCEL AI GENERATION ON PAGE UNLOAD
+// =====================================================
+
+// Add this at the end of the file
+window.addEventListener('beforeunload', function() {
+    if (aiGenerationController) {
+        console.log('⚠️ Page unloading, aborting AI generation');
+        aiGenerationController.abort();
+    }
+});
+
+// Also cancel when navigating away
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden && aiGenerationController) {
+        console.log('⚠️ Page hidden, aborting AI generation');
+        aiGenerationController.abort();
+    }
+});
+
 
 // =====================================================
 // Clause Selection Helper
