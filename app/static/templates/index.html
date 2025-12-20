@@ -242,7 +242,7 @@
            HERO SECTION
            ============================================ */
         .hero {
-            min-height: 100vh;
+            min-height: 105vh;
             background: var(--gradient-hero);
             position: relative;
             display: flex;
@@ -2827,6 +2827,579 @@ Add this to your <style> section
             z-index: 10;
         }
     </style>
+
+    <style>
+        .spinal-models {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Ensure the container is centered */
+        #spinal-models .app-container {
+            margin: 0 auto;
+        }
+
+        /* Center the hero container content */
+        #spinal-models.hero {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+        }
+
+        /* Hero Background Pattern */
+        .hero-bg-pattern {
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 80%, rgba(115, 180, 224, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(39, 98, 203, 0.2) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        .hero-grid {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+        }
+
+        /* Container */
+        .app-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 700px;
+            height: 700px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            /* Add this line */
+        }
+
+        /* Connection Lines SVG */
+        .connection-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .connection-line {
+            stroke: rgba(255, 255, 255, 0.15);
+            stroke-width: 2;
+            stroke-dasharray: 5, 5;
+            animation: dashMove 20s linear infinite;
+        }
+
+        @keyframes dashMove {
+            to {
+                stroke-dashoffset: -1000;
+            }
+        }
+
+        .connection-group:hover .connection-line {
+            stroke: rgba(115, 180, 224, 0.4);
+            stroke-width: 3;
+        }
+
+        /* App Icons */
+        .app {
+            position: absolute;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 5;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            text-decoration: none;
+        }
+
+        .app:hover {
+            transform: scale(1.05);
+            z-index: 15;
+        }
+
+        .app:active {
+            transform: scale(0.95);
+        }
+
+        /* Center app */
+        .app.center {
+            position: relative;
+            z-index: 10;
+            cursor: default;
+        }
+
+        .app.center .app-icon {
+            width: 160px;
+            height: 160px;
+            background: linear-gradient(135deg, rgba(74, 222, 128, 0.25) 0%, rgba(34, 197, 94, 0.35) 100%);
+            border: 3px solid rgba(74, 222, 128, 0.6);
+            box-shadow:
+                0 12px 48px rgba(74, 222, 128, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                0 0 60px rgba(74, 222, 128, 0.3);
+            cursor: default;
+            padding: 1.5rem;
+        }
+
+        .app.center .app-icon img {
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .app.center .app-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 1rem;
+        }
+
+        /* Surrounding apps positioning - Circular arrangement */
+        .app.top {
+            top: 5%;
+            left: 40%;
+            transform: translateX(-50%);
+        }
+
+        .app.top-right {
+            top: 12%;
+            right: 12%;
+        }
+
+        .app.right {
+            top: 40%;
+            right: 5%;
+            transform: translateY(-50%);
+        }
+
+        .app.bottom-right {
+            bottom: 8%;
+            right: 12%;
+        }
+
+        .app.bottom {
+            bottom: 0;
+            left: 40%;
+            transform: translateX(-50%);
+        }
+
+        .app.bottom-left {
+            bottom: 8%;
+            left: 12%;
+        }
+
+        .app.left {
+            top: 40%;
+            left: 5%;
+            transform: translateY(-50%);
+        }
+
+        .app.top-left {
+            top: 12%;
+            left: 12%;
+        }
+
+        /* App icon base styles */
+        .app-icon {
+            width: 130px;
+            height: 130px;
+            border-radius: 24px;
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow:
+                0 8px 32px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                0 0 40px rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app:hover .app-icon {
+            transform: scale(1.12);
+            box-shadow:
+                0 16px 48px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                0 0 60px rgba(255, 255, 255, 0.2);
+        }
+
+        /* App icon images */
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 1rem;
+        }
+
+        /* App name labels */
+        .app-name {
+            margin-top: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+        }
+
+        /* Individual color schemes for each app */
+        .app.top .app-icon {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.3) 100%);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .app.top-right .app-icon {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(217, 119, 6, 0.3) 100%);
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+
+        .app.right .app-icon {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(124, 58, 237, 0.3) 100%);
+            border-color: rgba(139, 92, 246, 0.5);
+        }
+
+        .app.bottom-right .app-icon {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(219, 39, 119, 0.3) 100%);
+            border-color: rgba(236, 72, 153, 0.5);
+        }
+
+        .app.bottom .app-icon {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.3) 100%);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .app.bottom-left .app-icon {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(147, 51, 234, 0.3) 100%);
+            border-color: rgba(168, 85, 247, 0.5);
+        }
+
+        .app.left .app-icon {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(22, 163, 74, 0.3) 100%);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
+
+        .app.top-left .app-icon {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2) 0%, rgba(8, 145, 178, 0.3) 100%);
+            border-color: rgba(6, 182, 212, 0.5);
+        }
+
+        /* Coming Soon Badge */
+        .coming-soon-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Active Badge */
+        .active-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+            z-index: 10;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Pulse animation for center app */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                box-shadow:
+                    0 12px 48px rgba(74, 222, 128, 0.2),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                    0 0 60px rgba(74, 222, 128, 0.3);
+            }
+
+            50% {
+                box-shadow:
+                    0 12px 48px rgba(74, 222, 128, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                    0 0 80px rgba(74, 222, 128, 0.5);
+            }
+        }
+
+        .app.center .app-icon {
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        /* Header */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem;
+            text-align: center;
+            z-index: 20;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Coming Soon Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a2744, #2762cb);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            color: #ff9800;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .modal-message {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .modal-close-btn {
+            background: linear-gradient(135deg, #2762cb, #1e4a9a);
+            color: white;
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 20px rgba(39, 98, 203, 0.3);
+        }
+
+        .modal-close-btn:hover {
+            background: linear-gradient(135deg, #1e4a9a, #2762cb);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(39, 98, 203, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .app-container {
+                max-width: 600px;
+                height: 600px;
+            }
+
+            .app-icon {
+                width: 110px;
+                height: 110px;
+                font-size: 40px;
+            }
+
+            .app.center .app-icon {
+                width: 140px;
+                height: 140px;
+            }
+
+            .app-name {
+                font-size: 0.85rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                max-width: 450px;
+                height: 450px;
+            }
+
+            .app-icon {
+                width: 85px;
+                height: 85px;
+                font-size: 32px;
+                border-radius: 18px;
+            }
+
+            .app.center .app-icon {
+                width: 110px;
+                height: 110px;
+                padding: 1rem;
+            }
+
+            .app-name {
+                font-size: 0.75rem;
+            }
+
+            .app.center .app-name {
+                font-size: 1rem;
+            }
+
+            .header {
+                padding: 1.5rem;
+            }
+
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .header p {
+                font-size: 0.9rem;
+            }
+
+            .coming-soon-badge,
+            .active-badge {
+                font-size: 0.55rem;
+                padding: 3px 8px;
+            }
+
+            .modal-content {
+                padding: 2rem 1.5rem;
+                margin: 1rem;
+            }
+
+            .modal-title {
+                font-size: 1.5rem;
+            }
+
+            .modal-message {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .app-container {
+                max-width: 350px;
+                height: 350px;
+            }
+
+            .app-icon {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+                border-radius: 16px;
+            }
+
+            .app.center .app-icon {
+                width: 95px;
+                height: 95px;
+                padding: 0.75rem;
+            }
+
+            .app-name {
+                font-size: 0.65rem;
+                margin-top: 0.5rem;
+            }
+
+            .app.center .app-name {
+                font-size: 0.9rem;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .header p {
+                font-size: 0.8rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .app.center .app-icon {
+                animation: none;
+            }
+
+            .connection-line {
+                animation: none;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -3024,6 +3597,9 @@ Add this to your <style> section
     </section>
 
 
+
+
+   
     <!-- PREMIUM MODULES SHOWCASE SECTION -->
     <section class="modules-showcase-section" id="modules">
         <div class="container">
@@ -3521,9 +4097,11 @@ Add this to your <style> section
 
             </div> <!-- End modules-grid -->
 
+
+
             <!-- Call to Action -->
-            <div class="modules-cta-section">
-                <div class="modules-cta-content">
+            <!-- <div class="modules-cta-section"> -->
+            <!-- <div class="modules-cta-content">
                     <h3>Need Multiple Modules?</h3>
                     <p>Get our complete suite with all 7 modules and save up to 40% with our enterprise plan.</p>
                     <div class="cta-buttons">
@@ -3536,9 +4114,298 @@ Add this to your <style> section
                             Talk to Sales
                         </button>
                     </div>
+                </div> -->
+
+            <!-- Background Pattern -->
+
+            <!-- </div> -->
+
+        </div>
+    </section>
+
+ <section class="hero" id="spinal-models" style="min-height: 105vh;">
+        <div class="hero-bg-pattern"></div>
+        <div class="hero-grid"></div>
+
+
+        <div class="app-container" id="folderContainer">
+            <div class="folder">
+                <div class="apps-circle">
+                    <!-- SVG for connection lines -->
+                    <svg class="connection-svg" viewBox="0 0 700 700" preserveAspectRatio="xMidYMid meet">
+                        <defs>
+                            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:rgba(255,255,255,0.3);stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:rgba(255,255,255,0.8);stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:rgba(255,255,255,0.3);stop-opacity:1" />
+                            </linearGradient>
+
+                            <filter id="glow">
+                                <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+                                <feMerge>
+                                    <feMergeNode in="coloredBlur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        <!-- Connection lines from center to each surrounding app -->
+                        <g class="connection-group">
+                            <line class="connection-line" x1="349" y1="270" x2="350" y2="135" />
+                            <circle cx="349" cy="135" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
+                            <circle cx="349" cy="135" r="10" fill="none" stroke="white" stroke-width="1"
+                                opacity="0.4" />
+                        </g>
+
+                        <g class="connection-group">
+                            <line class="connection-line" x1="406" y1="294" x2="485" y2="215" />
+                            <circle cx="485" cy="215" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
+                            <circle cx="485" cy="215" r="10" fill="none" stroke="white" stroke-width="1"
+                                opacity="0.4" />
+                        </g>
+
+                        <g class="connection-group">
+                            <line class="connection-line" x1="430" y1="353" x2="565" y2="352" />
+                            <circle cx="565" cy="352" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
+                            <circle cx="565" cy="352" r="10" fill="none" stroke="white" stroke-width="1"
+                                opacity="0.4" />
+                        </g>
+
+                        <g class="connection-group">
+                            <line class="connection-line" x1="406" y1="406" x2="485" y2="485" />
+                            <circle cx="485" cy="485" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
+                            <circle cx="485" cy="485" r="10" fill="none" stroke="white" stroke-width="1"
+                                opacity="0.4" />
+                        </g>
+
+                        <g class="connection-group">
+                            <line class="connection-line" x1="351" y1="430" x2="350" y2="565" />
+                            <circle cx="350" cy="565" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
+                            <circle cx="350" cy="565" r="10" fill="none" stroke="white" stroke-width="1"
+                                opacity="0.4" />
+                        </g>
+
+                        <g class="connection-group">
+                            <line class="connection-line" x1="294" y1="406" x2="215" y2="485" />
+                            <circle cx="215" cy="485" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
+                            <circle cx="215" cy="485" r="10" fill="none" stroke="white" stroke-width="1"
+                                opacity="0.4" />
+                        </g>
+
+                        <g class="connection-group">
+                            <line class="connection-line" x1="270" y1="351" x2="135" y2="350" />
+                            <circle cx="135" cy="350" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
+                            <circle cx="135" cy="350" r="10" fill="none" stroke="white" stroke-width="1"
+                                opacity="0.4" />
+                        </g>
+
+                        <g class="connection-group">
+                            <line class="connection-line" x1="294" y1="294" x2="215" y2="215" />
+                            <circle cx="215" cy="215" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
+                            <circle cx="215" cy="215" r="10" fill="none" stroke="white" stroke-width="1"
+                                opacity="0.4" />
+                        </g>
+                    </svg>
+
+                    <!-- Center app -->
+                    <div class="app center">
+                        <div class="app-icon">
+                            <img src="/static/img/c360.png" alt="CALIM 360">
+                        </div>
+                    </div>
+
+                    <!-- Surrounding apps - 8 positions -->
+
+                    <!-- Top - Tender -->
+                    <div class="app top" data-module="tender"
+                        onclick="handleModuleClick('tender', 'Tender Management')">
+                        <div class="coming-soon-badge">Soon</div>
+                        <div class="app-icon">
+                            <img src="/static/img/tender.png" alt="Tender">
+                        </div>
+                        <div class="app-name">Tender</div>
+                    </div>
+
+                    <!-- Top Right - Bid -->
+                    <div class="app top-right" data-module="bid" onclick="handleModuleClick('bid', 'Bid Management')">
+                        <div class="coming-soon-badge">Soon</div>
+                        <div class="app-icon">
+                            <img src="/static/img/bid.png" alt="Bid">
+                        </div>
+                        <div class="app-name">Bid</div>
+                    </div>
+
+                    <!-- Right - Communication -->
+                    <div class="app right" data-module="communication"
+                        onclick="handleModuleClick('communication', 'Communication')">
+                        <div class="coming-soon-badge">Soon</div>
+                        <div class="app-icon">
+                            <img src="/static/img/communication.png" alt="Communication">
+                        </div>
+                        <div class="app-name">Communication</div>
+                    </div>
+
+                    <!-- Bottom Right - Variation -->
+                    <div class="app bottom-right" data-module="variation"
+                        onclick="handleModuleClick('variation', 'Variation Orders')">
+                        <div class="coming-soon-badge">Soon</div>
+                        <div class="app-icon">
+                            <img src="/static/img/variation.png" alt="Variation">
+                        </div>
+                        <!-- <div class="app-name">Variation</div> -->
+                    </div>
+
+                    <!-- Bottom - Claim -->
+                    <div class="app bottom" data-module="claim"
+                        onclick="handleModuleClick('claim', 'Claims Management')">
+                        <div class="coming-soon-badge">Soon</div>
+                        <div class="app-icon">
+                            <img src="/static/img/claim.png" alt="Claim">
+                        </div>
+                        <!-- <div class="app-name">Claim</div> -->
+                    </div>
+
+                    <!-- Bottom Left - CLM (Active) -->
+                    <a href="/dashboard" class="app bottom-left" data-module="clm">
+                        <div class="active-badge">Active</div>
+                        <div class="app-icon">
+                            <img src="/static/img/clm.png" alt="CLM">
+                        </div>
+                        <!-- <div class="app-name">CLM</div> -->
+                    </a>
+
+                    <!-- Left - Closeout -->
+                    <div class="app left" data-module="closeout"
+                        onclick="handleModuleClick('closeout', 'Project Closeout')">
+                        <div class="coming-soon-badge">Soon</div>
+                        <div class="app-icon">
+                            <img src="/static/img/closeout.png" alt="Closeout">
+                        </div>
+                        <!-- <div class="app-name">Closeout</div> -->
+                    </div>
+
+                    <!-- Top Left - DPR -->
+                    <div class="app top-left" data-module="dpr"
+                        onclick="handleModuleClick('dpr', 'Daily Progress Report')">
+                        <div class="coming-soon-badge">Soon</div>
+                        <div class="app-icon">
+                            <img src="/static/img/dpr.png" alt="DPR">
+                        </div>
+                        <!-- <div class="app-name">DPR</div> -->
+                    </div>
                 </div>
             </div>
+        </div>
 
+        <!-- Coming Soon Modal -->
+        <div class="modal" id="comingSoonModal">
+            <div class="modal-content">
+                <div class="modal-icon">
+                    <i class="ti ti-clock"></i>
+                </div>
+                <h2 class="modal-title" id="modalTitle">Coming Soon</h2>
+                <p class="modal-message" id="modalMessage">
+                    This module is currently under development. Stay tuned for updates!
+                </p>
+                <button class="modal-close-btn" onclick="closeModal()">
+                    <i class="ti ti-check"></i> Got it
+                </button>
+            </div>
+        </div>
+
+        <script>
+            // Handle module clicks
+            function handleModuleClick(module, moduleName) {
+                // Show visual feedback
+                event.currentTarget.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    event.currentTarget.style.transform = '';
+                }, 200);
+
+                // Show coming soon modal
+                setTimeout(() => {
+                    showComingSoonModal(moduleName);
+                }, 300);
+            }
+
+            // Show coming soon modal
+            function showComingSoonModal(moduleName) {
+                const modal = document.getElementById('comingSoonModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const modalMessage = document.getElementById('modalMessage');
+
+                modalTitle.textContent = moduleName;
+                modalMessage.textContent = `The ${moduleName} module is currently under development. We're working hard to bring you this feature soon!`;
+
+                modal.classList.add('active');
+            }
+
+            // Close modal
+            function closeModal() {
+                const modal = document.getElementById('comingSoonModal');
+                modal.classList.remove('active');
+            }
+
+            // Close modal when clicking outside
+            document.getElementById('comingSoonModal').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            // Add hover/touch feedback
+            document.querySelectorAll('.app:not(.center)').forEach(app => {
+                // Desktop hover
+                app.addEventListener('mouseenter', () => {
+                    app.style.filter = 'brightness(1.1)';
+                });
+
+                app.addEventListener('mouseleave', () => {
+                    app.style.filter = '';
+                });
+
+                // Mobile touch feedback
+                app.addEventListener('touchstart', (e) => {
+                    app.style.filter = 'brightness(1.1)';
+                }, { passive: true });
+
+                app.addEventListener('touchend', (e) => {
+                    app.style.filter = '';
+                }, { passive: true });
+            });
+
+            // Animate apps on load
+            window.addEventListener('load', () => {
+                const apps = document.querySelectorAll('.app:not(.center)');
+                apps.forEach((app, index) => {
+                    app.style.opacity = '0';
+                    app.style.transform = 'scale(0.5)';
+
+                    setTimeout(() => {
+                        app.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                        app.style.opacity = '1';
+                        app.style.transform = 'scale(1)';
+                    }, 100 + (index * 100));
+                });
+            });
+
+            // Prevent zoom on double-tap for iOS
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', (e) => {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        </script>
         </div>
     </section>
 

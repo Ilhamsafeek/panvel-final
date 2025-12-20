@@ -3,792 +3,905 @@
 
 {% block head %}
 <style>
-:root {
-    --primary: #3b82f6;
-    --primary-dark: #2563eb;
-    --success: #10b981;
-    --success-dark: #059669;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    --info: #06b6d4;
-    --purple: #8b5cf6;
-    --text-dark: #1f2937;
-    --text-muted: #6b7280;
-    --border: #e5e7eb;
-    --bg-light: #f9fafb;
-    --bg-card: #ffffff;
-}
-
-.page-content {
-    padding: 1.5rem;
-    max-width: 1400px;
-    margin: 0 auto;
-}
-
-/* Page Header */
-.page-header {
-    margin-bottom: 1.5rem;
-}
-
-.header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-}
-
-.page-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-dark);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-}
-
-.page-title i {
-    color: var(--purple);
-}
-
-/* Stats Cards */
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.stat-card {
-    background: var(--bg-card);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    padding: 1.25rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.stat-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-}
-
-.stat-icon.total { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
-.stat-icon.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
-.stat-icon.overdue { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
-.stat-icon.completed { background: rgba(16, 185, 129, 0.1); color: var(--success); }
-
-.stat-content h3 {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: var(--text-dark);
-    margin: 0;
-}
-
-.stat-content p {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    margin: 0;
-}
-
-/* Filters Section */
-.filters-section {
-    background: var(--bg-card);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    padding: 1rem 1.25rem;
-    margin-bottom: 1.5rem;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    align-items: center;
-}
-
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-}
-
-.filter-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    text-transform: uppercase;
-}
-
-.filter-control {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.875rem;
-    min-width: 150px;
-    background: white;
-}
-
-.filter-control:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-
-.search-box {
-    flex: 1;
-    min-width: 200px;
-    position: relative;
-}
-
-.search-box input {
-    width: 100%;
-    padding: 0.5rem 0.75rem 0.5rem 2.25rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.875rem;
-}
-
-.search-box i {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-}
-
-.filter-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-left: auto;
-}
-
-/* Buttons */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 0.875rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background: var(--primary);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: var(--primary-dark);
-}
-
-.btn-success {
-    background: var(--success);
-    color: white;
-}
-
-.btn-success:hover {
-    background: var(--success-dark);
-}
-
-.btn-secondary {
-    background: var(--bg-light);
-    color: var(--text-dark);
-    border: 1px solid var(--border);
-}
-
-.btn-secondary:hover {
-    background: var(--border);
-}
-
-.btn-danger {
-    background: var(--danger);
-    color: white;
-}
-
-.btn-danger:hover {
-    background: #dc2626;
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Obligations Table */
-.obligations-card {
-    background: var(--bg-card);
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    overflow: hidden;
-}
-
-.card-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-}
-
-.obligation-count {
-    background: var(--primary);
-    color: white;
-    padding: 0.125rem 0.5rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-}
-
-.table-container {
-    overflow-x: auto;
-}
-
-.obligations-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.obligations-table th,
-.obligations-table td {
-    padding: 0.875rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid var(--border);
-}
-
-.obligations-table th {
-    background: var(--bg-light);
-    font-weight: 600;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-}
-
-.obligations-table tbody tr:hover {
-    background: var(--bg-light);
-}
-
-.obligations-table tbody tr.selected {
-    background: rgba(59, 130, 246, 0.05);
-}
-
-.obligation-title {
-    font-weight: 600;
-    color: var(--text-dark);
-    margin-bottom: 0.25rem;
-}
-
-.obligation-desc {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    max-width: 250px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.contract-link {
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.85rem;
-}
-
-.contract-link:hover {
-    text-decoration: underline;
-}
-
-.contract-number {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-}
-
-/* Status Badge */
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.625rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 500;
-}
-
-.status-initiated { background: #dbeafe; color: #1d4ed8; }
-.status-in-progress { background: #fef3c7; color: #b45309; }
-.status-pending { background: #fed7aa; color: #c2410c; }
-.status-awaiting { background: #e0e7ff; color: #4338ca; }
-.status-approved { background: #d1fae5; color: #047857; }
-.status-rejected { background: #fee2e2; color: #b91c1c; }
-.status-completed { background: #d1fae5; color: #047857; }
-.status-overdue { background: #fee2e2; color: #b91c1c; }
-
-/* Type Badge */
-.type-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    font-size: 0.7rem;
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.type-payment { background: #dcfce7; color: #166534; }
-.type-deliverable { background: #dbeafe; color: #1e40af; }
-.type-compliance { background: #fef3c7; color: #92400e; }
-.type-reporting { background: #e0e7ff; color: #4338ca; }
-.type-insurance { background: #fce7f3; color: #be185d; }
-.type-performance { background: #cffafe; color: #0e7490; }
-.type-coordination { background: #f3e8ff; color: #7c3aed; }
-.type-indemnification { background: #fef9c3; color: #a16207; }
-.type-timely_completion { background: #ecfccb; color: #4d7c0f; }
-.type-other { background: #f3f4f6; color: #4b5563; }
-
-/* User Display */
-.user-display {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.user-avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: var(--primary);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 600;
-}
-
-.user-name {
-    font-size: 0.85rem;
-    color: var(--text-dark);
-}
-
-/* Action Buttons in Table */
-.table-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.action-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.action-btn:hover {
-    background: var(--bg-light);
-}
-
-.action-btn.view:hover { color: var(--info); border-color: var(--info); }
-.action-btn.edit:hover { color: var(--primary); border-color: var(--primary); }
-.action-btn.delete:hover { color: var(--danger); border-color: var(--danger); }
-
-/* Checkbox styling */
-.row-checkbox {
-    width: 18px;
-    height: 18px;
-    cursor: pointer;
-}
-
-/* Pagination */
-.table-footer {
-    padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.pagination-info {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-}
-
-.pagination {
-    display: flex;
-    gap: 0.25rem;
-}
-
-.page-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-    background: white;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    transition: all 0.2s;
-}
-
-.page-btn:hover:not(.active):not(:disabled) {
-    background: var(--bg-light);
-}
-
-.page-btn.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.page-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-muted);
-}
-
-.empty-state i {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    opacity: 0.5;
-}
-
-.empty-state h3 {
-    margin: 0 0 0.5rem;
-    color: var(--text-dark);
-}
-
-/* Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 1rem;
-}
-
-.modal-overlay.active {
-    display: flex;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 600px;
-    max-height: 90vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-.modal-header {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.modal-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin: 0;
-}
-
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 1.25rem;
-    cursor: pointer;
-    color: inherit;
-    opacity: 0.7;
-    transition: opacity 0.2s;
-}
-
-.modal-close:hover {
-    opacity: 1;
-}
-
-.modal-body {
-    padding: 1.25rem;
-    overflow-y: auto;
-    flex: 1;
-}
-
-.modal-footer {
-    padding: 1rem 1.25rem;
-    border-top: 1px solid var(--border);
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.75rem;
-}
-
-/* Form Styles */
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.form-label {
-    display: block;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--text-dark);
-    margin-bottom: 0.375rem;
-}
-
-.form-label .required {
-    color: var(--danger);
-}
-
-.form-control {
-    width: 100%;
-    padding: 0.625rem 0.875rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.875rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.form-control:focus {
-    outline: none;
-    border-color: var(--primary);
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-}
-
-textarea.form-control {
-    min-height: 80px;
-    resize: vertical;
-}
-
-/* User Search */
-.user-search-container {
-    position: relative;
-}
-
-.user-suggestions {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 10;
-    display: none;
-}
-
-.user-suggestions.active {
-    display: block;
-}
-
-.user-suggestion-item {
-    padding: 0.625rem 0.875rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: background 0.2s;
-}
-
-.user-suggestion-item:hover {
-    background: var(--bg-light);
-}
-
-.selected-user {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    background: var(--bg-light);
-    border-radius: 8px;
-    margin-top: 0.5rem;
-}
-
-.selected-user .remove-user {
-    margin-left: auto;
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-muted);
-}
-
-.selected-user .remove-user:hover {
-    color: var(--danger);
-}
-
-/* Loading Overlay */
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.9);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000;
-}
-
-.loading-overlay.active {
-    display: flex;
-}
-
-.loading-content {
-    text-align: center;
-}
-
-.loading-spinner {
-    width: 48px;
-    height: 48px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-/* Toast Notification */
-.toast-container {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    z-index: 3000;
-}
-
-.toast {
-    padding: 0.875rem 1.25rem;
-    border-radius: 8px;
-    background: var(--text-dark);
-    color: white;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    animation: slideIn 0.3s ease;
-    margin-top: 0.5rem;
-}
-
-.toast.success { background: var(--success); }
-.toast.error { background: var(--danger); }
-.toast.warning { background: var(--warning); }
-
-@keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-
-/* Date Display */
-.date-display {
-    font-size: 0.85rem;
-    color: var(--text-dark);
-}
-
-.date-display.overdue {
-    color: var(--danger);
-    font-weight: 500;
-}
-
-.date-display.warning {
-    color: var(--warning);
-    font-weight: 500;
-}
-
-/* Bulk Actions */
-.bulk-actions {
-    display: none;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 1.25rem;
-    background: rgba(59, 130, 246, 0.05);
-    border-bottom: 1px solid var(--border);
-}
-
-.bulk-actions.active {
-    display: flex;
-}
-
-.bulk-count {
-    font-weight: 600;
-    color: var(--primary);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .form-row {
-        grid-template-columns: 1fr;
+    :root {
+        --primary: #3b82f6;
+        --primary-dark: #2563eb;
+        --success: #10b981;
+        --success-dark: #059669;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #06b6d4;
+        --purple: #8b5cf6;
+        --text-dark: #1f2937;
+        --text-muted: #6b7280;
+        --border: #e5e7eb;
+        --bg-light: #f9fafb;
+        --bg-card: #ffffff;
     }
-    
-    .filters-section {
-        flex-direction: column;
-        align-items: stretch;
+
+    .page-content {
+        padding: 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
     }
-    
-    .filter-actions {
-        margin-left: 0;
-        justify-content: flex-end;
+
+    /* Page Header */
+    .page-header {
+        margin-bottom: 1.5rem;
     }
-    
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
+
     .header-top {
-        flex-direction: column;
-        align-items: flex-start;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .page-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+    }
+
+    .page-title i {
+        color: var(--purple);
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
         gap: 1rem;
     }
-}
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-icon.total {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary);
+    }
+
+    .stat-icon.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .stat-icon.overdue {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .stat-icon.completed {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+    }
+
+    .stat-content h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin: 0;
+    }
+
+    .stat-content p {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+        margin: 0;
+    }
+
+    /* Filters Section */
+    .filters-section {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .filter-label {
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+
+    .filter-control {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        min-width: 150px;
+        background: white;
+    }
+
+    .filter-control:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    .search-box {
+        flex: 1;
+        min-width: 200px;
+        position: relative;
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.875rem;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+    }
+
+    .filter-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: auto;
+    }
+
+    /* Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: var(--primary);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+    }
+
+    .btn-success {
+        background: var(--success);
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: var(--success-dark);
+    }
+
+    .btn-secondary {
+        background: var(--bg-light);
+        color: var(--text-dark);
+        border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+        background: var(--border);
+    }
+
+    .btn-danger {
+        background: var(--danger);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* Obligations Table */
+    .obligations-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+    }
+
+    .obligation-count {
+        background: var(--primary);
+        color: white;
+        padding: 0.125rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+    }
+
+    .obligations-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .obligations-table th,
+    .obligations-table td {
+        padding: 0.875rem 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .obligations-table th {
+        background: var(--bg-light);
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+    }
+
+    .obligations-table tbody tr:hover {
+        background: var(--bg-light);
+    }
+
+    .obligations-table tbody tr.selected {
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .obligation-title {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .obligation-desc {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        max-width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .contract-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .contract-link:hover {
+        text-decoration: underline;
+    }
+
+    .contract-number {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    /* Status Badge */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.625rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-initiated {
+        background: #dbeafe;
+        color: #1d4ed8;
+    }
+
+    .status-in-progress {
+        background: #fef3c7;
+        color: #b45309;
+    }
+
+    .status-pending {
+        background: #fed7aa;
+        color: #c2410c;
+    }
+
+    .status-awaiting {
+        background: #e0e7ff;
+        color: #4338ca;
+    }
+
+    .status-approved {
+        background: #d1fae5;
+        color: #047857;
+    }
+
+    .status-rejected {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .status-completed {
+        background: #d1fae5;
+        color: #047857;
+    }
+
+    .status-overdue {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    /* Type Badge */
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .type-payment {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .type-deliverable {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .type-compliance {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .type-reporting {
+        background: #e0e7ff;
+        color: #4338ca;
+    }
+
+    .type-insurance {
+        background: #fce7f3;
+        color: #be185d;
+    }
+
+    .type-performance {
+        background: #cffafe;
+        color: #0e7490;
+    }
+
+    .type-coordination {
+        background: #f3e8ff;
+        color: #7c3aed;
+    }
+
+    .type-indemnification {
+        background: #fef9c3;
+        color: #a16207;
+    }
+
+    .type-timely_completion {
+        background: #ecfccb;
+        color: #4d7c0f;
+    }
+
+    .type-other {
+        background: #f3f4f6;
+        color: #4b5563;
+    }
+
+    /* User Display */
+    .user-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .user-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.7rem;
+        font-weight: 600;
+    }
+
+    .user-name {
+        font-size: 0.85rem;
+        color: var(--text-dark);
+    }
+
+    /* Action Buttons in Table */
+    .table-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .action-btn:hover {
+        background: var(--bg-light);
+    }
+
+    .action-btn.view:hover {
+        color: var(--info);
+        border-color: var(--info);
+    }
+
+    .action-btn.edit:hover {
+        color: var(--primary);
+        border-color: var(--primary);
+    }
+
+    .action-btn.delete:hover {
+        color: var(--danger);
+        border-color: var(--danger);
+    }
+
+    /* Checkbox styling */
+    .row-checkbox {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    /* Pagination */
+    .table-footer {
+        padding: 1rem 1.25rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .pagination-info {
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    .pagination {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .page-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        background: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .page-btn:hover:not(.active):not(:disabled) {
+        background: var(--bg-light);
+    }
+
+    .page-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .empty-state h3 {
+        margin: 0 0 0.5rem;
+        color: var(--text-dark);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        color: inherit;
+        opacity: 0.7;
+        transition: opacity 0.2s;
+    }
+
+    .modal-close:hover {
+        opacity: 1;
+    }
+
+    .modal-body {
+        padding: 1.25rem;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.25rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-dark);
+        margin-bottom: 0.375rem;
+    }
+
+    .form-label .required {
+        color: var(--danger);
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.625rem 0.875rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    textarea.form-control {
+        min-height: 80px;
+        resize: vertical;
+    }
+
+    /* User Search */
+    .user-search-container {
+        position: relative;
+    }
+
+    .user-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none;
+    }
+
+    .user-suggestions.active {
+        display: block;
+    }
+
+    .user-suggestion-item {
+        padding: 0.625rem 0.875rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background 0.2s;
+    }
+
+    .user-suggestion-item:hover {
+        background: var(--bg-light);
+    }
+
+    .selected-user {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        background: var(--bg-light);
+        border-radius: 8px;
+        margin-top: 0.5rem;
+    }
+
+    .selected-user .remove-user {
+        margin-left: auto;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--text-muted);
+    }
+
+    .selected-user .remove-user:hover {
+        color: var(--danger);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.9);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .loading-content {
+        text-align: center;
+    }
+
+    .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid var(--border);
+        border-top-color: var(--primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Toast Notification */
+    .toast-container {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        z-index: 3000;
+    }
+
+    .toast {
+        padding: 0.875rem 1.25rem;
+        border-radius: 8px;
+        background: var(--text-dark);
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        animation: slideIn 0.3s ease;
+        margin-top: 0.5rem;
+    }
+
+    .toast.success {
+        background: var(--success);
+    }
+
+    .toast.error {
+        background: var(--danger);
+    }
+
+    .toast.warning {
+        background: var(--warning);
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Date Display */
+    .date-display {
+        font-size: 0.85rem;
+        color: var(--text-dark);
+    }
+
+    .date-display.overdue {
+        color: var(--danger);
+        font-weight: 500;
+    }
+
+    .date-display.warning {
+        color: var(--warning);
+        font-weight: 500;
+    }
+
+    /* Bulk Actions */
+    .bulk-actions {
+        display: none;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.75rem 1.25rem;
+        background: rgba(59, 130, 246, 0.05);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .bulk-actions.active {
+        display: flex;
+    }
+
+    .bulk-count {
+        font-weight: 600;
+        color: var(--primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .filters-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-actions {
+            margin-left: 0;
+            justify-content: flex-end;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .header-top {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -850,9 +963,12 @@ textarea.form-control {
 
     <!-- Filters Section -->
     <div class="filters-section">
+         <div class="filter-group">
+            <span class="filter-label" style="color: white;">Search</span>
         <div class="search-box">
             <i class="ti ti-search"></i>
             <input type="text" id="searchInput" placeholder="Search obligations..." oninput="filterObligations()">
+        </div>
         </div>
         <div class="filter-group">
             <span class="filter-label">Status</span>
@@ -909,7 +1025,7 @@ textarea.form-control {
                 <span class="obligation-count" id="obligationCount">0</span>
             </h2>
         </div>
-        
+
         <!-- Bulk Actions -->
         <div class="bulk-actions" id="bulkActions">
             <span><span class="bulk-count" id="selectedCount">0</span> selected</span>
@@ -922,7 +1038,7 @@ textarea.form-control {
                 Clear Selection
             </button>
         </div>
-        
+
         <div class="table-container">
             <table class="obligations-table">
                 <thead>
@@ -944,13 +1060,13 @@ textarea.form-control {
                 </tbody>
             </table>
         </div>
-        
+
         <div class="empty-state" id="emptyState" style="display: none;">
             <i class="ti ti-clipboard-off"></i>
             <h3>No Obligations Found</h3>
             <p>Try adjusting your filters or create a new obligation.</p>
         </div>
-        
+
         <div class="table-footer">
             <div class="pagination-info" id="paginationInfo">
                 Showing 0 obligations
@@ -977,7 +1093,7 @@ textarea.form-control {
         <div class="modal-body">
             <form id="obligationForm">
                 <input type="hidden" id="editObligationId">
-                
+
                 <div class="form-group">
                     <label class="form-label">Contract <span class="required">*</span></label>
                     <select class="form-control" id="obligationContractId" required>
@@ -985,19 +1101,19 @@ textarea.form-control {
                         <!-- Contracts loaded dynamically -->
                     </select>
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">Obligation Title <span class="required">*</span></label>
-                    <input type="text" class="form-control" id="obligationTitle" required 
-                           placeholder="Enter obligation title">
+                    <input type="text" class="form-control" id="obligationTitle" required
+                        placeholder="Enter obligation title">
                 </div>
-                
+
                 <div class="form-group">
                     <label class="form-label">Description</label>
-                    <textarea class="form-control" id="obligationDescription" 
-                              placeholder="Enter detailed description"></textarea>
+                    <textarea class="form-control" id="obligationDescription"
+                        placeholder="Enter detailed description"></textarea>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Obligation Type <span class="required">*</span></label>
@@ -1028,13 +1144,13 @@ textarea.form-control {
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Owner</label>
                         <div class="user-search-container">
-                            <input type="text" class="form-control" id="ownerSearch" 
-                                   placeholder="Search user..." autocomplete="off">
+                            <input type="text" class="form-control" id="ownerSearch" placeholder="Search user..."
+                                autocomplete="off">
                             <input type="hidden" id="ownerUserId">
                             <div class="user-suggestions" id="ownerSuggestions"></div>
                         </div>
@@ -1043,15 +1159,15 @@ textarea.form-control {
                     <div class="form-group">
                         <label class="form-label">Escalation Contact</label>
                         <div class="user-search-container">
-                            <input type="text" class="form-control" id="escalationSearch" 
-                                   placeholder="Search user..." autocomplete="off">
+                            <input type="text" class="form-control" id="escalationSearch" placeholder="Search user..."
+                                autocomplete="off">
                             <input type="hidden" id="escalationUserId">
                             <div class="user-suggestions" id="escalationSuggestions"></div>
                         </div>
                         <div class="selected-user" id="selectedEscalation" style="display: none;"></div>
                     </div>
                 </div>
-                
+
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Threshold Date</label>
@@ -1089,169 +1205,186 @@ textarea.form-control {
 
 {% block extra_js %}
 <script>
-// =====================================================
-// GLOBAL VARIABLES
-// =====================================================
-const API_BASE = '/api/obligations';
-let allObligations = [];
-let filteredObligations = [];
-let users = [];
-let contracts = [];
-let selectedObligations = new Set();
-let currentPage = 1;
-const pageSize = 10;
+    // =====================================================
+    // GLOBAL VARIABLES
+    // =====================================================
+    const API_BASE = '/api/obligations';
+    let allObligations = [];
+    let filteredObligations = [];
+    let users = [];
+    let contracts = [];
+    let selectedObligations = new Set();
+    let currentPage = 1;
+    const pageSize = 10;
 
-// =====================================================
-// INITIALIZATION
-// =====================================================
-document.addEventListener('DOMContentLoaded', function() {
-    loadObligations();
-    loadUsers();
-    loadContracts();
-    setupUserSearch();
-});
-
-// =====================================================
-// DATA LOADING
-// =====================================================
-async function loadObligations() {
-    showLoading(true, 'Loading obligations...');
-    try {
-        const response = await fetch(`${API_BASE}/`);
-        if (!response.ok) throw new Error('Failed to load obligations');
-        
-        const data = await response.json();
-        allObligations = Array.isArray(data) ? data : (data.obligations || []);
-        
-        // Check for overdue obligations
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        
-        allObligations.forEach(obl => {
-            if (obl.due_date && obl.status !== 'completed') {
-                const dueDate = new Date(obl.due_date);
-                if (dueDate < today) {
-                    obl.status = 'overdue';
-                }
-            }
-        });
-        
-        filterObligations();
-        updateStats();
-    } catch (error) {
-        console.error('Error loading obligations:', error);
-        showToast('Failed to load obligations', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
-
-async function loadUsers() {
-    try {
-        const response = await fetch('/api/users/company');
-        if (!response.ok) throw new Error('Failed to load users');
-        const data = await response.json();
-        users = data.users || [];
-    } catch (error) {
-        console.error('Error loading users:', error);
-    }
-}
-
-async function loadContracts() {
-    try {
-        const response = await fetch('/api/contracts/');
-        if (!response.ok) throw new Error('Failed to load contracts');
-        const data = await response.json();
-        contracts = data.contracts || data || [];
-        
-        // Populate contract filters
-        const filterSelect = document.getElementById('contractFilter');
-        const formSelect = document.getElementById('obligationContractId');
-        
-        contracts.forEach(contract => {
-            const option1 = new Option(
-                `${contract.contract_number} - ${contract.contract_title}`.substring(0, 50),
-                contract.id
-            );
-            const option2 = option1.cloneNode(true);
-            
-            filterSelect.appendChild(option1);
-            formSelect.appendChild(option2);
-        });
-    } catch (error) {
-        console.error('Error loading contracts:', error);
-    }
-}
-
-function refreshObligations() {
-    loadObligations();
-}
-
-// =====================================================
-// FILTERING & RENDERING
-// =====================================================
-function filterObligations() {
-    const search = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    const typeFilter = document.getElementById('typeFilter').value;
-    const contractFilter = document.getElementById('contractFilter').value;
-    
-    filteredObligations = allObligations.filter(obl => {
-        // Search filter
-        const matchesSearch = !search || 
-            (obl.obligation_title || '').toLowerCase().includes(search) ||
-            (obl.description || '').toLowerCase().includes(search) ||
-            (obl.contract_title || '').toLowerCase().includes(search) ||
-            (obl.contract_number || '').toLowerCase().includes(search);
-        
-        // Status filter
-        const matchesStatus = statusFilter === 'all' || obl.status === statusFilter;
-        
-        // Type filter
-        const matchesType = typeFilter === 'all' || obl.obligation_type === typeFilter;
-        
-        // Contract filter
-        const matchesContract = contractFilter === 'all' || 
-            String(obl.contract_id) === String(contractFilter);
-        
-        return matchesSearch && matchesStatus && matchesType && matchesContract;
+    // =====================================================
+    // INITIALIZATION
+    // =====================================================
+    document.addEventListener('DOMContentLoaded', function () {
+        loadObligations();
+        loadUsers();
+        loadContracts();
+        setupUserSearch();
     });
-    
-    currentPage = 1;
-    renderObligations();
-    document.getElementById('obligationCount').textContent = filteredObligations.length;
-}
 
-function clearFilters() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('statusFilter').value = 'all';
-    document.getElementById('typeFilter').value = 'all';
-    document.getElementById('contractFilter').value = 'all';
-    filterObligations();
-}
+    // =====================================================
+    // DATA LOADING
+    // =====================================================
+    async function loadObligations() {
+        showLoading(true, 'Loading obligations...');
+        try {
+            const response = await fetch(`${API_BASE}/`);
+            if (!response.ok) throw new Error('Failed to load obligations');
 
-function renderObligations() {
-    const tbody = document.getElementById('obligationsTableBody');
-    const emptyState = document.getElementById('emptyState');
-    const tableContainer = document.querySelector('.table-container');
-    
-    if (filteredObligations.length === 0) {
-        tbody.innerHTML = '';
-        emptyState.style.display = 'block';
-        tableContainer.style.display = 'none';
-        updatePagination();
-        return;
+            const data = await response.json();
+            allObligations = Array.isArray(data) ? data : (data.obligations || []);
+
+            // Check for overdue obligations
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            allObligations.forEach(obl => {
+                if (obl.due_date && obl.status !== 'completed') {
+                    const dueDate = new Date(obl.due_date);
+                    if (dueDate < today) {
+                        obl.status = 'overdue';
+                    }
+                }
+            });
+
+            filterObligations();
+            updateStats();
+        } catch (error) {
+            console.error('Error loading obligations:', error);
+            showToast('Failed to load obligations', 'error');
+        } finally {
+            showLoading(false);
+        }
     }
-    
-    emptyState.style.display = 'none';
-    tableContainer.style.display = 'block';
-    
-    // Pagination
-    const start = (currentPage - 1) * pageSize;
-    const end = start + pageSize;
-    const pageObligations = filteredObligations.slice(start, end);
-    
-    tbody.innerHTML = pageObligations.map(obl => `
+
+    async function loadUsers() {
+        try {
+            const response = await fetch('/api/users/company');
+            if (!response.ok) throw new Error('Failed to load users');
+            const data = await response.json();
+            users = data.users || [];
+        } catch (error) {
+            console.error('Error loading users:', error);
+        }
+    }
+
+    async function loadContracts() {
+        try {
+            const response = await fetch('/api/contracts/');
+            if (!response.ok) throw new Error('Failed to load contracts');
+            const data = await response.json();
+            contracts = data.contracts || data || [];
+
+            // Populate contract filters
+            const filterSelect = document.getElementById('contractFilter');
+            const formSelect = document.getElementById('obligationContractId');
+
+            // Ensure contracts is an array
+            // Handle paginated response - contracts are in 'items' property
+            const contractsList = contracts.items || contracts;
+
+            if (Array.isArray(contractsList) && contractsList.length > 0) {
+                contractsList.forEach(contract => {
+                    const option1 = new Option(
+                        `${contract.contract_number} - ${contract.contract_title}`.substring(0, 50),
+                        contract.id
+                    );
+                    const option2 = option1.cloneNode(true);
+                    filterSelect.appendChild(option1);
+                    formSelect.appendChild(option2);
+                });
+
+                if (obligation.contract_id) {
+                    filterSelect.value = obligation.contract_id;
+                    formSelect.value = obligation.contract_id;
+                }
+            } else {
+                console.error('Contracts data is not valid:', contracts);
+                // Add a default option
+                const defaultOption1 = new Option('No contracts available', '');
+                const defaultOption2 = defaultOption1.cloneNode(true);
+                filterSelect.appendChild(defaultOption1);
+                formSelect.appendChild(defaultOption2);
+            }
+        } catch (error) {
+            console.error('Error loading contracts:', error);
+        }
+    }
+
+    function refreshObligations() {
+        loadObligations();
+    }
+
+    // =====================================================
+    // FILTERING & RENDERING
+    // =====================================================
+    function filterObligations() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+        const typeFilter = document.getElementById('typeFilter').value;
+        const contractFilter = document.getElementById('contractFilter').value;
+
+        filteredObligations = allObligations.filter(obl => {
+            // Search filter
+            const matchesSearch = !search ||
+                (obl.obligation_title || '').toLowerCase().includes(search) ||
+                (obl.description || '').toLowerCase().includes(search) ||
+                (obl.contract_title || '').toLowerCase().includes(search) ||
+                (obl.contract_number || '').toLowerCase().includes(search);
+
+            // Status filter
+            const matchesStatus = statusFilter === 'all' || obl.status === statusFilter;
+
+            // Type filter
+            const matchesType = typeFilter === 'all' || obl.obligation_type === typeFilter;
+
+            // Contract filter
+            const matchesContract = contractFilter === 'all' ||
+                String(obl.contract_id) === String(contractFilter);
+
+            return matchesSearch && matchesStatus && matchesType && matchesContract;
+        });
+
+        currentPage = 1;
+        renderObligations();
+        document.getElementById('obligationCount').textContent = filteredObligations.length;
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = 'all';
+        document.getElementById('typeFilter').value = 'all';
+        document.getElementById('contractFilter').value = 'all';
+        filterObligations();
+    }
+
+    function renderObligations() {
+        const tbody = document.getElementById('obligationsTableBody');
+        const emptyState = document.getElementById('emptyState');
+        const tableContainer = document.querySelector('.table-container');
+
+        if (filteredObligations.length === 0) {
+            tbody.innerHTML = '';
+            emptyState.style.display = 'block';
+            tableContainer.style.display = 'none';
+            updatePagination();
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        tableContainer.style.display = 'block';
+
+        // Pagination
+        const start = (currentPage - 1) * pageSize;
+        const end = start + pageSize;
+        const pageObligations = filteredObligations.slice(start, end);
+
+        tbody.innerHTML = pageObligations.map(obl => `
         <tr data-id="${obl.id}" class="${selectedObligations.has(obl.id) ? 'selected' : ''}">
             <td>
                 <input type="checkbox" class="row-checkbox" 
@@ -1295,330 +1428,330 @@ function renderObligations() {
             </td>
         </tr>
     `).join('');
-    
-    updatePagination();
-}
 
-function renderUser(userId, userName) {
-    if (!userId && !userName) return '<span style="color: var(--text-muted);">-</span>';
-    
-    const name = userName || 'Unknown';
-    const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    
-    return `
+        updatePagination();
+    }
+
+    function renderUser(userId, userName) {
+        if (!userId && !userName) return '<span style="color: var(--text-muted);">-</span>';
+
+        const name = userName || 'Unknown';
+        const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+        return `
         <div class="user-display">
             <div class="user-avatar">${initials}</div>
             <span class="user-name">${escapeHtml(name)}</span>
         </div>
     `;
-}
+    }
 
-function updateStats() {
-    const total = allObligations.length;
-    const pending = allObligations.filter(o => 
-        ['initiated', 'in-progress', 'pending', 'awaiting'].includes(o.status)
-    ).length;
-    const overdue = allObligations.filter(o => o.status === 'overdue').length;
-    const completed = allObligations.filter(o => o.status === 'completed').length;
-    
-    document.getElementById('totalCount').textContent = total;
-    document.getElementById('pendingCount').textContent = pending;
-    document.getElementById('overdueCount').textContent = overdue;
-    document.getElementById('completedCount').textContent = completed;
-}
+    function updateStats() {
+        const total = allObligations.length;
+        const pending = allObligations.filter(o =>
+            ['initiated', 'in-progress', 'pending', 'awaiting'].includes(o.status)
+        ).length;
+        const overdue = allObligations.filter(o => o.status === 'overdue').length;
+        const completed = allObligations.filter(o => o.status === 'completed').length;
 
-function updatePagination() {
-    const totalPages = Math.ceil(filteredObligations.length / pageSize);
-    const start = (currentPage - 1) * pageSize + 1;
-    const end = Math.min(currentPage * pageSize, filteredObligations.length);
-    
-    document.getElementById('paginationInfo').textContent = 
-        filteredObligations.length === 0 
-            ? 'No obligations found' 
-            : `Showing ${start} to ${end} of ${filteredObligations.length} obligations`;
-    
-    const pagination = document.getElementById('pagination');
-    let buttons = '';
-    
-    buttons += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+        document.getElementById('totalCount').textContent = total;
+        document.getElementById('pendingCount').textContent = pending;
+        document.getElementById('overdueCount').textContent = overdue;
+        document.getElementById('completedCount').textContent = completed;
+    }
+
+    function updatePagination() {
+        const totalPages = Math.ceil(filteredObligations.length / pageSize);
+        const start = (currentPage - 1) * pageSize + 1;
+        const end = Math.min(currentPage * pageSize, filteredObligations.length);
+
+        document.getElementById('paginationInfo').textContent =
+            filteredObligations.length === 0
+                ? 'No obligations found'
+                : `Showing ${start} to ${end} of ${filteredObligations.length} obligations`;
+
+        const pagination = document.getElementById('pagination');
+        let buttons = '';
+
+        buttons += `<button class="page-btn" onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
         <i class="ti ti-chevron-left"></i>
     </button>`;
-    
-    for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-            buttons += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
-        } else if (i === currentPage - 2 || i === currentPage + 2) {
-            buttons += `<button class="page-btn" disabled>...</button>`;
+
+        for (let i = 1; i <= totalPages; i++) {
+            if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                buttons += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+            } else if (i === currentPage - 2 || i === currentPage + 2) {
+                buttons += `<button class="page-btn" disabled>...</button>`;
+            }
         }
-    }
-    
-    buttons += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>
+
+        buttons += `<button class="page-btn" onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}>
         <i class="ti ti-chevron-right"></i>
     </button>`;
-    
-    pagination.innerHTML = buttons;
-}
 
-function goToPage(page) {
-    const totalPages = Math.ceil(filteredObligations.length / pageSize);
-    if (page >= 1 && page <= totalPages) {
-        currentPage = page;
+        pagination.innerHTML = buttons;
+    }
+
+    function goToPage(page) {
+        const totalPages = Math.ceil(filteredObligations.length / pageSize);
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page;
+            renderObligations();
+        }
+    }
+
+    // =====================================================
+    // SELECTION
+    // =====================================================
+    function toggleSelection(id) {
+        if (selectedObligations.has(id)) {
+            selectedObligations.delete(id);
+        } else {
+            selectedObligations.add(id);
+        }
+        updateBulkActions();
         renderObligations();
     }
-}
 
-// =====================================================
-// SELECTION
-// =====================================================
-function toggleSelection(id) {
-    if (selectedObligations.has(id)) {
-        selectedObligations.delete(id);
-    } else {
-        selectedObligations.add(id);
-    }
-    updateBulkActions();
-    renderObligations();
-}
+    function toggleSelectAll() {
+        const selectAll = document.getElementById('selectAll').checked;
 
-function toggleSelectAll() {
-    const selectAll = document.getElementById('selectAll').checked;
-    
-    if (selectAll) {
-        const start = (currentPage - 1) * pageSize;
-        const end = start + pageSize;
-        filteredObligations.slice(start, end).forEach(obl => {
-            selectedObligations.add(obl.id);
-        });
-    } else {
-        selectedObligations.clear();
-    }
-    
-    updateBulkActions();
-    renderObligations();
-}
+        if (selectAll) {
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            filteredObligations.slice(start, end).forEach(obl => {
+                selectedObligations.add(obl.id);
+            });
+        } else {
+            selectedObligations.clear();
+        }
 
-function clearSelection() {
-    selectedObligations.clear();
-    document.getElementById('selectAll').checked = false;
-    updateBulkActions();
-    renderObligations();
-}
-
-function updateBulkActions() {
-    const bulkActions = document.getElementById('bulkActions');
-    const count = selectedObligations.size;
-    
-    if (count > 0) {
-        bulkActions.classList.add('active');
-        document.getElementById('selectedCount').textContent = count;
-    } else {
-        bulkActions.classList.remove('active');
-    }
-}
-
-async function bulkDelete() {
-    if (selectedObligations.size === 0) return;
-    
-    if (!confirm(`Are you sure you want to delete ${selectedObligations.size} obligation(s)?`)) return;
-    
-    showLoading(true, 'Deleting obligations...');
-    
-    try {
-        const promises = Array.from(selectedObligations).map(id =>
-            fetch(`${API_BASE}/${id}`, { method: 'DELETE' })
-        );
-        
-        await Promise.all(promises);
-        
-        showToast(`Deleted ${selectedObligations.size} obligation(s)`, 'success');
-        selectedObligations.clear();
         updateBulkActions();
-        loadObligations();
-    } catch (error) {
-        console.error('Error deleting obligations:', error);
-        showToast('Failed to delete some obligations', 'error');
-    } finally {
-        showLoading(false);
+        renderObligations();
     }
-}
 
-// =====================================================
-// MODAL FUNCTIONS
-// =====================================================
-function openModal(modalId) {
-    document.getElementById(modalId).classList.add('active');
-}
+    function clearSelection() {
+        selectedObligations.clear();
+        document.getElementById('selectAll').checked = false;
+        updateBulkActions();
+        renderObligations();
+    }
 
-function closeModal(modalId) {
-    document.getElementById(modalId).classList.remove('active');
-}
+    function updateBulkActions() {
+        const bulkActions = document.getElementById('bulkActions');
+        const count = selectedObligations.size;
 
-function openNewObligationModal() {
-    document.getElementById('modalTitle').textContent = 'New Obligation';
-    document.getElementById('obligationForm').reset();
-    document.getElementById('editObligationId').value = '';
-    document.getElementById('ownerUserId').value = '';
-    document.getElementById('escalationUserId').value = '';
-    document.getElementById('selectedOwner').style.display = 'none';
-    document.getElementById('selectedEscalation').style.display = 'none';
-    document.getElementById('ownerSearch').style.display = 'block';
-    document.getElementById('escalationSearch').style.display = 'block';
-    openModal('obligationModal');
-}
+        if (count > 0) {
+            bulkActions.classList.add('active');
+            document.getElementById('selectedCount').textContent = count;
+        } else {
+            bulkActions.classList.remove('active');
+        }
+    }
 
-function editObligation(id) {
-    const obl = allObligations.find(o => o.id === id);
-    if (!obl) return;
-    
-    document.getElementById('modalTitle').textContent = 'Edit Obligation';
-    document.getElementById('editObligationId').value = id;
-    document.getElementById('obligationContractId').value = obl.contract_id;
-    document.getElementById('obligationTitle').value = obl.obligation_title || '';
-    document.getElementById('obligationDescription').value = obl.description || '';
-    document.getElementById('obligationType').value = obl.obligation_type || '';
-    document.getElementById('obligationStatus').value = obl.status || 'initiated';
-    document.getElementById('thresholdDate').value = obl.threshold_date ? obl.threshold_date.split('T')[0] : '';
-    document.getElementById('dueDate').value = obl.due_date ? obl.due_date.split('T')[0] : '';
-    
-    // Set owner
-    if (obl.owner_user_id) {
-        document.getElementById('ownerUserId').value = obl.owner_user_id;
-        setSelectedUser('owner', obl.owner_user_id, obl.owner_name);
-    } else {
+    async function bulkDelete() {
+        if (selectedObligations.size === 0) return;
+
+        if (!confirm(`Are you sure you want to delete ${selectedObligations.size} obligation(s)?`)) return;
+
+        showLoading(true, 'Deleting obligations...');
+
+        try {
+            const promises = Array.from(selectedObligations).map(id =>
+                fetch(`${API_BASE}/${id}`, { method: 'DELETE' })
+            );
+
+            await Promise.all(promises);
+
+            showToast(`Deleted ${selectedObligations.size} obligation(s)`, 'success');
+            selectedObligations.clear();
+            updateBulkActions();
+            loadObligations();
+        } catch (error) {
+            console.error('Error deleting obligations:', error);
+            showToast('Failed to delete some obligations', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    // =====================================================
+    // MODAL FUNCTIONS
+    // =====================================================
+    function openModal(modalId) {
+        document.getElementById(modalId).classList.add('active');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).classList.remove('active');
+    }
+
+    function openNewObligationModal() {
+        document.getElementById('modalTitle').textContent = 'New Obligation';
+        document.getElementById('obligationForm').reset();
+        document.getElementById('editObligationId').value = '';
         document.getElementById('ownerUserId').value = '';
-        document.getElementById('selectedOwner').style.display = 'none';
-        document.getElementById('ownerSearch').style.display = 'block';
-    }
-    
-    // Set escalation
-    if (obl.escalation_user_id) {
-        document.getElementById('escalationUserId').value = obl.escalation_user_id;
-        setSelectedUser('escalation', obl.escalation_user_id, obl.escalation_name);
-    } else {
         document.getElementById('escalationUserId').value = '';
+        document.getElementById('selectedOwner').style.display = 'none';
         document.getElementById('selectedEscalation').style.display = 'none';
+        document.getElementById('ownerSearch').style.display = 'block';
         document.getElementById('escalationSearch').style.display = 'block';
+        openModal('obligationModal');
     }
-    
-    openModal('obligationModal');
-}
 
-async function saveObligation() {
-    const form = document.getElementById('obligationForm');
-    if (!form.checkValidity()) {
-        form.reportValidity();
-        return;
+    function editObligation(id) {
+        const obl = allObligations.find(o => o.id === id);
+        if (!obl) return;
+
+        document.getElementById('modalTitle').textContent = 'Edit Obligation';
+        document.getElementById('editObligationId').value = id;
+        document.getElementById('obligationContractId').value = obl.contract_id;
+        document.getElementById('obligationTitle').value = obl.obligation_title || '';
+        document.getElementById('obligationDescription').value = obl.description || '';
+        document.getElementById('obligationType').value = obl.obligation_type || '';
+        document.getElementById('obligationStatus').value = obl.status || 'initiated';
+        document.getElementById('thresholdDate').value = obl.threshold_date ? obl.threshold_date.split('T')[0] : '';
+        document.getElementById('dueDate').value = obl.due_date ? obl.due_date.split('T')[0] : '';
+
+        // Set owner
+        if (obl.owner_user_id) {
+            document.getElementById('ownerUserId').value = obl.owner_user_id;
+            setSelectedUser('owner', obl.owner_user_id, obl.owner_name);
+        } else {
+            document.getElementById('ownerUserId').value = '';
+            document.getElementById('selectedOwner').style.display = 'none';
+            document.getElementById('ownerSearch').style.display = 'block';
+        }
+
+        // Set escalation
+        if (obl.escalation_user_id) {
+            document.getElementById('escalationUserId').value = obl.escalation_user_id;
+            setSelectedUser('escalation', obl.escalation_user_id, obl.escalation_name);
+        } else {
+            document.getElementById('escalationUserId').value = '';
+            document.getElementById('selectedEscalation').style.display = 'none';
+            document.getElementById('escalationSearch').style.display = 'block';
+        }
+
+        openModal('obligationModal');
     }
-    
-    const editId = document.getElementById('editObligationId').value;
-    const isEdit = !!editId;
-    
-    const payload = {
-        contract_id: parseInt(document.getElementById('obligationContractId').value),
-        obligation_title: document.getElementById('obligationTitle').value.trim(),
-        description: document.getElementById('obligationDescription').value.trim(),
-        obligation_type: document.getElementById('obligationType').value,
-        status: document.getElementById('obligationStatus').value,
-        owner_user_id: document.getElementById('ownerUserId').value || null,
-        escalation_user_id: document.getElementById('escalationUserId').value || null,
-        threshold_date: document.getElementById('thresholdDate').value || null,
-        due_date: document.getElementById('dueDate').value || null
-    };
-    
-    showLoading(true, isEdit ? 'Updating obligation...' : 'Creating obligation...');
-    
-    try {
-        const url = isEdit ? `${API_BASE}/${editId}` : `${API_BASE}/`;
-        const method = isEdit ? 'PUT' : 'POST';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+
+    async function saveObligation() {
+        const form = document.getElementById('obligationForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const editId = document.getElementById('editObligationId').value;
+        const isEdit = !!editId;
+
+        const payload = {
+            contract_id: parseInt(document.getElementById('obligationContractId').value),
+            obligation_title: document.getElementById('obligationTitle').value.trim(),
+            description: document.getElementById('obligationDescription').value.trim(),
+            obligation_type: document.getElementById('obligationType').value,
+            status: document.getElementById('obligationStatus').value,
+            owner_user_id: document.getElementById('ownerUserId').value || null,
+            escalation_user_id: document.getElementById('escalationUserId').value || null,
+            threshold_date: document.getElementById('thresholdDate').value || null,
+            due_date: document.getElementById('dueDate').value || null
+        };
+
+        showLoading(true, isEdit ? 'Updating obligation...' : 'Creating obligation...');
+
+        try {
+            const url = isEdit ? `${API_BASE}/${editId}` : `${API_BASE}/`;
+            const method = isEdit ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Failed to save obligation');
+            }
+
+            showToast(isEdit ? 'Obligation updated successfully' : 'Obligation created successfully', 'success');
+            closeModal('obligationModal');
+            loadObligations();
+        } catch (error) {
+            console.error('Error saving obligation:', error);
+            showToast(error.message || 'Failed to save obligation', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    async function deleteObligation(id) {
+        if (!confirm('Are you sure you want to delete this obligation?')) return;
+
+        showLoading(true, 'Deleting obligation...');
+
+        try {
+            const response = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Failed to delete obligation');
+            }
+
+            showToast('Obligation deleted successfully', 'success');
+            loadObligations();
+        } catch (error) {
+            console.error('Error deleting obligation:', error);
+            showToast(error.message || 'Failed to delete obligation', 'error');
+        } finally {
+            showLoading(false);
+        }
+    }
+
+    function viewContract(contractId) {
+        window.location.href = `/contract/obligations/${contractId}`;
+    }
+
+    // =====================================================
+    // USER SEARCH
+    // =====================================================
+    function setupUserSearch() {
+        const ownerSearch = document.getElementById('ownerSearch');
+        const escalationSearch = document.getElementById('escalationSearch');
+
+        ownerSearch.addEventListener('input', () => searchUsers('owner', ownerSearch.value));
+        escalationSearch.addEventListener('input', () => searchUsers('escalation', escalationSearch.value));
+
+        ownerSearch.addEventListener('focus', () => searchUsers('owner', ownerSearch.value));
+        escalationSearch.addEventListener('focus', () => searchUsers('escalation', escalationSearch.value));
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-search-container')) {
+                document.querySelectorAll('.user-suggestions').forEach(el => el.classList.remove('active'));
+            }
         });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Failed to save obligation');
-        }
-        
-        showToast(isEdit ? 'Obligation updated successfully' : 'Obligation created successfully', 'success');
-        closeModal('obligationModal');
-        loadObligations();
-    } catch (error) {
-        console.error('Error saving obligation:', error);
-        showToast(error.message || 'Failed to save obligation', 'error');
-    } finally {
-        showLoading(false);
     }
-}
 
-async function deleteObligation(id) {
-    if (!confirm('Are you sure you want to delete this obligation?')) return;
-    
-    showLoading(true, 'Deleting obligation...');
-    
-    try {
-        const response = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
-        
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail || 'Failed to delete obligation');
+    function searchUsers(type, query) {
+        const suggestionsEl = document.getElementById(`${type}Suggestions`);
+
+        if (query.length < 1) {
+            suggestionsEl.classList.remove('active');
+            return;
         }
-        
-        showToast('Obligation deleted successfully', 'success');
-        loadObligations();
-    } catch (error) {
-        console.error('Error deleting obligation:', error);
-        showToast(error.message || 'Failed to delete obligation', 'error');
-    } finally {
-        showLoading(false);
-    }
-}
 
-function viewContract(contractId) {
-    window.location.href = `/contract/obligations/${contractId}`;
-}
+        const filtered = users.filter(u => {
+            const fullName = `${u.first_name} ${u.last_name}`.toLowerCase();
+            const email = (u.email || '').toLowerCase();
+            const q = query.toLowerCase();
+            return fullName.includes(q) || email.includes(q);
+        }).slice(0, 5);
 
-// =====================================================
-// USER SEARCH
-// =====================================================
-function setupUserSearch() {
-    const ownerSearch = document.getElementById('ownerSearch');
-    const escalationSearch = document.getElementById('escalationSearch');
-    
-    ownerSearch.addEventListener('input', () => searchUsers('owner', ownerSearch.value));
-    escalationSearch.addEventListener('input', () => searchUsers('escalation', escalationSearch.value));
-    
-    ownerSearch.addEventListener('focus', () => searchUsers('owner', ownerSearch.value));
-    escalationSearch.addEventListener('focus', () => searchUsers('escalation', escalationSearch.value));
-    
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.user-search-container')) {
-            document.querySelectorAll('.user-suggestions').forEach(el => el.classList.remove('active'));
-        }
-    });
-}
-
-function searchUsers(type, query) {
-    const suggestionsEl = document.getElementById(`${type}Suggestions`);
-    
-    if (query.length < 1) {
-        suggestionsEl.classList.remove('active');
-        return;
-    }
-    
-    const filtered = users.filter(u => {
-        const fullName = `${u.first_name} ${u.last_name}`.toLowerCase();
-        const email = (u.email || '').toLowerCase();
-        const q = query.toLowerCase();
-        return fullName.includes(q) || email.includes(q);
-    }).slice(0, 5);
-    
-    if (filtered.length === 0) {
-        suggestionsEl.innerHTML = '<div class="user-suggestion-item" style="color: var(--text-muted);">No users found</div>';
-    } else {
-        suggestionsEl.innerHTML = filtered.map(u => `
+        if (filtered.length === 0) {
+            suggestionsEl.innerHTML = '<div class="user-suggestion-item" style="color: var(--text-muted);">No users found</div>';
+        } else {
+            suggestionsEl.innerHTML = filtered.map(u => `
             <div class="user-suggestion-item" onclick="selectUser('${type}', ${u.id}, '${escapeHtml(u.first_name)} ${escapeHtml(u.last_name)}')">
                 <div class="user-avatar">${u.first_name[0]}${u.last_name[0]}</div>
                 <div>
@@ -1627,106 +1760,106 @@ function searchUsers(type, query) {
                 </div>
             </div>
         `).join('');
+        }
+
+        suggestionsEl.classList.add('active');
     }
-    
-    suggestionsEl.classList.add('active');
-}
 
-function selectUser(type, userId, userName) {
-    document.getElementById(`${type}UserId`).value = userId;
-    document.getElementById(`${type}Search`).style.display = 'none';
-    document.getElementById(`${type}Suggestions`).classList.remove('active');
-    setSelectedUser(type, userId, userName);
-}
+    function selectUser(type, userId, userName) {
+        document.getElementById(`${type}UserId`).value = userId;
+        document.getElementById(`${type}Search`).style.display = 'none';
+        document.getElementById(`${type}Suggestions`).classList.remove('active');
+        setSelectedUser(type, userId, userName);
+    }
 
-function setSelectedUser(type, userId, userName) {
-    const selectedEl = document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`);
-    const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-    
-    selectedEl.innerHTML = `
+    function setSelectedUser(type, userId, userName) {
+        const selectedEl = document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`);
+        const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
+        selectedEl.innerHTML = `
         <div class="user-avatar">${initials}</div>
         <span>${escapeHtml(userName)}</span>
         <button class="remove-user" onclick="removeUser('${type}')">
             <i class="ti ti-x"></i>
         </button>
     `;
-    selectedEl.style.display = 'flex';
-}
+        selectedEl.style.display = 'flex';
+    }
 
-function removeUser(type) {
-    document.getElementById(`${type}UserId`).value = '';
-    document.getElementById(`${type}Search`).value = '';
-    document.getElementById(`${type}Search`).style.display = 'block';
-    document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`).style.display = 'none';
-}
+    function removeUser(type) {
+        document.getElementById(`${type}UserId`).value = '';
+        document.getElementById(`${type}Search`).value = '';
+        document.getElementById(`${type}Search`).style.display = 'block';
+        document.getElementById(`selected${type.charAt(0).toUpperCase() + type.slice(1)}`).style.display = 'none';
+    }
 
-// =====================================================
-// UTILITY FUNCTIONS
-// =====================================================
-function showLoading(show, text = 'Loading...') {
-    const overlay = document.getElementById('loadingOverlay');
-    document.getElementById('loadingText').textContent = text;
-    overlay.classList.toggle('active', show);
-}
+    // =====================================================
+    // UTILITY FUNCTIONS
+    // =====================================================
+    function showLoading(show, text = 'Loading...') {
+        const overlay = document.getElementById('loadingOverlay');
+        document.getElementById('loadingText').textContent = text;
+        overlay.classList.toggle('active', show);
+    }
 
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `
         <i class="ti ti-${type === 'success' ? 'check' : type === 'error' ? 'x' : 'info-circle'}"></i>
         ${escapeHtml(message)}
     `;
-    container.appendChild(toast);
-    
-    setTimeout(() => toast.remove(), 4000);
-}
+        container.appendChild(toast);
 
-function escapeHtml(str) {
-    if (!str) return '';
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-}
-
-function formatType(type) {
-    if (!type) return 'Other';
-    return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
-
-function formatStatus(status) {
-    if (!status) return 'Initiated';
-    const statusMap = {
-        'initiated': 'Initiated',
-        'in-progress': 'In Progress',
-        'pending': 'Pending',
-        'awaiting': 'Awaiting Approval',
-        'approved': 'Approved',
-        'rejected': 'Rejected',
-        'completed': 'Completed',
-        'overdue': 'Overdue'
-    };
-    return statusMap[status] || status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-}
-
-function formatDueDate(dateStr) {
-    if (!dateStr) return '<span style="color: var(--text-muted);">-</span>';
-    const date = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    
-    if (date < today) {
-        return `<span class="date-display overdue">${formattedDate}</span>`;
+        setTimeout(() => toast.remove(), 4000);
     }
-    
-    const daysUntil = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
-    if (daysUntil <= 7) {
-        return `<span class="date-display warning">${formattedDate}</span>`;
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
-    
-    return `<span class="date-display">${formattedDate}</span>`;
-}
+
+    function formatType(type) {
+        if (!type) return 'Other';
+        return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function formatStatus(status) {
+        if (!status) return 'Initiated';
+        const statusMap = {
+            'initiated': 'Initiated',
+            'in-progress': 'In Progress',
+            'pending': 'Pending',
+            'awaiting': 'Awaiting Approval',
+            'approved': 'Approved',
+            'rejected': 'Rejected',
+            'completed': 'Completed',
+            'overdue': 'Overdue'
+        };
+        return statusMap[status] || status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    }
+
+    function formatDueDate(dateStr) {
+        if (!dateStr) return '<span style="color: var(--text-muted);">-</span>';
+        const date = new Date(dateStr);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const formattedDate = date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        if (date < today) {
+            return `<span class="date-display overdue">${formattedDate}</span>`;
+        }
+
+        const daysUntil = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+        if (daysUntil <= 7) {
+            return `<span class="date-display warning">${formattedDate}</span>`;
+        }
+
+        return `<span class="date-display">${formattedDate}</span>`;
+    }
 </script>
 {% endblock %}

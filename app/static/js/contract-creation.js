@@ -1112,13 +1112,13 @@ async function saveContract() {
             console.log('📤 Uploading contract file...');
             const formData = new FormData();
             formData.append('file', uploadedFile);
-            formData.append('contract_name', contractName);
+            formData.append('contract_title', contractName);
             formData.append('profile_type', selectedProfile);
             if (projectId && projectId !== 'create_new' && projectId !== '') {
                 formData.append('project_id', projectId);
             }
 
-            const response = await authenticatedFetch('/api/contracts/upload', {
+            const response = await authenticatedFetch('/api/contracts/upload-contract', {
                 method: 'POST',
                 body: formData
             });

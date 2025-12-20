@@ -582,7 +582,7 @@
         align-items: center;
         justify-content: center;
         text-align: center;
-        padding: 3rem;
+        /* padding: 3rem; */
     }
 
     .welcome-icon {
@@ -720,18 +720,22 @@
 
     .message-body {
         background: white;
-        padding: 1.25rem 1.5rem;
-        border-radius: 12px;
+        padding: 1rem 1rem;
+        /* border-radius: 12px; */
         font-size: 0.9rem;
         line-height: 1.7;
         color: var(--text-color);
-        border: 1px solid var(--border-color);
+        /* border: 1px solid var(--border-color); */
         box-shadow: var(--shadow-sm);
     }
 
     .message.user .message-body {
-        background: rgba(39, 98, 203, 0.05);
+        background: rgba(202, 203, 204, 0.05);
         border-color: rgba(39, 98, 203, 0.15);
+    }
+
+    .message.user .message-content{
+        background-color: rgb(221, 227, 236);
     }
 
     .message-body h2,
@@ -1061,7 +1065,7 @@
         border-radius: 16px !important;
         width: 90% !important;
         max-width: 520px !important;
-        max-height: 90vh;
+        /* max-height: 90vh; */
         overflow-y: auto !important;
         box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5) !important;
         position: relative !important;
@@ -1273,15 +1277,6 @@
     }
 
     /* Ensure sidebar is collapsed on this page */
-    body.correspondence-page .sidebar:not(.sidebar-collapsed) {
-        width: 70px !important;
-    }
-
-    body.correspondence-page .sidebar:not(.sidebar-collapsed) .nav-text,
-    body.correspondence-page .sidebar:not(.sidebar-collapsed) .nav-section-title,
-    body.correspondence-page .sidebar:not(.sidebar-collapsed) .logo-text {
-        display: none !important;
-    }
 
     /* Pagination for Documents */
     .docs-pagination {
@@ -1438,21 +1433,21 @@
 <div class="correspondence-container">
     <!-- Left Sidebar -->
     <aside class="selection-sidebar">
-        <div class="correspondance-sidebar-header">
+        <!-- <div class="correspondance-sidebar-header">
             <div class="sidebar-title">
                 <div class="sidebar-title-icon">
                     <i class="ti ti-mail-cog"></i>
                 </div>
                 <div>
                     <h3>Correspondence Management</h3>
-                    <!-- <p>AI-Powered Document Analysis</p> -->
+                    <p>AI-Powered Document Analysis</p>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Mode Selection -->
         <div class="mode-selection">
-            <label class="mode-label">Analysis Mode</label>
+            <!-- <label class="mode-label">Analysis Mode</label> -->
             <div class="mode-cards">
                 <div class="mode-card active" data-mode="project" onclick="setAnalysisMode('project')">
                     <div class="mode-card-icon">
@@ -1534,7 +1529,7 @@
                         <i class="ti ti-x"></i> Clear
                     </button>
                 </div>
-               
+
             </div>
         </div>
     </aside>
@@ -1543,7 +1538,8 @@
     <main class="chat-main">
         <header class="chat-header">
             <div class="chat-header-left">
-                <h2 id="chatHeaderTitle">AI Correspondence Assistant</h2>
+                
+                <h2 id="chatHeaderTitle"><i class="ti ti-mail-cog"></i>  AI Correspondence Management</h2>
                 <p id="chatHeaderSubtitle">Select documents and ask questions</p>
             </div>
             <div class="header-actions">
@@ -1561,10 +1557,10 @@
 
         <div class="chat-messages" id="chatMessages">
             <div class="welcome-state" id="welcomeState">
-                <div class="welcome-icon">
+                <!-- <div class="welcome-icon">
                     <i class="ti ti-robot"></i>
-                </div>
-                <h2>Correspondence AI Assistant</h2>
+                </div> -->
+                <!-- <h2>Correspondence AI Assistant</h2> -->
                 <p>Select a project and documents from the sidebar, then ask questions about your contracts, request
                     analysis, or draft professional correspondence.</p>
 
@@ -1593,13 +1589,13 @@
             </div>
         </div>
 
-       
+
 
         <!-- Input Area -->
         <div class="chat-input-area">
-              <!-- <div class="selected-chips" id="selectedChips"> -->
-                    <!-- Selected document chips rendered here -->
-                <!-- </div> -->
+            <!-- <div class="selected-chips" id="selectedChips"> -->
+            <!-- Selected document chips rendered here -->
+            <!-- </div> -->
             <div class="input-container">
                 <div class="input-options">
                     <div class="option-group">
@@ -1653,7 +1649,7 @@
 
 <!-- Upload Modal - Hidden by default -->
 <!-- Upload Modal -->
-<div id="uploadModal" class="modal-overlay">
+<div id="uploadModal" class="modal-overlay" style="max-height: 72vh;">
     <div class="modal">
         <div class="modal-header">
             <h3><i class="ti ti-upload"></i> Upload Documents</h3>
@@ -1724,19 +1720,29 @@
             // Auto-collapse main sidebar for this page
             const sidebar = document.getElementById('sidebar');
             if (sidebar) {
-                // Try using the global toggleSidebar function if sidebar is not collapsed
-                if (!sidebar.classList.contains('sidebar-collapsed')) {
+                // Check if sidebar is NOT already collapsed (check both classes for safety)
+                const isCollapsed = sidebar.classList.contains('collapsed') ||
+                    sidebar.classList.contains('sidebar-collapsed');
+
+                if (!isCollapsed) {
+                    // Try using the global toggleSidebar function first
                     if (typeof toggleSidebar === 'function') {
                         toggleSidebar();
                     } else {
-                        // Fallback: manually collapse
+                        // Fallback: manually collapse - ADD BOTH CLASSES!
+                        sidebar.classList.add('collapsed');           // <-- This was missing!
                         sidebar.classList.add('sidebar-collapsed');
+
                         const mainContent = document.querySelector('.main-content');
                         if (mainContent) {
                             mainContent.classList.add('sidebar-collapsed');
                         }
+
                         // Also update body class that some templates use
                         document.body.classList.add('sidebar-collapsed');
+
+                        // Save to localStorage so toggleSidebar() stays in sync
+                        localStorage.setItem('sidebarCollapsed', 'true');
                     }
                 }
             }
@@ -1757,7 +1763,6 @@
                 }
             });
         });
-
         // Cleanup when leaving the page
         window.addEventListener('beforeunload', () => {
             document.body.classList.remove('correspondence-page');
@@ -2424,7 +2429,7 @@
                 <div class="message-header">
                     <span class="message-sender">${type === 'user' ? 'You' : 'CALIM AI'}</span>
                     <span class="message-time">${time}</span>
-                    ${type === 'ai' ? confidenceBadge : ''}
+                   
                 </div>
                 <div class="message-body">${formattedContent}${sourcesHtml}</div>
                 ${type === 'ai' ? `
@@ -2484,7 +2489,7 @@
             };
 
             document.getElementById('queryInput').value = prompts[type] || '';
-            document.getElementById('welcomeState').style.display = 'none';
+            // document.getElementById('welcomeState').style.display = 'none';
             document.getElementById('queryInput').focus();
             autoResize(document.getElementById('queryInput'));
             updateSubmitState();

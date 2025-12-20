@@ -1193,31 +1193,19 @@
     let currentUploadType = null;  // ✅ ADD THIS
     let selectedFile = null;        // ✅ ADD THIS
 
+
+
     // Load contracts from database
-    async function initializeContracts() {
-        try {
-            showLoading();
-
-            // Fetch statistics
-            // const statsResponse = await fetch('/api/contracts/statistics', {
-            //     credentials: 'include'
-            // });
-            // const stats = await statsResponse.json();
-            // updateSidebarCounts({
-            //     drafting: stats.drafting_count,
-            //     negotiation: stats.negotiation_count,
-            //     operations: stats.operations_count
-            // });
-
-            // Load initial contracts
-            await loadContractsFromDB();
-
-            hideLoading();
-        } catch (error) {
-            console.error('Error initializing:', error);
-            hideLoading();
-        }
+   async function initializeContracts() {
+    try {
+        showContractsLoading();  // ← UPDATED
+        await loadContractsFromDB();
+        hideContractsLoading();  // ← UPDATED
+    } catch (error) {
+        console.error('Error initializing:', error);
+        hideContractsLoading();  // ← UPDATED
     }
+}
 
     // Load contracts from database with current filters
     // ✅ ADD: Pagination state
@@ -1227,17 +1215,17 @@
 
     // Load contracts from database with current filters
     async function loadContractsFromDB() {
-        try {
-            showLoading();
+        showContractsLoading();  // ← UPDATED
 
+        try {
             const params = new URLSearchParams({
                 module: currentModule,
                 status: currentSubTab !== 'all' ? currentSubTab : '',
-                search: document.getElementById('searchInput').value,
-                type: document.getElementById('typeFilter').value,
-                date: document.getElementById('dateFilter').value,
-                page: currentPage,  // ✅ Add page parameter
-                limit: 20  // ✅ Add limit parameter
+                search: document.getElementById('searchInput')?.value || '',
+                type: document.getElementById('typeFilter')?.value || '',
+                date: document.getElementById('dateFilter')?.value || '',
+                page: currentPage,
+                limit: 20
             });
 
             const response = await fetch(`/api/contracts?${params}`, {
@@ -1250,7 +1238,6 @@
             allContracts = data.contracts || [];
             filteredContracts = allContracts;
 
-            // ✅ Update pagination state
             if (data.pagination) {
                 totalPages = data.pagination.total_pages;
                 hasMore = data.pagination.has_more;
@@ -1259,17 +1246,38 @@
 
             renderContracts();
             syncSidebarCounts();
-            hideLoading();
 
         } catch (error) {
             console.error('Error loading contracts:', error);
-            hideLoading();
             const emptyState = document.getElementById('emptyState');
             const grid = document.getElementById('contractsGrid');
-            grid.style.display = 'none';
-            emptyState.style.display = 'block';
+            if (grid) grid.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+        } finally {
+            hideContractsLoading();  // ← UPDATED
         }
     }
+    // Show loading state - RENAMED to avoid auth.js conflict
+    function showContractsLoading() {
+        const loadingState = document.getElementById('loadingState');
+        const contractsGrid = document.getElementById('contractsGrid');
+        const emptyState = document.getElementById('emptyState');
+        const resultsCount = document.getElementById('resultsCount');
+        const paginationContainer = document.getElementById('paginationContainer');
+
+        if (loadingState) loadingState.style.display = 'flex';
+        if (contractsGrid) contractsGrid.style.display = 'none';
+        if (emptyState) emptyState.style.display = 'none';
+        if (paginationContainer) paginationContainer.style.display = 'none';
+        if (resultsCount) resultsCount.textContent = 'Loading...';
+    }
+
+    // Hide loading state - RENAMED to avoid auth.js conflict
+    function hideContractsLoading() {
+        const loadingState = document.getElementById('loadingState');
+        if (loadingState) loadingState.style.display = 'none';
+    }
+
 
     // ✅ NEW: Update pagination UI
     function updatePaginationUI(pagination) {
@@ -1311,6 +1319,7 @@
 
     // ✅ UPDATE: Reset page when changing filters
     function applyFilters() {
+        console.log('applyFilters called');  // Debug
         currentPage = 1;  // Reset to first page when filtering
         loadContractsFromDB();
     }
@@ -1957,8 +1966,8 @@
     }
 
     // Render contracts - Compact Version with All Buttons
-    // Render contracts - Compact Version with All Buttons
     function renderContracts() {
+
         const grid = document.getElementById('contractsGrid');
         const emptyState = document.getElementById('emptyState');
         const resultsCount = document.getElementById('resultsCount');
@@ -1992,7 +2001,7 @@
                 <span class="contract-id">${contract.contract_number}</span>
             </div>
             
-            <h3 class="contract-title" title="${contract.title}">${contract.title}</h3>
+            <h3 class="contract-title" title="${contract.title}">${contract.title}-${contract.contract_number.replace('CNT-', '')}</h3>
             
             <div class="contract-party">
                 <span class="contract-party-label">${contract.template ? 'Type:' : 'Counter-party:'}</span>
@@ -2301,6 +2310,7 @@
     // Search functionality with debounce
     let searchTimeout;
     function performSearch() {
+        console.log('performSearch called');  // Debug
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
             applyFilters();
@@ -2309,6 +2319,7 @@
 
     // Show loading state
     function showLoading() {
+        console.log('showLoading called');  // Debug
         const loadingState = document.getElementById('loadingState');
         const contractsGrid = document.getElementById('contractsGrid');
         const emptyState = document.getElementById('emptyState');
@@ -2322,6 +2333,7 @@
 
     // Hide loading state
     function hideLoading() {
+        console.log('hideLoading called');  // Debug
         const loadingState = document.getElementById('loadingState');
         loadingState.style.display = 'none';
     }
@@ -2344,29 +2356,29 @@
 
 
     function timeAgo(dateString) {
-    const now = new Date();
-    const date = new Date(dateString);
-    const seconds = Math.floor((now - date) / 1000);
-    
-    const intervals = [
-        { label: 'year', seconds: 31536000 },
-        { label: 'month', seconds: 2592000 },
-        { label: 'week', seconds: 604800 },
-        { label: 'day', seconds: 86400 },
-        { label: 'hour', seconds: 3600 },
-        { label: 'minute', seconds: 60 },
-        { label: 'second', seconds: 1 }
-    ];
-    
-    for (const interval of intervals) {
-        const count = Math.floor(seconds / interval.seconds);
-        if (count >= 1) {
-            return `${count} ${interval.label}${count > 1 ? 's' : ''} ago`;
+        const now = new Date();
+        const date = new Date(dateString);
+        const seconds = Math.floor((now - date) / 1000);
+
+        const intervals = [
+            { label: 'year', seconds: 31536000 },
+            { label: 'month', seconds: 2592000 },
+            { label: 'week', seconds: 604800 },
+            { label: 'day', seconds: 86400 },
+            { label: 'hour', seconds: 3600 },
+            { label: 'minute', seconds: 60 },
+            { label: 'second', seconds: 1 }
+        ];
+
+        for (const interval of intervals) {
+            const count = Math.floor(seconds / interval.seconds);
+            if (count >= 1) {
+                return `${count} ${interval.label}${count > 1 ? 's' : ''} ago`;
+            }
         }
+
+        return 'just now';
     }
-    
-    return 'just now';
-}
 
     function getStatusLabel(status) {
         const labels = {
