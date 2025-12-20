@@ -210,7 +210,7 @@ async function showBlockchainCertificateById(contractId, contractNumber) {
                                 <i data-lucide="award" style="width: 20px; height: 20px;"></i>
                                 Blockchain Certificate
                             </h5>
-                            <button class="btn-close btn-close-white" onclick="this.closest('.modal').remove()"></button>
+                            <button class="btn-close btn-close-white" onclick="this.closest('.modal').remove()">X</button>
                         </div>
                         <div class="modal-body">
                             <div class="text-center mb-4">

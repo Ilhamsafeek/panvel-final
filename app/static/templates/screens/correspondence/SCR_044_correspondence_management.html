@@ -734,7 +734,7 @@
         border-color: rgba(39, 98, 203, 0.15);
     }
 
-    .message.user .message-content{
+    .message.user .message-content {
         background-color: rgb(221, 227, 236);
     }
 
@@ -1538,8 +1538,8 @@
     <main class="chat-main">
         <header class="chat-header">
             <div class="chat-header-left">
-                
-                <h2 id="chatHeaderTitle"><i class="ti ti-mail-cog"></i>  AI Correspondence Management</h2>
+
+                <h2 id="chatHeaderTitle"><i class="ti ti-mail-cog"></i> AI Correspondence Management</h2>
                 <p id="chatHeaderSubtitle">Select documents and ask questions</p>
             </div>
             <div class="header-actions">
@@ -1649,42 +1649,45 @@
 
 <!-- Upload Modal - Hidden by default -->
 <!-- Upload Modal -->
-<div id="uploadModal" class="modal-overlay" style="max-height: 72vh;">
-    <div class="modal">
+<div id="uploadModal" class="modal-overlay">
+    <div class="modal-container">
         <div class="modal-header">
-            <h3><i class="ti ti-upload"></i> Upload Documents</h3>
-            <button class="modal-close" onclick="closeUploadModal()" type="button">
+            <h3>Upload Documents</h3>
+            <button onclick="closeUploadModal()" class="modal-close">
                 <i class="ti ti-x"></i>
             </button>
         </div>
         <div class="modal-body">
-            <div class="upload-project-wrapper" id="uploadProjectWrapper" style="margin-bottom: 1rem;">
-                <label
-                    style="font-size: 0.8rem; font-weight: 600; color: var(--text-color); display: block; margin-bottom: 0.5rem;">
-                    <i class="ti ti-folder"></i> Upload to Project <span style="color: var(--danger-color);">*</span>
-                </label>
-                <select id="uploadProjectSelect" class="project-select" style="width: 100%;">
+            <!-- Project Selector (shown in document mode or when no project selected) -->
+            <div id="uploadProjectWrapper" class="form-group">
+                <label for="uploadProjectSelect">Select Project *</label>
+                <select id="uploadProjectSelect" class="form-control">
                     <option value="">-- Select a Project --</option>
                 </select>
             </div>
 
-            <div class="upload-zone" id="uploadZone">
-                <i class="ti ti-cloud-upload"></i>
-                <h4>Drag & Drop Files Here</h4>
-                <p>or click to browse (PDF, DOCX, EML, XLSX supported)</p>
-                <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.eml,.msg,.xlsx,.xls">
+            <!-- File Input -->
+            <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.rtf,.odt,.eml"
+                onchange="handleFileSelect(event)" style="display: none;">
+
+            <!-- Upload Area -->
+            <div class="upload-area" onclick="triggerFileInput()">
+                <i class="ti ti-cloud-upload" style="font-size: 48px; color: #2762cb;"></i>
+                <p>Click to browse or drag files here</p>
+                <p class="text-muted">Supported: PDF, DOC, DOCX, XLS, XLSX, TXT, RTF, ODT, EML</p>
             </div>
-            <div class="upload-list" id="uploadList"></div>
+
+            <!-- File List -->
+            <div id="uploadList" class="upload-list"></div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline" onclick="closeUploadModal()" type="button">Cancel</button>
-            <button class="btn btn-primary" id="uploadBtn" onclick="uploadFiles()" disabled type="button">
+            <button onclick="closeUploadModal()" class="btn btn-secondary">Cancel</button>
+            <button id="uploadBtn" onclick="uploadFiles()" class="btn btn-primary" disabled>
                 <i class="ti ti-upload"></i> Upload
             </button>
         </div>
     </div>
 </div>
-
 
 <div class="toast-container" id="toastContainer"></div>
 
@@ -2127,13 +2130,13 @@
         // UPLOAD FUNCTIONALITY
         // =====================================================
         window.openUploadModal = function () {
-            console.log('Opening modal...');
+            console.log('Opening upload modal...');
+            console.log('Current analysis mode:', state.analysisMode);
 
             state.filesToUpload = [];
             renderUploadList();
 
             const modal = document.getElementById('uploadModal');
-            const selector = document.getElementById('uploadProjectSelect');
             const wrapper = document.getElementById('uploadProjectWrapper');
 
             if (!modal) {
@@ -2141,22 +2144,22 @@
                 return;
             }
 
-            // Populate project selector
-            selector.innerHTML = '<option value="">-- Select a Project --</option>';
-            state.projectsList.forEach(p => {
-                selector.innerHTML += `<option value="${p.id}">${escapeHtml(p.name)} (${escapeHtml(p.code)})</option>`;
-            });
-
-            // Pre-select if in project mode
-            if (state.analysisMode === 'project' && state.selectedProject) {
-                selector.value = state.selectedProject;
+            // HIDE project selector completely in document mode
+            if (wrapper) {
+                if (state.analysisMode === 'document') {
+                    wrapper.style.display = 'none';
+                    console.log('Document mode - project selector hidden');
+                } else if (state.analysisMode === 'project') {
+                    wrapper.style.display = 'none';  // Also hide in project mode since project is already selected
+                    console.log('Project mode - using already selected project:', state.selectedProject);
+                }
             }
 
             modal.style.display = 'flex';
             modal.classList.add('active');
             document.body.style.overflow = 'hidden';
 
-            console.log('Modal opened');
+            console.log('Modal opened successfully');
         };
         window.closeUploadModal = function () {
             const modal = document.getElementById('uploadModal');
@@ -2166,9 +2169,36 @@
             }
             document.body.style.overflow = '';
             state.filesToUpload = [];
-            document.getElementById('fileInput').value = '';
-            renderUploadList();
         };
+
+
+        window.triggerFileInput = function () {
+            document.getElementById('fileInput').click();
+        };
+
+
+
+        window.handleFileSelect = function (event) {
+            const files = Array.from(event.target.files);
+            const allowedTypes = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'rtf', 'odt', 'eml'];
+
+            files.forEach(file => {
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (allowedTypes.includes(ext)) {
+                    // Avoid duplicates
+                    if (!state.filesToUpload.some(f => f.name === file.name && f.size === file.size)) {
+                        state.filesToUpload.push(file);
+                    }
+                } else {
+                    showToast(`${file.name} - unsupported format`, 'warning');
+                }
+            });
+
+            renderUploadList();
+            // Reset input to allow re-selecting same files
+            event.target.value = '';
+        };
+
 
         function setupDragDrop() {
             const zone = document.getElementById('uploadZone');
@@ -2237,31 +2267,35 @@
 
             renderUploadList();
         }
-
         function renderUploadList() {
             const container = document.getElementById('uploadList');
-            document.getElementById('uploadBtn').disabled = state.filesToUpload.length === 0;
+            const uploadBtn = document.getElementById('uploadBtn');
+
+            if (!container || !uploadBtn) return;
+
+            uploadBtn.disabled = state.filesToUpload.length === 0;
 
             if (state.filesToUpload.length === 0) {
-                container.innerHTML = '';
+                container.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">No files selected</div>';
                 return;
             }
 
             container.innerHTML = state.filesToUpload.map((file, i) => `
-            <div class="upload-item">
-                <div class="upload-item-icon">
-                    <i class="ti ti-file"></i>
-                </div>
-                <div class="upload-item-info">
-                    <div class="upload-item-name">${escapeHtml(file.name)}</div>
-                    <div class="upload-item-size">${formatFileSize(file.size)}</div>
-                </div>
-                <button class="upload-item-remove" onclick="removeUploadFile(${i})">
-                    <i class="ti ti-x"></i>
-                </button>
+        <div class="upload-item">
+            <div class="upload-item-icon">
+                <i class="ti ti-file"></i>
             </div>
-        `).join('');
+            <div class="upload-item-info">
+                <div class="upload-item-name">${escapeHtml(file.name)}</div>
+                <div class="upload-item-size">${formatFileSize(file.size)}</div>
+            </div>
+            <button class="upload-item-remove" onclick="removeUploadFile(${i})">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+    `).join('');
         }
+
 
         window.removeUploadFile = function (index) {
             state.filesToUpload.splice(index, 1);
@@ -2269,20 +2303,20 @@
         };
 
         window.uploadFiles = async function () {
-            if (state.filesToUpload.length === 0) return;
+            console.log('=== UPLOAD STARTED ===');
 
-            // Get project ID based on mode
-            let projectId = state.selectedProject;
-            if (state.analysisMode === 'document') {
-                const uploadProjectSelect = document.getElementById('uploadProjectSelect');
-                if (uploadProjectSelect) {
-                    projectId = uploadProjectSelect.value;
-                }
+            if (state.filesToUpload.length === 0) {
+                showToast('No files selected', 'warning');
+                return;
             }
 
-            if (!projectId) {
-                showToast('Please select a project for upload', 'warning');
-                return;
+            let projectId = null;
+
+            if (state.analysisMode === 'project' && state.selectedProject) {
+                projectId = state.selectedProject;
+                console.log('PROJECT MODE - Project ID:', projectId);
+            } else {
+                console.log('DOCUMENT MODE - Standalone upload');
             }
 
             const uploadBtn = document.getElementById('uploadBtn');
@@ -2292,38 +2326,66 @@
 
             try {
                 const formData = new FormData();
-                state.filesToUpload.forEach(file => formData.append('files', file));
-                formData.append('project_id', projectId);
+
+                // Append files
+                state.filesToUpload.forEach(file => {
+                    formData.append('files', file);
+                });
+
+                // ✅ ALWAYS send project_id field (empty string for standalone)
+                formData.append('project_id', projectId ? String(projectId) : '');
+                formData.append('document_type', 'correspondence');
+
+                console.log('Sending upload request...');
+                console.log('Upload mode:', projectId ? 'project-level' : 'document-level');
+                console.log('Project ID being sent:', projectId ? String(projectId) : '(empty string)');
 
                 const response = await fetch('/api/v1/correspondence/upload', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${getAuthToken()}` },
                     body: formData
                 });
 
-                if (!response.ok) throw new Error('Upload failed');
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('Upload error response:', errorData);
+                    throw new Error(errorData.detail || 'Upload failed');
+                }
 
                 const result = await response.json();
-                showToast(`${state.filesToUpload.length} file(s) uploaded successfully`, 'success');
+                console.log('Upload successful:', result);
+
+                showToast(`${result.uploaded} file(s) uploaded successfully (${result.upload_mode})`, 'success');
+
+                state.filesToUpload = [];
+                uploadBtn.innerHTML = originalContent;
+                uploadBtn.disabled = false;
+
                 closeUploadModal();
 
-                // Reload all data
-                await loadProjects();
-
-                // If in project mode, re-select the project
+                // Reload data
                 if (state.analysisMode === 'project' && state.selectedProject) {
-                    document.getElementById('projectSelect').value = state.selectedProject;
-                    onProjectChange();
+                    await loadProjects();
+                    const projectSelect = document.getElementById('projectSelect');
+                    if (projectSelect) {
+                        projectSelect.value = state.selectedProject;
+                        onProjectChange();
+                    }
+                } else {
+                    // Document mode - reload all documents
+                    await loadAllDocuments();
                 }
 
             } catch (error) {
                 console.error('Upload error:', error);
-                showToast('Upload failed. Please try again.', 'error');
-                uploadBtn.disabled = false;
+                showToast('Upload failed: ' + error.message, 'error');
                 uploadBtn.innerHTML = originalContent;
+                uploadBtn.disabled = false;
             }
-        };
 
+            console.log('=== UPLOAD COMPLETED ===');
+        };
         // =====================================================
         // QUERY SUBMISSION
         // =====================================================
@@ -2529,11 +2591,11 @@
         }
 
         function formatFileSize(bytes) {
-            if (!bytes) return '-';
+            if (bytes === 0) return '0 Bytes';
             const k = 1024;
-            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
         }
 
         function formatDate(dateStr) {

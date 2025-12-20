@@ -16,6 +16,12 @@ import re
 from pathlib import Path
 import asyncio
 import sys
+from app.core.config import settings
+
+import pdfplumber
+import docx
+from sqlalchemy.sql import text
+
 
 
 from app.core.database import get_db
@@ -2835,6 +2841,398 @@ IMPORTANT: Use lowercase for severity levels (critical, high, medium, low)."""
         logger.error(f"Error in risk analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+@router.post("/risk-analysis-upload")
+async def upload_contract_for_risk_analysis(
+    file: UploadFile = File(...),
+    profile_type: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload contract file and perform immediate AI risk analysis with format preservation"""
+    
+    try:
+        logger.info(f"📤 Risk Analysis Upload from user {current_user.email}")
+        logger.info(f"📎 File: {file.filename}, Profile: {profile_type}")
+        
+        # Validate file type
+        allowed_extensions = {'.pdf', '.docx', '.doc', '.txt'}
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File type not supported. Allowed: {', '.join(allowed_extensions)}"
+            )
+        
+        # =====================================================
+        # FIXED: Generate unique contract number with retry logic
+        # =====================================================
+        year = datetime.now().year
+        month = datetime.now().month
+        contract_number = None
+        max_retries = 5
+        
+        for attempt in range(max_retries):
+            try:
+                # Use MAX instead of COUNT to get the highest number
+                max_number_query = text("""
+                    SELECT contract_number 
+                    FROM contracts 
+                    WHERE contract_number LIKE :pattern 
+                    AND company_id = :company_id
+                    ORDER BY contract_number DESC
+                    LIMIT 1
+                """)
+                
+                result = db.execute(max_number_query, {
+                    "pattern": f"CNT-{year}-%",
+                    "company_id": current_user.company_id
+                }).fetchone()
+                
+                if result and result.contract_number:
+                    # Extract the number from the last contract number
+                    last_number = int(result.contract_number.split('-')[-1])
+                    new_number = last_number + 1
+                else:
+                    new_number = 1
+                
+                contract_number = f"CNT-{year}-{new_number:04d}"
+                logger.info(f"🔢 Generated contract number: {contract_number} (attempt {attempt + 1})")
+                
+                # Try to insert the contract - if successful, break the loop
+                insert_contract = text("""
+                    INSERT INTO contracts (
+                        contract_number, contract_title, contract_type, profile_type,
+                        status, current_version, created_by, company_id, created_at, updated_at
+                    ) VALUES (
+                        :contract_number, :contract_title, :contract_type, :profile_type,
+                        'draft', 1, :created_by, :company_id, NOW(), NOW()
+                    )
+                """)
+                
+                contract_title = f"Risk Analysis - {file.filename}"
+                
+                db.execute(insert_contract, {
+                    "contract_number": contract_number,
+                    "contract_title": contract_title,
+                    "contract_type": "risk_analysis",
+                    "profile_type": profile_type,
+                    "created_by": current_user.id,
+                    "company_id": current_user.company_id
+                })
+                db.commit()
+                
+                logger.info(f"✅ Contract created with number: {contract_number}")
+                break  # Success - exit retry loop
+                
+            except Exception as e:
+                db.rollback()
+                if "Duplicate entry" in str(e) and attempt < max_retries - 1:
+                    logger.warning(f"⚠️ Duplicate contract number {contract_number}, retrying... (attempt {attempt + 1})")
+                    continue  # Retry with next number
+                elif attempt == max_retries - 1:
+                    # Last attempt - use timestamp-based unique number
+                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                    contract_number = f"CNT-{year}-{timestamp[-6:]}"
+                    logger.warning(f"⚠️ Using timestamp-based contract number: {contract_number}")
+                    
+                    db.execute(insert_contract, {
+                        "contract_number": contract_number,
+                        "contract_title": contract_title,
+                        "contract_type": "risk_analysis",
+                        "profile_type": profile_type,
+                        "created_by": current_user.id,
+                        "company_id": current_user.company_id
+                    })
+                    db.commit()
+                    logger.info(f"✅ Contract created with timestamp-based number: {contract_number}")
+                    break
+                else:
+                    raise  # Re-raise if it's not a duplicate error
+        
+        # Get the inserted contract ID
+        contract_id_query = text("""
+            SELECT id FROM contracts 
+            WHERE contract_number = :contract_number 
+            AND company_id = :company_id
+        """)
+        contract_result = db.execute(contract_id_query, {
+            "contract_number": contract_number,
+            "company_id": current_user.company_id
+        }).fetchone()
+        
+        if not contract_result:
+            raise HTTPException(status_code=500, detail="Failed to create contract")
+        
+        contract_id = contract_result.id
+        logger.info(f"✅ Contract created with ID: {contract_id}")
+        
+        # Create upload directory
+        upload_base = os.path.join("app", "uploads", "contracts", str(contract_id))
+        os.makedirs(upload_base, exist_ok=True)
+        
+        # Save file
+        file_path = os.path.join(upload_base, file.filename)
+        file_content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+        
+        logger.info(f"💾 File saved to: {file_path}")
+        
+        # =====================================================
+        # EXTRACT TEXT USING DocumentParser (Same as upload-contract)
+        # =====================================================
+        logger.info(f"📄 Extracting text from {file_ext} file...")
+        
+        # Import DocumentParser
+        from app.utils.document_parser import DocumentParser
+        
+        # Extract text with proper formatting
+        extracted_text = DocumentParser.extract_text(str(file_path))
+        
+        if not extracted_text or len(extracted_text.strip()) < 10:
+            logger.warning(f"⚠️ No text extracted from file, using placeholder")
+            extracted_text = f"<p>Unable to extract text from {file.filename}. Please check the file format.</p>"
+        else:
+            logger.info(f"✅ Extracted {len(extracted_text)} characters from document")
+        
+        # Format the extracted content as HTML (same as upload-contract)
+        file_size_kb = len(file_content) / 1024
+        
+        html_content = f"""
+        <div class="contract-document" style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            
+            <!-- Document Content -->
+            <div class="document-content" style="background: white;">
+                <div style="white-space: pre-wrap; word-wrap: break-word; font-size: 14px; line-height: 1.8;">
+{extracted_text}
+                </div>
+            </div>
+           
+        </div>
+        """
+        
+        # Get plain text for AI analysis (strip HTML tags)
+        import re
+        extracted_text_plain = re.sub('<[^<]+?>', '', extracted_text)
+        extracted_text_plain = re.sub(r'\s+', ' ', extracted_text_plain).strip()
+        
+        logger.info(f"📝 Extracted: {len(extracted_text_plain)} chars (HTML: {len(html_content)} chars)")
+        
+        # Save contract version with formatted HTML content
+        insert_version = text("""
+            INSERT INTO contract_versions (
+                contract_id, version_number, version_type, contract_content,
+                change_summary, created_by, created_at
+            ) VALUES (
+                :contract_id, 1, 'draft', :contract_content,
+                :change_summary, :created_by, NOW()
+            )
+        """)
+        
+        db.execute(insert_version, {
+            "contract_id": contract_id,
+            "contract_content": html_content,  # Save formatted HTML
+            "change_summary": f"Initial upload: {file.filename} - {len(extracted_text_plain):,} characters extracted",
+            "created_by": current_user.id
+        })
+        db.commit()
+        
+        logger.info("💾 Contract version saved with preserved formatting")
+        
+        # =====================================================
+        # AI RISK ANALYSIS - Use plain text for analysis
+        # =====================================================
+        logger.info("🤖 Starting AI risk analysis with Claude...")
+        
+        try:
+            # Check if Claude client is available
+            if not anthropic_client:
+                logger.warning("⚠️ Claude API not available - skipping AI analysis")
+                raise Exception("Claude API not configured")
+            
+            # Use plain text for AI analysis (better for token efficiency)
+            content_for_analysis = extracted_text_plain[:8000] if len(extracted_text_plain) > 8000 else extracted_text_plain
+            
+            claude_prompt = f"""Analyze this contract for legal and business risks. Focus on Qatar construction, oil & gas, and infrastructure sector regulations.
+
+Contract Type: {profile_type}
+Profile: {profile_type.title()} risk tolerance
+
+Contract Content:
+{content_for_analysis}
+
+Provide a comprehensive risk assessment in this exact JSON structure (no markdown, just pure JSON):
+{{
+    "overall_risk_score": <number 0-100>,
+    "risk_level": "<Low|Medium|High|Critical>",
+    "executive_summary": "<2-3 sentence overview of key risks>",
+    "risk_factors": [
+        {{
+            "category": "<Payment|Compliance|Liability|Termination|Force Majeure|Dispute Resolution>",
+            "issue": "<specific issue title>",
+            "severity": "<low|medium|high|critical>",
+            "description": "<detailed 1-2 sentence description>",
+            "recommendation": "<specific mitigation strategy>",
+            "clause_reference": "<section or clause reference>"
+        }}
+    ],
+    "red_flags": ["<critical issues that need immediate attention>"],
+    "recommendations": ["<actionable recommendations to reduce risk>"],
+    "compliance_issues": [
+        {{
+            "regulation": "<Qatar Labor Law|QFCRA|FIDIC|specific regulation>",
+            "issue": "<compliance concern>",
+            "severity": "<low|medium|high>",
+            "recommendation": "<compliance action required>"
+        }}
+    ]
+}}
+
+Focus on: payment terms, liability caps, termination clauses, force majeure, dispute resolution, Qatar-specific compliance, QFCRA regulations, and construction industry standards."""
+
+            # Call Claude API
+            response = anthropic_client.messages.create(
+                model="claude-sonnet-4-20250514",
+                max_tokens=4000,
+                messages=[{"role": "user", "content": claude_prompt}]
+            )
+            
+            ai_response = response.content[0].text
+            logger.info(f"🤖 Claude AI Response: {len(ai_response)} characters")
+            
+            # Parse JSON from AI response
+            json_match = re.search(r'\{[\s\S]*\}', ai_response)
+            if json_match:
+                claude_analysis = json.loads(json_match.group())
+                logger.info("✅ Successfully parsed AI JSON response")
+            else:
+                raise ValueError("No valid JSON found in AI response")
+            
+            # Process and format risk items
+            high_risks = 0
+            medium_risks = 0
+            low_risks = 0
+            risk_items = []
+            
+            # Process risk factors
+            for factor in claude_analysis.get("risk_factors", []):
+                severity = factor.get("severity", "medium").lower()
+                
+                if severity in ["critical", "high"]:
+                    high_risks += 1
+                    risk_score = 85
+                elif severity == "medium":
+                    medium_risks += 1
+                    risk_score = 60
+                else:
+                    low_risks += 1
+                    risk_score = 30
+                
+                risk_items.append({
+                    "type": factor.get("category", "General"),
+                    "issue": factor.get("issue", "Risk Identified"),
+                    "description": factor.get("description", ""),
+                    "severity": severity,
+                    "score": risk_score,
+                    "clause_reference": factor.get("clause_reference", "General"),
+                    "mitigation": factor.get("recommendation", "Review with legal team"),
+                    "likelihood": "High" if severity in ["high", "critical"] else "Medium",
+                    "business_impact": factor.get("category", "General")
+                })
+            
+            # Process compliance issues
+            for issue in claude_analysis.get("compliance_issues", []):
+                severity = issue.get("severity", "medium").lower()
+                
+                if severity in ["critical", "high"]:
+                    high_risks += 1
+                elif severity == "medium":
+                    medium_risks += 1
+                else:
+                    low_risks += 1
+                
+                risk_items.append({
+                    "type": "Compliance",
+                    "issue": f"Compliance: {issue.get('regulation', 'Regulatory Issue')}",
+                    "description": issue.get("issue", ""),
+                    "severity": severity,
+                    "score": 80 if severity == "high" else 60,
+                    "clause_reference": issue.get("regulation", "General"),
+                    "mitigation": issue.get("recommendation", "Ensure compliance"),
+                    "likelihood": "High",
+                    "business_impact": "Regulatory"
+                })
+            
+            # Calculate scores
+            overall_risk_score = claude_analysis.get("overall_risk_score", 50)
+            safety_score = 100 - overall_risk_score
+            
+            # Format final analysis
+            formatted_analysis = {
+                "overall_score": safety_score,
+                "risk_score": overall_risk_score,
+                "risk_level": claude_analysis.get("risk_level", "Medium"),
+                "high_risks": high_risks,
+                "medium_risks": medium_risks,
+                "low_risks": low_risks,
+                "executive_summary": claude_analysis.get("executive_summary", "AI risk analysis completed successfully."),
+                "risk_items": risk_items,
+                "red_flags": claude_analysis.get("red_flags", []),
+                "recommendations": claude_analysis.get("recommendations", []),
+                "compliance_issues": claude_analysis.get("compliance_issues", []),
+                "total_risks": high_risks + medium_risks + low_risks,
+                "profile_type": profile_type,
+                "analyzed_at": datetime.now().isoformat()
+            }
+            
+            # Save analysis to database
+            save_analysis = text("""
+                INSERT INTO ai_analysis_results 
+                (contract_id, analysis_type, analysis_data, risk_score, created_at)
+                VALUES (:contract_id, 'risk_analysis', :analysis_data, :risk_score, NOW())
+            """)
+            
+            db.execute(save_analysis, {
+                "contract_id": contract_id,
+                "analysis_data": json.dumps(formatted_analysis),
+                "risk_score": overall_risk_score
+            })
+            db.commit()
+            
+            logger.info(f"💾 AI risk analysis saved to database (Risk Score: {overall_risk_score})")
+            
+        except json.JSONDecodeError as json_err:
+            logger.error(f"⚠️ JSON parsing error: {str(json_err)}")
+            # Continue without AI analysis
+            
+        except Exception as ai_error:
+            logger.error(f"⚠️ AI analysis error: {str(ai_error)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            # Continue without AI analysis - user can run it later
+        
+        return {
+            "success": True,
+            "contract_id": contract_id,
+            "contract_number": contract_number,
+            "message": f"Contract '{file.filename}' uploaded and analyzed successfully",
+            "file_path": file_path,
+            "extracted_length": len(extracted_text_plain),
+            "formatted": True,
+            "content_extracted": len(extracted_text_plain) > 10
+        }
+        
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error in risk analysis upload: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
 
 # =====================================================
 # CLAUSE ANALYSIS ENDPOINTS

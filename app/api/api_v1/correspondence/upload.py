@@ -4,7 +4,7 @@ Document Upload API for Correspondence Management
 Handles file uploads with validation, storage, and database integration
 """
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, status
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, status,Request
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from pathlib import Path
@@ -60,15 +60,20 @@ def calculate_file_hash(content: bytes) -> str:
     return hashlib.sha256(content).hexdigest()
 
 
+
 def save_file_to_disk(
     content: bytes,
     filename: str,
-    project_id: int,
-    company_id: str
+    project_id,  # Can be int or 'standalone'
+    company_id: int
 ) -> str:
     """Save file to disk and return relative path"""
-    # Create directory structure: uploads/correspondence/{company_id}/{project_id}/
-    save_dir = UPLOAD_BASE_DIR / str(company_id) / str(project_id)
+    # Create directory structure
+    if project_id == 'standalone':
+        save_dir = UPLOAD_BASE_DIR / str(company_id) / "standalone"
+    else:
+        save_dir = UPLOAD_BASE_DIR / str(company_id) / str(project_id)
+    
     save_dir.mkdir(parents=True, exist_ok=True)
     
     # Generate unique filename with timestamp
@@ -84,128 +89,136 @@ def save_file_to_disk(
         f.write(content)
     
     # Return relative path for database storage
-    return str(file_path)
-
+    return str(file_path.relative_to(Path("app")))
 
 @router.post("/upload")
 async def upload_document(
     files: List[UploadFile] = File(...),
-    project_id: int = Form(...),
+    project_id: str = Form(default=""),  # ✅ Changed: Accept empty string as default
     document_type: str = Form(default="correspondence"),
-    notes: Optional[str] = Form(default=None),
+    notes: str = Form(default=""),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Upload one or more documents to a project
+    Upload one or more documents
     
-    - **files**: List of files to upload (max 10 files, max 50MB each)
-    - **project_id**: ID of the project to associate documents with
-    - **document_type**: Type of document (correspondence, contract, email, etc.)
-    - **notes**: Optional notes for the uploaded files
+    **Two Upload Modes:**
+    1. **Project-level**: Provide project_id to associate with a project
+    2. **Document-level**: Leave project_id empty for standalone documents
     """
     
     try:
-        logger.info(f"📤 Upload request: {len(files)} files for project {project_id} by user {current_user.email}")
+        logger.info(f"📤 Upload request received from {current_user.email}")
+        logger.info(f"Files count: {len(files)}")
+        logger.info(f"Project ID received: '{project_id}'")
+        logger.info(f"Document type: {document_type}")
         
-        # Validate batch size
+        if not files or len(files) == 0:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No files provided"
+            )
+        
+        # ✅ Convert project_id to int ONLY if provided and not empty
+        project_id_int = None
+        if project_id and project_id.strip() and project_id.strip() not in ['null', 'undefined', 'None']:
+            try:
+                project_id_int = int(project_id.strip())
+                logger.info(f"✅ Project ID converted: {project_id_int}")
+            except ValueError:
+                logger.warning(f"⚠️ Invalid project_id format: '{project_id}', treating as standalone")
+                project_id_int = None
+        
+        upload_mode = "project-level" if project_id_int else "document-level"
+        logger.info(f"📋 Upload mode: {upload_mode}")
+        
         if len(files) > MAX_BATCH_SIZE:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Maximum {MAX_BATCH_SIZE} files allowed per upload"
             )
         
-        # Verify project exists and user has access
-        project_query = text("""
-            SELECT p.id, p.company_id 
-            FROM projects p
-            WHERE p.id = :project_id
-        """)
-        project_result = db.execute(project_query, {"project_id": project_id}).fetchone()
-        
-        if not project_result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Project {project_id} not found"
-            )
-        
-        company_id = str(current_user.company_id) if current_user.company_id else str(project_result.company_id)
+        if project_id_int:
+            project_query = text("""
+                SELECT id, project_name 
+                FROM projects 
+                WHERE id = :project_id AND company_id = :company_id
+            """)
+            
+            project = db.execute(project_query, {
+                "project_id": project_id_int,
+                "company_id": current_user.company_id
+            }).fetchone()
+            
+            if not project:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Project with ID {project_id_int} not found or access denied"
+                )
+            
+            logger.info(f"✅ Project verified: {project.project_name}")
+        else:
+            logger.info(f"✅ Standalone upload (no project association)")
         
         uploaded_files = []
-        failed_files = []
+        errors = []
         
-        for file in files:
+        for idx, file in enumerate(files):
             try:
-                # Validate file
-                is_valid, message = validate_file(file)
+                logger.info(f"📄 Processing file {idx + 1}/{len(files)}: {file.filename}")
+                
+                is_valid, error_msg = validate_file(file)
                 if not is_valid:
-                    failed_files.append({
-                        "filename": file.filename,
-                        "error": message
-                    })
+                    logger.warning(f"⚠️ Validation failed: {error_msg}")
+                    errors.append(f"{file.filename}: {error_msg}")
                     continue
                 
-                # Read file content
                 content = await file.read()
                 file_size = len(content)
                 
-                # Check file size
+                logger.info(f"  Size: {file_size:,} bytes")
+                
                 if file_size > MAX_FILE_SIZE:
-                    failed_files.append({
-                        "filename": file.filename,
-                        "error": f"File size ({file_size / 1024 / 1024:.1f}MB) exceeds limit of 50MB"
-                    })
+                    error = f"{file.filename}: File exceeds {MAX_FILE_SIZE / 1024 / 1024}MB limit"
+                    logger.warning(f"⚠️ {error}")
+                    errors.append(error)
                     continue
                 
-                # Calculate hash
                 file_hash = calculate_file_hash(content)
                 
-                # Save file to disk
-                file_path = save_file_to_disk(content, file.filename, project_id, company_id)
+                file_path = save_file_to_disk(
+                    content,
+                    file.filename,
+                    project_id_int if project_id_int else 'standalone',
+                    current_user.company_id
+                )
                 
-                # Generate document ID
+                logger.info(f"  Saved to: {file_path}")
+                
                 doc_id = str(uuid.uuid4())
                 
-                # Get file extension
-                file_ext = Path(file.filename).suffix.lower().replace('.', '')
-                mime_type = ALLOWED_EXTENSIONS.get(file_ext, file.content_type or 'application/octet-stream')
-                
-                # Insert into documents table
                 insert_query = text("""
                     INSERT INTO documents (
-                        id, company_id, document_name, document_type, 
-                        file_path, file_size, mime_type, hash_value, 
-                        uploaded_by, uploaded_at, version, access_count,
-                        metadata
+                        id, project_id, document_name, document_type,
+                        file_path, file_size, file_hash, uploaded_by,
+                        created_at, status
                     ) VALUES (
-                        :id, :company_id, :document_name, :document_type,
-                        :file_path, :file_size, :mime_type, :hash_value,
-                        :uploaded_by, :uploaded_at, 1, 0,
-                        :metadata
+                        :id, :project_id, :doc_name, :doc_type,
+                        :file_path, :file_size, :file_hash, :uploaded_by,
+                        NOW(), 'active'
                     )
                 """)
                 
-                # Prepare metadata
-                import json
-                metadata = json.dumps({
-                    "project_id": project_id,
-                    "original_filename": file.filename,
-                    "notes": notes,
-                    "upload_source": "correspondence_management"
-                })
-                
                 db.execute(insert_query, {
                     "id": doc_id,
-                    "company_id": company_id,
-                    "document_name": file.filename,
-                    "document_type": document_type,
+                    "project_id": project_id_int,  # NULL for standalone
+                    "doc_name": file.filename,
+                    "doc_type": document_type,
                     "file_path": file_path,
                     "file_size": file_size,
-                    "mime_type": mime_type,
-                    "hash_value": file_hash,
-                    "uploaded_by": str(current_user.id),
-                    "uploaded_at": datetime.utcnow(),
-                    "metadata": metadata
+                    "file_hash": file_hash,
+                    "uploaded_by": current_user.id
                 })
                 
                 uploaded_files.append({
@@ -213,29 +226,29 @@ async def upload_document(
                     "filename": file.filename,
                     "file_size": file_size,
                     "document_type": document_type,
-                    "mime_type": mime_type,
-                    "uploaded_at": datetime.utcnow().isoformat()
+                    "upload_mode": upload_mode
                 })
                 
-                logger.info(f"✅ Uploaded: {file.filename} ({file_size} bytes) -> {doc_id}")
+                logger.info(f"  ✅ Uploaded successfully")
                 
-            except Exception as file_error:
-                logger.error(f"❌ Error uploading {file.filename}: {str(file_error)}")
-                failed_files.append({
-                    "filename": file.filename,
-                    "error": str(file_error)
-                })
+            except Exception as e:
+                logger.error(f"❌ Error uploading {file.filename}: {str(e)}")
+                import traceback
+                logger.error(traceback.format_exc())
+                errors.append(f"{file.filename}: {str(e)}")
         
-        # Commit all uploads
         db.commit()
         
+        logger.info(f"✅ Upload complete: {len(uploaded_files)} successful, {len(errors)} failed")
+        
         return {
-            "success": len(uploaded_files) > 0,
-            "message": f"Uploaded {len(uploaded_files)} file(s) successfully",
-            "uploaded": uploaded_files,
-            "failed": failed_files,
-            "total_uploaded": len(uploaded_files),
-            "total_failed": len(failed_files)
+            "success": True,
+            "uploaded": len(uploaded_files),
+            "failed": len(errors),
+            "upload_mode": upload_mode,
+            "files": uploaded_files,
+            "errors": errors if errors else None,
+            "message": f"Successfully uploaded {len(uploaded_files)} of {len(files)} files ({upload_mode})"
         }
         
     except HTTPException:
@@ -243,11 +256,37 @@ async def upload_document(
     except Exception as e:
         db.rollback()
         logger.error(f"❌ Upload error: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to upload files: {str(e)}"
+            detail=f"Upload failed: {str(e)}"
         )
 
+        
+def save_standalone_file(
+    content: bytes,
+    filename: str,
+    company_id: int
+) -> str:
+    """Save standalone file (not associated with project)"""
+    # Create directory: uploads/correspondence/{company_id}/standalone/
+    save_dir = UPLOAD_BASE_DIR / str(company_id) / "standalone"
+    save_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_ext = Path(filename).suffix
+    base_name = Path(filename).stem[:50]
+    unique_filename = f"{base_name}_{timestamp}{file_ext}"
+    
+    file_path = save_dir / unique_filename
+    
+    # Write file
+    with open(file_path, 'wb') as f:
+        f.write(content)
+    
+    return str(file_path.relative_to(Path("app")))
 
 @router.get("/documents/{project_id}")
 async def get_project_documents(
