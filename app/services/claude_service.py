@@ -424,7 +424,7 @@ Draft the clause now:"""
 
             message = self.client.messages.create(
                 model=self.model,
-                max_tokens=16000,
+                max_tokens=4000,
                 temperature=0.4,  # Balanced for legal creativity and consistency
                 messages=[{"role": "user", "content": prompt}]
             )

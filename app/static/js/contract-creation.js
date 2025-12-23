@@ -1164,6 +1164,7 @@ async function saveContract() {
             const result = await response.json();
             contractId = result.id || result.contract_id;
 
+        
         } else {
             // Standard contract creation
             console.log(' Creating standard contract...');

@@ -478,9 +478,9 @@ async def create_contract_from_template(
 #         )
 
 # =====================================================
-# AI GENERATE CONTRACT - Using Claude Service
+# QUICK FIX: Update ONLY the ai-generate endpoint
+# File: app/api/api_v1/contracts/contracts.py
 # =====================================================
-
 @router.post("/ai-generate")
 async def generate_contract_with_ai(
     request: dict,
@@ -654,6 +654,7 @@ async def generate_contract_with_ai(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate contract: {str(e)}"
         )
+
 
 # =====================================================
 # STATISTICS ENDPOINT - FIXED VERSION
@@ -2639,16 +2640,6 @@ def calculate_completion(contract):
         completion = max(completion, 90)
     
     return min(completion, 100)
-
-
-# =====================================================
-# ADDITIONAL ENDPOINTS TO ADD TO contracts.py
-# Add these after your existing endpoints
-# =====================================================
-
-# =====================================================
-# RISK ANALYSIS ENDPOINTS
-# =====================================================
 
 # =====================================================
 # FILE: app/api/api_v1/contracts/contracts.py
