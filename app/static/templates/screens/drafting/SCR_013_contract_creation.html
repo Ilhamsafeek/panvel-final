@@ -406,10 +406,6 @@
 </div>
 
 <!-- MOD-016: Add/Remove Clauses Modal -->
-<!-- ========================================================================= -->
-<!-- MOD-016: Add/Remove Clauses Modal - FIXED VERSION -->
-<!-- Replace the existing MOD-016 section with this code -->
-<!-- ========================================================================= -->
 
 <div class="modal" id="clausesModal">
     <div class="modal-content modal-lg">
@@ -625,41 +621,6 @@
 </div>
 
 
-<!-- Add streaming container -->
-<div class="modal fade" id="streamingModal" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="ti ti-robot me-2"></i>
-                    AI Contract Generation in Progress
-                </h5>
-            </div>
-            <div class="modal-body">
-                <!-- Status Bar -->
-                <div id="stream-status" class="alert alert-info mb-3">
-                    Connecting to AI...
-                </div>
-                
-                <!-- Streaming Output Container -->
-                <div id="stream-output" 
-                     class="border rounded p-3 bg-light" 
-                     style="max-height: 600px; overflow-y: auto; font-family: 'Georgia', serif; line-height: 1.6;">
-                    <!-- Contract content will stream here -->
-                </div>
-                
-                <!-- Word Counter -->
-                <div class="mt-2 text-muted small">
-                    <i class="ti ti-file-text me-1"></i>
-                    <span id="word-counter">0 words generated...</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
 <!-- MOD-018: Import Document Modal -->
 <div class="modal" id="importModal">
     <div class="modal-content">
@@ -709,9 +670,6 @@
             }
         }, 1000);
     });
-
-
-
 </script>
 
 {% endblock %}

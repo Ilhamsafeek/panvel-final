@@ -1061,7 +1061,7 @@ async function saveContract() {
     // Get the save button
     const saveButton = document.querySelector('#saveContractModal .btn-primary');
     const originalButtonHTML = '<i class="ti ti-device-floppy"></i> Save & Continue';
-
+    
     try {
         console.log(' Starting contract save process...');
         console.log('Current method:', selectedCreationMethod);
@@ -1130,55 +1130,52 @@ async function saveContract() {
 
             const result = await response.json();
             contractId = result.id || result.contract_id;
+
         } else if (selectedCreationMethod === 'ai') {
-            // 🎬 AI-generated contract with streaming
-            console.log('🤖 Creating AI-generated contract with streaming...');
-
-            // Hide the loader, show streaming modal instead
-            hideLoader();
-
-            // Build contract data from form
+            // AI-generated contract
+            console.log('🤖 Creating AI-generated contract...');
+            
             const contractData = {
                 contract_title: contractName,
-                contract_type: selectedContractType || 'service_agreement',
+                contract_type: selectedContractType || 'general',
                 profile_type: selectedProfile || 'contractor',
-                parties: {
-                    party_a: {
-                        name: document.getElementById('partyAName')?.value || 'Party A'
-                    },
-                    party_b: {
-                        name: document.getElementById('partyBName')?.value || 'Party B'
-                    }
-                },
-                selected_clauses: selectedClauses || [], // Get from AI assistant
-                contract_value: document.getElementById('contractValue')?.value,
-                currency: document.getElementById('currency')?.value || 'QAR',
-                start_date: document.getElementById('startDate')?.value,
-                end_date: document.getElementById('endDate')?.value,
-                jurisdiction: 'Qatar',
-                prompt: document.getElementById('aiPrompt')?.value || '',
-                language: 'en',
-                metadata: {
-                    project_id: projectId && projectId !== 'create_new' && projectId !== '' ? projectId : null
-                }
+                template_id: null,
+                project_id: projectId && projectId !== 'create_new' && projectId !== '' 
+                    ? parseInt(projectId) 
+                    : null,
+                tags: tags,
+                ai_prompt: buildAIPrompt(),
+                clause_selections: selectedClauses
             };
 
-            // Close the save modal
-            closeModal('saveContractModal');
+            const response = await authenticatedFetch('/api/contracts/ai-generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(contractData)
+            });
 
-            // Call the streaming function
-            contractId = await generateContractWithStreaming(contractData);
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Failed to generate contract');
+            }
+
+            const result = await response.json();
+            contractId = result.id || result.contract_id;
+
+        
         } else {
             // Standard contract creation
             console.log(' Creating standard contract...');
-
+            
             const contractData = {
                 contract_title: contractName,
                 contract_type: selectedContractType || 'general',
                 profile_type: selectedProfile || 'contractor',
                 template_id: selectedTemplate ? parseInt(selectedTemplate) : null,
-                project_id: projectId && projectId !== 'create_new' && projectId !== ''
-                    ? parseInt(projectId)
+                project_id: projectId && projectId !== 'create_new' && projectId !== '' 
+                    ? parseInt(projectId) 
                     : null,
                 tags: tags,
                 status: 'draft'
@@ -1234,16 +1231,16 @@ async function saveContract() {
 
     } catch (error) {
         console.error(' Error saving contract:', error);
-
+        
         // Hide loader
         hideLoader();
-
+        
         // 🔥 RE-ENABLE BUTTON AND RESTORE TEXT ON ERROR
         if (saveButton) {
             saveButton.disabled = false;
             saveButton.innerHTML = originalButtonHTML;
         }
-
+        
         // Show error
         showNotification(error.message || 'Failed to save contract. Please try again.', 'error');
 
@@ -1258,13 +1255,13 @@ async function saveContract() {
 
 function handleProjectSelectChange(event) {
     const selectedValue = event.target.value;
-
+    
     console.log('📌 Project select changed:', selectedValue);
-
+    
     if (selectedValue === 'create_new') {
         // Reset the select to empty
         event.target.value = '';
-
+        
         // Open the create project modal
         openCreateProjectModal();
     }
@@ -1276,30 +1273,30 @@ function handleProjectSelectChange(event) {
 
 function openCreateProjectModal() {
     console.log('🚀 Opening create project modal...');
-
+    
     const modal = document.getElementById('createProjectModal');
     if (!modal) {
         console.error(' Create project modal not found');
         showNotification('Create project modal not found. Please refresh the page.', 'error');
         return;
     }
-
+    
     // Reset form
     const form = document.getElementById('createProjectForm');
     if (form) {
         form.reset();
     }
-
+    
     // Generate project code
     const projectCode = generateProjectCode();
     const projectCodeInput = document.getElementById('newProjectCode');
     if (projectCodeInput) {
         projectCodeInput.value = projectCode;
     }
-
+    
     // Show modal
     modal.style.display = 'flex';
-
+    
     // Focus on title input
     setTimeout(() => {
         const titleInput = document.getElementById('newProjectTitle');
@@ -1327,35 +1324,35 @@ function generateProjectCode() {
 async function createNewProject() {
     try {
         console.log(' Creating new project...');
-
+        
         const titleInput = document.getElementById('newProjectTitle');
         const codeInput = document.getElementById('newProjectCode');
         const descriptionInput = document.getElementById('newProjectDescription');
-
+        
         if (!titleInput || !codeInput) {
             showNotification('Form elements not found', 'error');
             return;
         }
-
+        
         const title = titleInput.value.trim();
         const code = codeInput.value.trim();
         const description = descriptionInput ? descriptionInput.value.trim() : '';
-
+        
         // Validate
         if (!title) {
             showNotification('Please enter a project title', 'error');
             titleInput.focus();
             return;
         }
-
+        
         if (!code) {
             showNotification('Please enter a project code', 'error');
             codeInput.focus();
             return;
         }
-
+        
         showLoader('Creating project...');
-
+        
         // Create project via API
         const response = await authenticatedFetch('/api/projects/', {
             method: 'POST',
@@ -1369,30 +1366,30 @@ async function createNewProject() {
                 status: 'planning'
             })
         });
-
+        
         if (!response.ok) {
             const errorData = await response.json();
             throw new Error(errorData.detail || 'Failed to create project');
         }
-
+        
         const result = await response.json();
         console.log(' Project created:', result);
-
+        
         hideLoader();
         showNotification('Project created successfully!', 'success');
-
+        
         // Close create project modal
         closeCreateProjectModal();
-
+        
         // Reload projects dropdown
         await loadProjects();
-
+        
         // Auto-select the newly created project
         const projectSelect = document.getElementById('projectSelect');
         if (projectSelect && result.id) {
             projectSelect.value = result.id;
         }
-
+        
     } catch (error) {
         hideLoader();
         showNotification('Error creating project: ' + error.message, 'error');
@@ -1646,195 +1643,6 @@ function debugClauseSelection() {
 
 
 // =====================================================
-// AI Contract Streaming Generation
-// =====================================================
-
-async function generateContractWithStreaming(contractData) {
-    console.log('🎬 Starting streaming contract generation...');
-    
-    // Create and show streaming modal
-    showStreamingModal();
-    
-    const streamContainer = document.getElementById('stream-output');
-    const statusDiv = document.getElementById('stream-status');
-    const wordCounter = document.getElementById('word-counter');
-    
-    // Clear previous content
-    streamContainer.innerHTML = '';
-    statusDiv.textContent = '🤖 Connecting to AI...';
-    statusDiv.className = 'alert alert-info';
-    
-    let contractId = null;
-    
-    try {
-        const token = localStorage.getItem('access_token');
-        
-        const response = await fetch('/api/contracts/ai-generate-stream', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(contractData)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        
-        let buffer = '';
-        let fullContent = '';
-        
-        while (true) {
-            const { done, value } = await reader.read();
-            
-            if (done) {
-                console.log('✅ Streaming complete');
-                break;
-            }
-            
-            buffer += decoder.decode(value, { stream: true });
-            
-            // Process complete SSE messages
-            const messages = buffer.split('\n\n');
-            buffer = messages.pop(); // Keep incomplete message in buffer
-            
-            for (const message of messages) {
-                if (message.startsWith('data: ')) {
-                    const data = JSON.parse(message.substring(6));
-                    
-                    switch (data.type) {
-                        case 'status':
-                            statusDiv.textContent = `🤖 ${data.message}`;
-                            statusDiv.className = 'alert alert-info';
-                            break;
-                            
-                        case 'content':
-                            // Append content chunk to display
-                            fullContent += data.chunk;
-                            streamContainer.innerHTML += data.chunk;
-                            
-                            // Update word counter
-                            const currentWords = fullContent.split(/\s+/).length;
-                            wordCounter.textContent = `${currentWords} words generated...`;
-                            
-                            // Auto-scroll to bottom
-                            streamContainer.scrollTop = streamContainer.scrollHeight;
-                            break;
-                            
-                        case 'complete':
-                            contractId = data.contract_id;
-                            statusDiv.textContent = `✅ Contract generated successfully! ${data.word_count} words`;
-                            statusDiv.className = 'alert alert-success';
-                            wordCounter.textContent = `${data.word_count} words total`;
-                            
-                            // Show success and redirect after 2 seconds
-                            setTimeout(() => {
-                                hideStreamingModal();
-                                showNotification(`Contract ${data.contract_number} created successfully!`, 'success');
-                                window.location.href = `/contracts/${data.contract_id}`;
-                            }, 2000);
-                            break;
-                            
-                        case 'error':
-                            statusDiv.textContent = `❌ Error: ${data.message}`;
-                            statusDiv.className = 'alert alert-danger';
-                            
-                            // Re-enable save button
-                            const saveButton = document.querySelector('#saveContractModal .btn-primary');
-                            if (saveButton) {
-                                saveButton.disabled = false;
-                                saveButton.innerHTML = '<i class="ti ti-device-floppy"></i> Save & Continue';
-                            }
-                            break;
-                    }
-                }
-            }
-        }
-        
-        return contractId;
-        
-    } catch (error) {
-        console.error('❌ Streaming error:', error);
-        statusDiv.textContent = `❌ Error: ${error.message}`;
-        statusDiv.className = 'alert alert-danger';
-        
-        // Re-enable save button
-        const saveButton = document.querySelector('#saveContractModal .btn-primary');
-        if (saveButton) {
-            saveButton.disabled = false;
-            saveButton.innerHTML = '<i class="ti ti-device-floppy"></i> Save & Continue';
-        }
-        
-        showNotification('Failed to generate contract: ' + error.message, 'error');
-        
-        // Close streaming modal after 3 seconds
-        setTimeout(() => {
-            hideStreamingModal();
-        }, 3000);
-        
-        return null;
-    }
-}
-
-// Helper functions for streaming modal
-function showStreamingModal() {
-    // Check if modal exists, if not create it
-    let modal = document.getElementById('streamingModal');
-    
-    if (!modal) {
-        // Create modal dynamically
-        const modalHTML = `
-        <div class="modal" id="streamingModal" style="display: none;">
-            <div class="modal-content modal-xl">
-                <div class="modal-header">
-                    <h3 class="modal-title">
-                        <i class="ti ti-robot"></i>
-                        AI Contract Generation in Progress
-                    </h3>
-                </div>
-                <div class="modal-body">
-                    <!-- Status Bar -->
-                    <div id="stream-status" class="alert alert-info mb-3">
-                        🤖 Connecting to AI...
-                    </div>
-                    
-                    <!-- Streaming Output Container -->
-                    <div id="stream-output" 
-                         class="border rounded p-3 bg-light" 
-                         style="max-height: 500px; overflow-y: auto; font-family: Georgia, serif; line-height: 1.6; font-size: 14px;">
-                        <!-- Contract content will stream here -->
-                    </div>
-                    
-                    <!-- Word Counter -->
-                    <div class="mt-2 text-muted small">
-                        <i class="ti ti-file-text"></i>
-                        <span id="word-counter">0 words generated...</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
-        
-        document.body.insertAdjacentHTML('beforeend', modalHTML);
-        modal = document.getElementById('streamingModal');
-    }
-    
-    modal.style.display = 'flex';
-}
-
-function hideStreamingModal() {
-    const modal = document.getElementById('streamingModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-
-// =====================================================
 // Global Exports
 // =====================================================
 
@@ -1847,11 +1655,11 @@ window.contractCreation = {
     toggleAiAssistant,
     hideAiAssistant,
     buildAIPrompt,
-    handleProjectSelectChange,
-    openCreateProjectModal,
-    closeCreateProjectModal,
-    createNewProject,
-    generateProjectCode
+    handleProjectSelectChange,      
+    openCreateProjectModal,         
+    closeCreateProjectModal,  
+    createNewProject,         
+    generateProjectCode      
 };
 
 window.openModal = openModal;
@@ -1872,9 +1680,9 @@ window.debugClauseSelection = debugClauseSelection;
 window.hideAiAssistant = hideAiAssistant;
 window.toggleAiAssistant = toggleAiAssistant;
 window.handleContractTypeChange = handleContractTypeChange;
-window.handleProjectSelectChange = handleProjectSelectChange;
-window.openCreateProjectModal = openCreateProjectModal;
-window.closeCreateProjectModal = closeCreateProjectModal;
-window.createNewProject = createNewProject;
+window.handleProjectSelectChange = handleProjectSelectChange;  
+window.openCreateProjectModal = openCreateProjectModal;      
+window.closeCreateProjectModal = closeCreateProjectModal;  
+window.createNewProject = createNewProject;              
 
 console.log(' Contract creation script loaded successfully with AI Assistant');
