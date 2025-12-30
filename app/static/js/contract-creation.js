@@ -1133,7 +1133,7 @@ async function saveContract() {
 
         } else if (selectedCreationMethod === 'ai') {
             // AI-generated contract - CREATE METADATA ONLY, STREAM CONTENT IN EDITOR
-            console.log('🤖 Creating AI-generated contract metadata...');
+            console.log(' Creating AI-generated contract metadata...');
 
             // Gather all form data
             const contractValue = document.getElementById('contractValue')?.value;

@@ -525,7 +525,7 @@ async def generate_ai_obligations(
 ):
     """Use AI to extract obligations from contract content"""
     try:
-        logger.info(f"🤖 Generating AI obligations for contract {contract_id}")
+        logger.info(f" Generating AI obligations for contract {contract_id}")
         
         # Verify contract exists and belongs to user's company
         contract = db.query(Contract).filter(

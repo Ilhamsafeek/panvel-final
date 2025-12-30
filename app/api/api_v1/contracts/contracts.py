@@ -493,7 +493,7 @@ async def generate_contract_with_ai(
 ):
     """Create contract metadata for AI generation (content will be streamed separately)"""
     try:
-        logger.info("🤖 Creating contract for AI generation")
+        logger.info(" Creating contract for AI generation")
         
         # Extract metadata
         contract_title = request_data.contract_title
@@ -1026,6 +1026,7 @@ async def get_contract_editor_data(
                 c.effective_date,
                 comp.company_name,
                 c.company_id,
+                c.is_ai_generated,
                 CONCAT(u.first_name, ' ', u.last_name) as created_by_name,
                 cv.contract_content as content,
                 cv.version_number as current_version
@@ -1270,7 +1271,8 @@ async def get_contract_editor_data(
                 "effective_date": result.effective_date.isoformat() if result.effective_date else None,
                 "current_version": result.current_version if result.current_version else 1,
                 "is_initiator": is_initiator,
-                "is_counterparty": is_counterparty 
+                "is_counterparty": is_counterparty,
+                "is_ai_generated": result.is_ai_generated
             },
             "workflow": {
                 "status": workflow.workflow_status if workflow else "not_configured",
@@ -4646,7 +4648,7 @@ async def stream_ai_contract_generation(
 ):
     """Stream AI-generated contract content directly to the editor"""
     try:
-        logger.info(f"🤖 Streaming AI generation for contract {contract_id}")
+        logger.info(f" Streaming AI generation for contract {contract_id}")
         logger.info(f"📦 Received data: {json.dumps(request_data, indent=2)}")  # Debug log
         
         # Verify contract exists

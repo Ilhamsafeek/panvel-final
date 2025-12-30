@@ -11792,7 +11792,7 @@ async function initializeAIGeneration() {
             const hasContent = contract.content && contract.content.trim().length > 100;
             
             if (!hasContent) {
-                console.log('🤖 No content yet, starting AI generation...');
+                console.log(' No content yet, starting AI generation...');
                 await startAIStreaming();
             } else {
                 console.log('✅ Contract already has content, regenerate available');
@@ -11925,7 +11925,7 @@ async function startAIStreaming() {
     editor.innerHTML = `
         <div style="text-align: center; padding: 4rem 2rem; color: #666;">
             <div style="width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #2762CB; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1.5rem;"></div>
-            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">🤖 AI is Generating Your Contract</h3>
+            <h3 style="font-size: 1.5rem; margin-bottom: 1rem;"> AI is Generating Your Contract</h3>
             <p style="font-size: 1rem; max-width: 500px; margin: 0 auto;">
                 This may take 30-90 seconds. The contract will appear here as it's being written...
             </p>

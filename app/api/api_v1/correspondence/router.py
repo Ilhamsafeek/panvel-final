@@ -113,7 +113,7 @@ async def generate_ai_correspondence(
     """
     
     try:
-        logger.info(f"🤖 Generating {request.correspondence_type} with {request.tone} tone for user {current_user.id}")
+        logger.info(f" Generating {request.correspondence_type} with {request.tone} tone for user {current_user.id}")
         
         # Extract document IDs
         document_ids = [doc.document_id for doc in request.documents]
@@ -1552,7 +1552,7 @@ async def analyze_correspondence(
     FIXED: Proper error handling for Claude AI service
     """
     try:
-        logger.info(f"🤖 Starting correspondence analysis for user {current_user.id}")
+        logger.info(f" Starting correspondence analysis for user {current_user.id}")
         
         # Extract request data
         query_text = request.get("query", "")

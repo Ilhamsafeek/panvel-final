@@ -117,7 +117,7 @@ class ClaudeAPIClient:
         """
         
         try:
-            logger.info(f"🤖 Generating {correspondence_type} with {tone} tone")
+            logger.info(f" Generating {correspondence_type} with {tone} tone")
             logger.info(f"   Query length: {len(query)} chars")
             logger.info(f"   Documents: {len(documents)}")
             
