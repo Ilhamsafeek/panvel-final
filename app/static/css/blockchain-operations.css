@@ -805,3 +805,64 @@
         display: none;
     }
 }
+
+
+
+/* =====================================================
+   FIX: Modal Click-Through Issue
+   ===================================================== */
+
+.blockchain-ops-modal-backdrop {
+    pointer-events: auto;
+    z-index: 99998;
+}
+
+.blockchain-ops-modal-content {
+    pointer-events: auto !important;
+    z-index: 99999 !important;
+    position: relative;
+}
+
+/* Ensure ALL modal children accept clicks */
+.blockchain-ops-modal-content * {
+    pointer-events: auto !important;
+}
+
+/* Make sure inputs, buttons, and interactive elements work */
+.blockchain-ops-modal-content input,
+.blockchain-ops-modal-content button,
+.blockchain-ops-modal-content select,
+.blockchain-ops-modal-content textarea,
+.blockchain-ops-modal-content a,
+.blockchain-ops-tab,
+.btn-icon,
+.btn-primary,
+.btn-secondary {
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Terminal areas should be clickable */
+.terminal-body,
+.terminal-header,
+.terminal-actions {
+    pointer-events: auto !important;
+}
+
+/* Tabs must be clickable */
+.blockchain-ops-tabs {
+    pointer-events: auto !important;
+    z-index: 10;
+}
+
+.blockchain-ops-tab {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
+/* Panel content must be clickable */
+.blockchain-ops-panel,
+.blockchain-ops-content {
+    pointer-events: auto !important;
+}

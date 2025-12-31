@@ -2552,6 +2552,9 @@
         width: 100%;
         height: calc(100vh - var(--header-height, 60px));
     }
+
+
+    
 </style>
 
 
@@ -7859,7 +7862,6 @@ ${contract.content && contract.content.trim() !== '' ?
 
             // For each comment, find or create marker and attach bubble
             data.comments.forEach(comment => {
-                 console.log(comment.comment_text);
                 let marker = document.querySelector(`[data-comment-db-id="${comment.id}"]`);
 
                 if (!marker) {
