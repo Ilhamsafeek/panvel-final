@@ -584,6 +584,33 @@
             width: 100%;
         }
     }
+
+    .coming-soon-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(238, 90, 90, 0.3);
+}
+
+.session-option.disabled {
+    cursor: not-allowed;
+    background: var(--bg-light) !important;
+    border-color: var(--border-color) !important;
+}
+
+.session-option.disabled:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: var(--border-color) !important;
+}
 </style>
 {% endblock %}
 
@@ -765,13 +792,14 @@
                                 Real-time messaging
                             </div>
                         </div>
-                        <div class="session-option" data-type="video">
-                            <i class="ti ti-video"></i>
-                            <strong>Video Call</strong>
-                            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
-                                Face-to-face consultation
-                            </div>
-                        </div>
+                        <div class="session-option disabled" data-type="video" style="pointer-events: none; opacity: 0.5; position: relative;">
+    <span class="coming-soon-badge">Coming Soon</span>
+    <i class="ti ti-video"></i>
+    <strong>Video Call</strong>
+    <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+        Face-to-face consultation
+    </div>
+</div>
                     </div>
 
                     <div class="form-group" style="margin-top: 1rem;">

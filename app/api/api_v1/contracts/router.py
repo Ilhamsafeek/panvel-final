@@ -58,11 +58,11 @@ async def add_comment_to_contract(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Add a comment to a contract"""
+    """Add a comment to a contract - Full permissions by default"""
     try:
-        logger.info(f"💬 Adding comment to contract {request.contract_id}")
+        logger.info(f"💬 Adding comment to contract {request.contract_id} by user {current_user.id}")
         
-        # Verify contract exists and user has access
+        # ✅ SIMPLIFIED: Just verify contract exists
         contract = db.query(Contract).filter(
             Contract.id == request.contract_id
         ).first()
@@ -70,10 +70,9 @@ async def add_comment_to_contract(
         if not contract:
             raise HTTPException(status_code=404, detail="Contract not found")
         
-        if contract.company_id != current_user.company_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        # ✅ NO PERMISSION CHECKS - All authenticated users can comment
         
-        #  FIXED: Use contract_comments table with INT IDs
+        # ✅ Insert comment
         query = text("""
             INSERT INTO contract_comments 
             (contract_id, user_id, comment_text, selected_text, created_at)
@@ -90,10 +89,9 @@ async def add_comment_to_contract(
         
         db.commit()
         
-        # Get the inserted comment ID
         comment_id = result.lastrowid
         
-        logger.info(f" Comment {comment_id} added successfully")
+        logger.info(f"✅ Comment {comment_id} added successfully")
         
         return {
             "success": True,
@@ -112,7 +110,7 @@ async def add_comment_to_contract(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f" Error adding comment: {str(e)}")
+        logger.error(f"❌ Error adding comment: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(
@@ -121,29 +119,29 @@ async def add_comment_to_contract(
         )
 
 
+
+
 # =====================================================
 # Get Comments - Using contract_comments table
 # =====================================================
-
 @router.get("/comments/{contract_id}")
 async def get_contract_comments(
     contract_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get all comments for a contract"""
+    """Get all comments for a contract - Full access by default"""
     try:
         logger.info(f"📖 Getting comments for contract {contract_id}")
         
-        # Verify access
+        # ✅ SIMPLIFIED: Just verify contract exists
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise HTTPException(status_code=404, detail="Contract not found")
         
-        if contract.company_id != current_user.company_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        # ✅ NO PERMISSION CHECKS - All authenticated users can view comments
         
-        #  FIXED: Query contract_comments with correct column name
+        # ✅ Get comments
         query = text("""
             SELECT 
                 cc.id,
@@ -173,7 +171,7 @@ async def get_contract_comments(
                 'created_at': row.created_at.isoformat() if row.created_at else None
             })
         
-        logger.info(f" Found {len(comments)} comments")
+        logger.info(f"✅ Found {len(comments)} comments")
         
         return {
             'success': True,
@@ -184,16 +182,16 @@ async def get_contract_comments(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f" Error getting comments: {str(e)}")
+        logger.error(f"❌ Error getting comments: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
+
 # =====================================================
 # DELETE Comment (Optional - for future enhancement)
 # =====================================================
-
 @router.delete("/comments/{comment_id}")
 async def delete_comment(
     comment_id: int,
@@ -204,9 +202,8 @@ async def delete_comment(
     try:
         # Check if comment exists and user owns it
         query = text("""
-            SELECT cc.id, cc.contract_id, cc.user_id, c.company_id
+            SELECT cc.id, cc.user_id, cc.contract_id
             FROM contract_comments cc
-            INNER JOIN contracts c ON c.id = cc.contract_id
             WHERE cc.id = :comment_id
         """)
         
@@ -216,24 +213,31 @@ async def delete_comment(
         if not comment:
             raise HTTPException(status_code=404, detail="Comment not found")
         
-        # Check if user is the author or from same company
-        if comment.user_id != current_user.id and comment.company_id != current_user.company_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+        # Only comment author or admin can delete
+        # For now, simplified: only author can delete
+        if comment.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only delete your own comments")
         
         # Delete comment
         delete_query = text("DELETE FROM contract_comments WHERE id = :comment_id")
         db.execute(delete_query, {'comment_id': comment_id})
         db.commit()
         
-        return {"success": True, "message": "Comment deleted successfully"}
+        logger.info(f"✅ Comment {comment_id} deleted successfully")
+        
+        return {
+            'success': True,
+            'message': 'Comment deleted successfully'
+        }
         
     except HTTPException:
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f" Error deleting comment: {str(e)}")
+        logger.error(f"❌ Error deleting comment: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
         
+          
 # =====================================================
 # Contract Creation & Basic Operations
 # =====================================================

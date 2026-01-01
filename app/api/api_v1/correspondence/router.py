@@ -4,7 +4,7 @@
 # Integrates Claude AI, CRUD operations, and Analytics
 # =====================================================
 
-from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File, status, BackgroundTasks,Form
 from fastapi.responses import FileResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import text, or_, and_, func
@@ -17,6 +17,10 @@ import uuid
 import json
 import os
 import logging
+
+
+from app.services.document_generator import DocumentGenerator
+from io import BytesIO
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -1990,4 +1994,4 @@ async def get_available_documents(
     
 
 
-    
+# Add this endpoint after the export_correspondence_document function

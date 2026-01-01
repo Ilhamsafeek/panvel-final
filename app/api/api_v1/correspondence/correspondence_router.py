@@ -943,3 +943,62 @@ async def delete_correspondence_document(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete document: {str(e)}"
         )
+
+
+
+
+
+@router.post("/download-response")
+async def download_ai_response(
+    content: str = Form(...),
+    subject: str = Form(None),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Download AI-generated response as Word document
+    
+    **Purpose:**
+    - Convert AI response to professional Word document
+    - Provides immediate download
+    
+    **Parameters:**
+    - content: The AI-generated text content
+    - subject: Optional subject line
+    """
+    
+    try:
+        logger.info(f"📄 Generating Word document for user {current_user.id}")
+        
+        # Generate Word document
+        docx_buffer = DocumentGenerator.generate_correspondence_docx(
+            content=content,
+            subject=subject,
+            sender_name=current_user.full_name,
+            reference=f"CALIM-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        )
+        
+        # Generate filename
+        filename = f"correspondence_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+        
+        logger.info(f"✅ Word document generated: {filename}")
+        
+        # Return as streaming response
+        return StreamingResponse(
+            docx_buffer,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Error downloading response: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate Word document: {str(e)}"
+        )
+
+
+    
+
+    

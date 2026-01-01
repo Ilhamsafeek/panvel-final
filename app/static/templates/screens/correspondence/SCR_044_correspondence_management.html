@@ -1514,6 +1514,21 @@
             transform: rotate(360deg);
         }
     }
+
+    /* Add this to the existing style section */
+    @keyframes rotate {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .rotating {
+        animation: rotate 1s linear infinite;
+    }
 </style>
 {% endblock %}
 
@@ -2918,14 +2933,60 @@
             navigator.clipboard.writeText(text).then(() => showToast('Copied!', 'success'));
         };
 
-        window.downloadMsgText = function (btn) {
-            const text = btn.closest('.message-content').querySelector('.message-body').innerText;
-            const blob = new Blob([text], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `response-${new Date().toISOString().slice(0, 10)}.txt`;
-            a.click();
-            showToast('Downloaded', 'success');
+        // Replace the existing downloadMsgText function with this:
+        window.downloadMsgText = async function (btn) {
+            try {
+                // Get the message content
+                const messageBody = btn.closest('.message-content').querySelector('.message-body');
+                const content = messageBody.innerText;
+
+                // Show loading state
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ti ti-loader-2 rotating"></i> Generating...';
+
+                // Prepare form data
+                const formData = new FormData();
+                formData.append('content', content);
+                formData.append('subject', 'AI Generated Correspondence Response');
+
+                // Call backend to generate Word document
+                const response = await fetch('/api/v1/correspondence/download-response', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to generate Word document');
+                }
+
+                // Get the blob
+                const blob = await response.blob();
+
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `response-${new Date().toISOString().slice(0, 10)}.docx`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                // Reset button
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ti ti-download"></i> Download';
+
+                showToast('Word document downloaded successfully!', 'success');
+
+            } catch (error) {
+                console.error('Download error:', error);
+
+                // Reset button
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ti ti-download"></i> Download';
+
+                showToast('Failed to generate Word document', 'error');
+            }
         };
 
         window.clearChat = function () {
@@ -3067,6 +3128,28 @@
             }
         }
     };
+
+
+
+     document.addEventListener('DOMContentLoaded', () => {
+
+            // Sidebar hover toggle
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.header-btn.mobile-menu-btn');
+
+            if (sidebar) {
+               
+               
+                    if (!sidebar.classList.contains('collapsed')) {
+                        toggleSidebar();
+                      
+                    }
+               
+            }
+          
+        });
+
+        
 
 
 </script>

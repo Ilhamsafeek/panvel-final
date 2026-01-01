@@ -96,8 +96,6 @@ python-docx>=0.8.11
 anthropic==0.39.0
 
 reportlab
-python-docx==0.8.11
-
 apscheduler==3.10.4
 twilio==8.10.0
 boto3==1.28.85

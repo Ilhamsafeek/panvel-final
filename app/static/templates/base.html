@@ -1587,7 +1587,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="/dashboard" class="logo-container">
+                <a href="/" class="logo-container">
                     <div class="logo-icon" id="sidebarLogo" style="padding-left:45px">
                         <img src="/app/static/img/logo/contriq-logo.png" alt="CALIM 360 Logo" width="110px">
                     </div>
@@ -1945,13 +1945,13 @@
     <script>
         // Make current user globally available
         window.currentUser = {
-            id: {{ user.id if user else 'null' }},
-        full_name: "{{ user.full_name if user else '' }}",
+            id: parseInt("{{ user.id if user else '0' }}") || null,
+            full_name: "{{ user.full_name if user else '' }}",
             email: "{{ user.email if user else '' }}",
-                user_type: "{{ user.user_type if user else '' }}",
-                    avatar_initial: "{{ user.avatar_initial if user else 'U' }}",
-                        company_id: { { user.company_id if user else 'null' } }
-    };
+            user_type: "{{ user.user_type if user else '' }}",
+            avatar_initial: "{{ user.avatar_initial if user else 'U' }}",
+            company_id: parseInt("{{ user.company_id if user else '0' }}") || null
+        };
 
         // Quick access properties
         window.currentUserId = window.currentUser.id;

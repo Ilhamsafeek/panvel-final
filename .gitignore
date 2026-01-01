@@ -5,3 +5,4 @@ kubernetes
 .vscode
 .env
 app/uploads
+.sql

@@ -43,6 +43,8 @@ from app.api.api_v1.auth.registration import router as registration_router
 from app.api.api_v1.auth.login import router as login_router
 from app.api.api_v1.auth.schemas import UserRegistration, LoginRequest
 from app.api.api_v1.auth.logout import router as logout_router
+from app.api.api_v1.auth.password_recovery import router as password_recovery_router
+
 
 # User routers (Required)
 from app.api.api_v1.users.settings import router as settings_router
@@ -356,6 +358,9 @@ app.include_router(
     tags=["workflow"]
 )
 
+app.include_router(password_recovery_router)
+logger.info("✅ Password recovery router registered at /api/auth")
+
 app.include_router(analytics_router)
 app.include_router(terminal_router, prefix="/terminal")
 
@@ -474,6 +479,13 @@ logger.info(" All available API routers registered successfully")
 
 
 app.include_router(subscription_router.router)
+
+app.include_router(registration_router)
+app.include_router(login_router)
+app.include_router(logout_router)
+app.include_router(password_recovery_router)  # <-- ADD THIS LINE
+
+logger.info("✅ Auth routers registered")
 
 # =====================================================
 # STATIC FILES AND TEMPLATES
@@ -706,6 +718,18 @@ async def login_page(request: Request, db: Session = Depends(get_db)):
 @app.get("/forgot-password", response_class=HTMLResponse)
 async def password_recovery_page(request: Request, token: Optional[str] = Query(None)):
     """Password recovery page"""
+    return templates.TemplateResponse("screens/auth/SCR_003_password_recovery.html", {
+        "request": request,
+        "current_page": "password_recovery",
+        "token": token
+    })
+
+@app.get("/password-recovery", response_class=HTMLResponse)
+async def password_recovery_with_token(request: Request, token: Optional[str] = Query(None)):
+    """
+    Password Recovery Page - accessed via email reset link
+    URL: /password-recovery?token=xxxxx
+    """
     return templates.TemplateResponse("screens/auth/SCR_003_password_recovery.html", {
         "request": request,
         "current_page": "password_recovery",

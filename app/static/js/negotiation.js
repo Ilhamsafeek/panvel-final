@@ -638,6 +638,7 @@ async function updateParticipantsDisplay(participants, type) {
         return;
     }
 
+
     // Get current user ID from global variable
     const currentUserId = String(window.currentUserId || '');
     const currentUserCompanyId = window.currentUser?.company_id;
@@ -679,6 +680,7 @@ async function updateParticipantsDisplay(participants, type) {
 
         // Determine if this is the current user
         const isCurrentUser = String(participant.user_id) === currentUserId;
+        console.log('is current User',isCurrentUser);
 
         // Determine display name and role
         let displayName = participant.full_name || 'User';

@@ -2883,8 +2883,6 @@
                             Automatically send to predefined approvers in sequence
                         </p>
                     </div>
-
-
                 </label>
             </div>
 
@@ -4452,16 +4450,21 @@
     // =====================================================
     // PAGE INITIALIZATION
     // =====================================================
-    document.addEventListener('DOMContentLoaded', async function () {
-        console.log('Loading contract ID:', contractId);
+ // =====================================================
+// PAGE INITIALIZATION
+// =====================================================
+document.addEventListener('DOMContentLoaded', async function () {
+    console.log('Loading contract ID:', contractId);
 
-        await ensureWorkflowInstance();
-
-        await checkWorkflowAvailability();
-
-        await loadContractData();
-        await saveAsDraft();
-    });
+    await ensureWorkflowInstance();
+    await checkWorkflowAvailability();
+    await loadContractData();
+    
+    // ✅ LOAD EXISTING COMMENTS AFTER CONTRACT DATA IS LOADED
+    await loadExistingComments();
+    
+    await saveAsDraft();
+});
 
 
 
@@ -4686,10 +4689,11 @@
 
             if (contract.is_counterparty === true) {
 
-
-
                 if ((workflow && workflow.status != 'active')) {
-
+                            console.log("showing counter party lead");
+                            console.log(contract.is_party_b_lead);
+                    if(contract.is_party_b_lead==true){
+                            
                     actionButtons = `
         <button class="btn btn-success" onclick="markCounterpartyReviewComplete()">
             <i class="ti ti-check"></i> Quick Review
@@ -4697,10 +4701,11 @@
         <button class="btn btn-primary" onclick="submitForReview('${workflow.status}')">
                 <i class="ti ti-send"></i> Submit for Internal Review
             </button>`;
+        }
                 } else if ((workflow && workflow.status == 'active')) {
 
                     if ((workflow && workflow.is_my_workflow_turn === true) && (workflow && workflow.status != 'completed')) {
-
+                        
                         actionButtons = `
         <button class="btn signature-btn" onclick="approveWorkflow(${contract.id},'counterparty_review')">
             <i class="ti ti-check"></i> Approve
@@ -4708,6 +4713,7 @@
         <button class="btn btn-danger" onclick="rejectWorkflow(${contract.id}, 'counterparty_internal_review')">
             <i class="ti ti-x"></i> Reject
         </button>`;
+
                     } else {
                         //if I am not the current approver
                         actionButtons = getApprovalBadge(current_approver, workflow, 'review');
@@ -4724,6 +4730,8 @@
         } else if (contract.status === 'negotiation') {
 
             if (contract.is_counterparty === true) {
+
+                 if(contract.is_party_b_lead==true){
                 // Negotiation stage
                 actionButtons = `
             <button class="btn btn-success" onclick="quickApprove()">
@@ -4735,6 +4743,13 @@
             <button class="btn btn-outline-secondary" onclick="openDocumentsModal()">
                 <i class="ti ti-paperclip"></i> Attach Documents
             </button>`;
+        }else{
+               actionButtons = `
+           
+            <button class="btn btn-primary" id="openNegotiationBtn" onclick="openNegotiationModal()">
+                <i class="ti ti-message-circle"></i> Open Negotiation
+            </button>`;
+        }
             } else {
 
                 if (contract.is_initiator === true) {
@@ -4885,8 +4900,12 @@ ${renderWorkflowStepper(contract.status)}
                     <i class="ti ti-file-text"></i> Generate Risk Summary
                 </button>`}
             </div>
+
         </div>
+
+        
         <div class="editor-container">
+            
             <div class="editor-main">
                 <!-- Editor Toolbar -->
 ${renderEditorToolbar()}
@@ -8474,7 +8493,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
             <option value="reviewer">Reviewer</option>
             <option value="approver">Approver</option>
             <option value="e-sign">E-Sign</option>
-            <option value="counter-party">Counter-Party</option>
+         
         </select>
     </td>
     <td style="padding: 0.75rem; position: relative;">
@@ -8759,7 +8778,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
             <option value="reviewer" ${stepType === 'reviewer' ? 'selected' : ''}>Reviewer</option>
             <option value="approver" ${stepType === 'approver' ? 'selected' : ''}>Approver</option>
             <option value="e-sign" ${stepType === 'e-sign' ? 'selected' : ''}>E-Sign</option>
-            <option value="counter-party" ${stepType === 'counter-party' ? 'selected' : ''}>Counter-Party</option>
+          
         </select>
     </td>
     <td style="padding: 0.75rem; position: relative;">
@@ -11758,7 +11777,7 @@ Generated by CALIM 360 Smart CLM
             masterLabel.style.opacity = '1';
             masterLabel.style.cursor = 'pointer';
             masterLabel.style.background = 'white';
-            masterDesc.textContent = `Using: ${workflowAvailability.master.name}`;
+            masterDesc.textContent = ``;
             masterSetupBtn.style.display = 'none';
         } else {
             // Master workflow NOT available - show setup option
@@ -11780,7 +11799,7 @@ Generated by CALIM 360 Smart CLM
             customLabel.style.opacity = '1';
             customLabel.style.cursor = 'pointer';
             customLabel.style.background = 'white';
-            customDesc.textContent = `Using: ${workflowAvailability.custom.name}`;
+            customDesc.textContent = ``;
             // customSetupBtn.style.display = 'none';
         } else {
             // Custom workflow NOT available - show setup option

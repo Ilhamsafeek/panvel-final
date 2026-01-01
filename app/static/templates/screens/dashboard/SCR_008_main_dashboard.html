@@ -82,6 +82,10 @@
         transition: var(--transition);
         position: relative;
         overflow: hidden;
+        text-decoration: none;
+        display: block;
+        color: inherit;
+        cursor: pointer;
     }
 
     .stat-card:hover {
@@ -494,96 +498,96 @@
 
     <!-- Statistics Cards -->
     <div class="stats-grid">
-        <!-- Total Contracts -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon blue">
-                    <i class="ti ti-files"></i>
-                </div>
-                <div class="stat-info">
-                    <h4>All Contracts</h4>
-                </div>
+    <!-- Total Contracts -->
+    <a href="/contracts" class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon blue">
+                <i class="ti ti-files"></i>
             </div>
-            <div class="stat-value" id="totalContracts">-</div>
+            <div class="stat-info">
+                <h4>All Contracts</h4>
+            </div>
         </div>
+        <div class="stat-value" id="totalContracts">-</div>
+    </a>
 
-        <!-- Active Contracts -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon green">
-                    <i class="ti ti-circle-check"></i>
-                </div>
-                <div class="stat-info">
-                    <h4>Executed Contracts</h4>
-                </div>
+    <!-- Executed Contracts -->
+    <a href="/contracts?module=operations" class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon green">
+                <i class="ti ti-circle-check"></i>
             </div>
-            <div class="stat-value" id="activeContracts">-</div>
+            <div class="stat-info">
+                <h4>Executed Contracts</h4>
+            </div>
         </div>
+        <div class="stat-value" id="activeContracts">-</div>
+    </a>
 
-        <!-- Active Projects Card -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon purple">
-                    <i class="ti ti-folder"></i>
-                </div>
-                <div class="stat-info">
-                    <h4>Active Projects</h4>
-                </div>
+    <!-- Active Projects Card -->
+    <a href="/projects" class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon purple">
+                <i class="ti ti-folder"></i>
             </div>
-            <div class="stat-value" id="activeProjects">-</div>
-            <div class="stat-change positive" id="activeProjectsChange" style="display: none;">
-                <i class="ti ti-trending-up"></i>
-                <span id="activeProjectsChangeText">-</span>
+            <div class="stat-info">
+                <h4>Active Projects</h4>
             </div>
         </div>
+        <div class="stat-value" id="activeProjects">-</div>
+        <div class="stat-change positive" id="activeProjectsChange" style="display: none;">
+            <i class="ti ti-trending-up"></i>
+            <span id="activeProjectsChangeText">-</span>
+        </div>
+    </a>
 
-        <!-- Contracts in Progress -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon purple">
-                    <i class="ti ti-hourglass"></i>
-                </div>
-                <div class="stat-info">
-                    <h4>Contracts in Progress</h4>
-                </div>
+    <!-- Contracts in Progress -->
+    <a href="/contracts?module=negotiation" class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon purple">
+                <i class="ti ti-hourglass"></i>
             </div>
-            <div class="stat-value" id="pendingApprovals">-</div>
-            <div class="stat-change negative" id="pendingApprovalsChange" style="display: none;">
-                <i class="ti ti-alert-circle"></i>
-                <span>Needs attention</span>
+            <div class="stat-info">
+                <h4>Contracts in Progress</h4>
             </div>
         </div>
+        <div class="stat-value" id="pendingApprovals">-</div>
+        <div class="stat-change negative" id="pendingApprovalsChange" style="display: none;">
+            <i class="ti ti-alert-circle"></i>
+            <span>Needs attention</span>
+        </div>
+    </a>
 
-        <!-- All Obligations -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon red">
-                    <i class="ti ti-alert-octagon"></i>
-                </div>
-                <div class="stat-info">
-                    <h4>All Obligations</h4>
-                </div>
+    <!-- All Obligations -->
+    <a href="/obligations" class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon red">
+                <i class="ti ti-alert-octagon"></i>
             </div>
-            <div class="stat-value" id="overdueObligations">-</div>
-            <div class="stat-change negative" id="overdueObligationsChange" style="display: none;">
-                <i class="ti ti-arrow-down"></i>
-                <span>Urgent action needed</span>
+            <div class="stat-info">
+                <h4>All Obligations</h4>
             </div>
         </div>
+        <div class="stat-value" id="overdueObligations">-</div>
+        <div class="stat-change negative" id="overdueObligationsChange" style="display: none;">
+            <i class="ti ti-arrow-down"></i>
+            <span>Urgent action needed</span>
+        </div>
+    </a>
 
-        <!-- Pending Actions -->
-        <div class="stat-card">
-            <div class="stat-header">
-                <div class="stat-icon cyan">
-                    <i class="ti ti-clipboard-check"></i>
-                </div>
-                <div class="stat-info">
-                    <h4>Pending Actions</h4>
-                </div>
+    <!-- Pending Actions / My Approvals -->
+    <a href="/approvals" class="stat-card">
+        <div class="stat-header">
+            <div class="stat-icon cyan">
+                <i class="ti ti-clipboard-check"></i>
             </div>
-            <div class="stat-value" id="myApprovals">-</div>
+            <div class="stat-info">
+                <h4>Pending Actions</h4>
+            </div>
         </div>
-    </div>
+        <div class="stat-value" id="myApprovals">-</div>
+    </a>
+</div>
 
     <!-- Main Content Grid -->
     <div class="content-grid">

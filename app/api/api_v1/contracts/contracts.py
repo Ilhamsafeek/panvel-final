@@ -1023,11 +1023,13 @@ async def get_contract_editor_data(
                 c.created_by as created_by_id,
                 c.updated_at,
                 c.party_b_id,
+                c.party_b_lead_id,
                 c.signed_date,
                 c.effective_date,
                 comp.company_name,
                 c.company_id,
                 c.is_ai_generated,
+                c.ai_generation_params,
                 CONCAT(u.first_name, ' ', u.last_name) as created_by_name,
                 cv.contract_content as content,
                 cv.version_number as current_version
@@ -1134,6 +1136,12 @@ async def get_contract_editor_data(
                     if step["assignee_user_id"] == current_user.id:
                         is_my_workflow_turn = True
                         break
+        
+
+        is_party_b_lead = False
+        if current_user.id==result.party_b_lead_id:
+            is_party_b_lead = True
+        
         
         # Get version history
         version_query = text("""
@@ -1265,6 +1273,7 @@ async def get_contract_editor_data(
                 "company_name": result.company_name,
                 "company_id": result.company_id,
                 "party_b_id": result.party_b_id,
+                "is_party_b_lead": is_party_b_lead,
                 "created_by": result.created_by_name,
                 "created_by_id": result.created_by_id,
                 "created_at": result.created_at.isoformat() if result.created_at else None,
@@ -1274,7 +1283,8 @@ async def get_contract_editor_data(
                 "current_version": result.current_version if result.current_version else 1,
                 "is_initiator": is_initiator,
                 "is_counterparty": is_counterparty,
-                "is_ai_generated": result.is_ai_generated
+                "is_ai_generated": result.is_ai_generated,
+                "ai_generation_params": result.ai_generation_params
             },
             "workflow": {
                 "status": workflow.workflow_status if workflow else "not_configured",
@@ -3888,6 +3898,7 @@ async def send_to_counterparty(
         # Update contract status
         contract.status = 'counterparty_internal_review'
         contract.party_b_id = counterparty_company_id
+        contract.party_b_lead_id = counterparty_user_id
         contract.updated_at = datetime.now()
         
         # Log the action
@@ -4674,32 +4685,34 @@ async def stream_ai_contract_generation(
         end_date = request_data.get("end_date", "")
         selected_clause_descriptions = request_data.get("selected_clauses", [])
         jurisdiction = request_data.get("jurisdiction", "Qatar")
+
+
+        # ✅ EXTRACT METADATA WITH SPECIAL REQUIREMENTS
+        metadata = request_data.get("metadata", {})
+        additional_requirements = metadata.get("additional_requirements", "")
+        user_prompt = metadata.get("prompt", "")
+        payment_terms = metadata.get("payment_terms", "")
+
+
         
         party_a_name = party_a.get("name", "Party A")
         party_b_name = party_b.get("name", "Party B")
         
         # Build prompt
-        prompt_text = f"""Generate a complete, production-ready {contract_type} contract between:
-- Party A ({profile_type}): {party_a_name}
-- Party B: {party_b_name}
-
-Contract Value: {contract_value} {currency}
-Duration: {start_date} to {end_date}
+        prompt_text = f"""Generate a complete, production-ready {contract_type} contract:
+- Party A ({profile_type}): 
 Jurisdiction: {jurisdiction}
 
 Selected Clauses: {', '.join(selected_clause_descriptions) if selected_clause_descriptions else 'Standard clauses'}
 
 **CRITICAL REQUIREMENTS:**
-1. NO placeholders, NO brackets, NO [CLIENT NAME] or similar
-2. Use "{party_a_name}" everywhere, NEVER "[CLIENT NAME]", "Client", or placeholder
-3. Use "{party_b_name}" everywhere, NEVER "[PROVIDER NAME]", "Service Provider", or placeholder  
-4. Use "{contract_value} {currency}" for amounts, NEVER "[AMOUNT]" or placeholder
-5. Use "{start_date}" for start date, NEVER "[START DATE]" or placeholder
-6. Use "{end_date}" for end date, NEVER "[END DATE]" or placeholder
-7. Production-ready, legally enforceable (minimum 3,500 words)
-8. Professional legal language for {jurisdiction}
-9. Detailed obligations, timelines, deliverables, remedies
-10. Every clause fully developed with procedures and consequences
+
+1. Production-ready, contractually & legally binding (minimum 3,500 words)
+2. Professional legal language with contractually & legally binding for {jurisdiction}
+4. Every clause fully developed with procedures and consequences
+5. {additional_requirements}
+6. {payment_terms}
+7. {user_prompt}
 
 **FORMAT:**
 - Clean HTML: <h2> for sections, <h3> for subsections, <p> for paragraphs

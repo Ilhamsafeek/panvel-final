@@ -213,10 +213,6 @@ Draft the clause now:"""
             # Enhanced prompt emphasizing legal enforceability
             prompt = f"""Draft a comprehensive, contractually and legally binding {contract_type} contract that is fully enforceable under {jurisdiction} law.
 
-    **PARTIES:**
-    - Party A: {party_a}
-    - Party B: {party_b}
-
     **JURISDICTION:** {jurisdiction}
 
     **KEY TERMS:**
@@ -236,7 +232,6 @@ Draft the clause now:"""
 
     1. **Complete legal enforceability** - Include all elements required for a valid, binding contract under {jurisdiction} law
     2. **Comprehensive rights and obligations** - Clearly define what each party must do, may do, and cannot do
-    3. **Enforceable remedies** - Specify consequences for breach, termination rights, and dispute resolution mechanisms
     4. **All required clauses fully developed** - Each clause must include detailed provisions, sub-clauses, procedures, and timelines
     5. **No placeholders** - Use actual dates, values, and specific terms provided. No [TBD], [INSERT], or generic text
     6. **Production-ready quality** - This contract should be ready for signature and legal enforcement

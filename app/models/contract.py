@@ -28,6 +28,7 @@ class Contract(Base):
     party_a_id = Column(Integer)
     party_b_name = Column(String(255))  # ← THIS IS THE KEY ONE
     party_b_id = Column(Integer)
+    party_b_lead_id = Column(Integer)
     project_name = Column(String(255))  #  ADD
     
     # Financial
