@@ -3192,7 +3192,7 @@
             <!-- Will be populated dynamically -->
         </div>
         <div class="modal-footer">
-            <button class="btn btn-outline-secondary" onclick="compareVersions()">Compare Versions</button>
+            <!-- <button class="btn btn-outline-secondary" onclick="compareVersions()">Compare Versions</button> -->
             <button class="btn btn-primary" onclick="closeModal('versionModal')">Close</button>
         </div>
     </div>
@@ -5894,15 +5894,13 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
 
-
-    function acceptClauseSuggestion(index, clauseName, improvedVersion, originalText) {
+    async function acceptClauseSuggestion(index, clauseName, improvedVersion, originalText) {
         if (!improvedVersion || improvedVersion === 'AI analysis unavailable - legal review recommended') {
             showNotification('No improved version available for this clause', 'warning');
             return;
         }
 
         try {
-            // Get the contract editor
             const editor = document.getElementById('contractContent') ||
                 document.getElementById('contractContentEditor') ||
                 document.querySelector('.editor-paper[contenteditable="true"]');
@@ -5912,176 +5910,96 @@ ${contract.content && contract.content.trim() !== '' ?
                 return;
             }
 
-            // Get current content
-            let content = editor.innerHTML;
+            showLoader(`Applying ${clauseName} suggestion...`);
 
-            // Try to find and replace the original clause text
-            // We need to handle both plain text and HTML content
-            const originalTextEscaped = escapeHtml(originalText);
+            const applied = applyClauseReplacement(editor, originalText, improvedVersion, clauseName);
 
-            // Try direct replacement first (for HTML content)
-            if (content.includes(originalTextEscaped)) {
-                content = content.replace(originalTextEscaped, escapeHtml(improvedVersion));
-            }
-            // Try plain text replacement
-            else if (content.includes(originalText)) {
-                content = content.replace(originalText, improvedVersion);
-            }
-            // Try approximate match (remove extra whitespace)
-            else {
-                const cleanOriginal = originalText.replace(/\s+/g, ' ').trim();
-                const cleanContent = content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ');
+            hideLoader();
 
-                if (cleanContent.includes(cleanOriginal)) {
-                    // Find the approximate location and replace
-                    const startIdx = cleanContent.indexOf(cleanOriginal);
-                    if (startIdx !== -1) {
-                        // Create a highlighted version
-                        const beforeText = content.substring(0, startIdx);
-                        const afterText = content.substring(startIdx + cleanOriginal.length);
+            if (applied) {
+                clauseReplacementMap.set(index, {
+                    originalText: originalText,
+                    improvedVersion: improvedVersion,
+                    clauseName: clauseName
+                });
 
-                        content = beforeText +
-                            `<span style="background: #e8f5e9; padding: 0.25rem; border-left: 3px solid #4caf50;">` +
-                            improvedVersion +
-                            `</span>` +
-                            afterText;
-                    } else {
-                        // If exact replacement fails, append to end with clear marking
-                        content += `
-                    
-<div style="background: #e8f5e9; padding: 1rem; margin-top: 1rem; border-left: 4px solid #4caf50; border-radius: 8px;">
-    <h5 style="color: #2e7d32; margin-bottom: 0.5rem;">
-        <i class="ti ti-sparkles"></i> ${clauseName} - Improved Version
-    </h5>
-    <p style="margin: 0; line-height: 1.6;">
-        ${improvedVersion}
-    </p>
-    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;">
-        <strong>Note:</strong> Please replace the original ${clauseName} clause with this improved version.
-    </p>
-</div>`;
+                const clauseItem = document.getElementById(`clause-item-${index}`);
+                if (clauseItem) {
+                    clauseItem.style.background = '#f0f0f0';
+                    const buttonContainer = clauseItem.querySelector('div[style*="display: flex"]');
+                    if (buttonContainer) {
+                        buttonContainer.innerHTML = `
+                        <div style="padding: 0.75rem; text-align: center;">
+                            <i class="ti ti-check"></i> Applied to Contract
+                        </div>
+                    `;
                     }
-                } else {
-                    // Last resort: append at the end
-                    content += `
-
-<div style="background: #e8f5e9; padding: 1rem; margin-top: 1rem; border-left: 4px solid #4caf50; border-radius: 8px;">
-    <h5 style="color: #2e7d32; margin-bottom: 0.5rem;">
-        <i class="ti ti-sparkles"></i> ${clauseName} - Improved Version
-    </h5>
-    <p style="margin: 0; line-height: 1.6;">
-        ${improvedVersion}
-    </p>
-    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;">
-        <strong>Note:</strong> Original clause not found. Please integrate this improved clause manually.
-    </p>
-</div>`;
                 }
-            }
 
-            // Update the editor
-            editor.innerHTML = content;
+                showNotification(`${clauseName} suggestion applied`, 'success');
 
-            // Mark this clause as replaced
-            clauseReplacementMap.set(index, {
-                originalText: originalText,
-                improvedVersion: improvedVersion,
-                clauseName: clauseName
-            });
-
-            // Update the UI to show it's been accepted
-            const clauseItem = document.getElementById(`clause-item-${index}`);
-            if (clauseItem) {
-                clauseItem.style.background = '#e8f5e9';
-                clauseItem.style.borderColor = '#4caf50';
-
-                // Hide action buttons
-                const buttonContainer = clauseItem.querySelector('div[style*="display: flex"]');
-                if (buttonContainer) {
-                    buttonContainer.innerHTML = `
-                    <div style="background: #4caf50; color: white; padding: 0.75rem; border-radius: 8px; text-align: center;">
-                        <i class="ti ti-check"></i> Suggestion Applied to Contract
-                    </div>
-                `;
+                if (typeof autoSaveContract === 'function') {
+                    setTimeout(() => autoSaveContract(), 500);
                 }
-            }
-
-            showNotification(`${clauseName} suggestion accepted and added to contract!`, 'success');
-
-            // Auto-save the contract (if auto-save function exists)
-            if (typeof autoSaveContract === 'function') {
-                autoSaveContract();
             }
 
         } catch (error) {
+            hideLoader();
             console.error('Error accepting clause suggestion:', error);
-            showNotification('Failed to apply suggestion. Please try manual editing.', 'error');
+            showNotification('Failed to apply suggestion', 'error');
         }
     }
+
+
+
 
     // =====================================================
     // EDIT CLAUSE MANUALLY
     // =====================================================
 
-    function editClauseManually(index, clauseName, clauseText) {
+    function editClauseManually(index, clauseName) {
         try {
-            // Close the modal
             closeModal('clauseSuggestionModal');
 
-            // Get the editor
             const editor = document.getElementById('contractContent') ||
                 document.getElementById('contractContentEditor') ||
                 document.querySelector('.editor-paper[contenteditable="true"]');
 
-            if (!editor) {
-                showNotification('Contract editor not found', 'error');
-                return;
-            }
+            if (editor) {
+                editor.focus();
 
-            // Try to find and highlight the clause text
-            const content = editor.innerHTML;
-            const cleanClauseText = clauseText.replace(/\s+/g, ' ').trim().substring(0, 100); // First 100 chars
+                // Try to scroll to the clause if we can find it
+                const plainContent = editor.innerText || editor.textContent || '';
+                const headingPattern = new RegExp(escapeRegex(clauseName), 'i');
+                const match = plainContent.match(headingPattern);
 
-            // Search for the text
-            if (content.toLowerCase().includes(cleanClauseText.toLowerCase())) {
-                // Highlight it
-                const regex = new RegExp(escapeRegExp(cleanClauseText), 'gi');
-                editor.innerHTML = content.replace(regex, match =>
-                    `<span style="background: yellow; padding: 0.25rem;">${match}</span>`
-                );
-
-                // Scroll to the highlighted text
-                const highlighted = editor.querySelector('span[style*="background: yellow"]');
-                if (highlighted) {
-                    highlighted.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (match) {
+                    // Scroll to approximate position
+                    editor.scrollTop = editor.scrollTop + (match.index / plainContent.length) * editor.scrollHeight;
                 }
             }
 
-            // Focus the editor
-            editor.focus();
-
-            showNotification(`Please manually edit the "${clauseName}" clause in the highlighted section`, 'info');
+            showNotification(`Please locate and edit "${clauseName}" clause manually`, 'info');
 
         } catch (error) {
             console.error('Error in manual edit:', error);
-            closeModal('clauseSuggestionModal');
-            showNotification(`Please locate and edit the "${clauseName}" clause manually`, 'info');
+            showNotification('Please edit the clause manually in the contract', 'info');
         }
     }
+
+
 
     // =====================================================
     // SKIP CLAUSE SUGGESTION
     // =====================================================
-
     function skipClauseSuggestion(index) {
         const clauseItem = document.getElementById(`clause-item-${index}`);
         if (clauseItem) {
             clauseItem.style.opacity = '0.5';
+            clauseItem.style.filter = 'grayscale(100%)';
         }
         showNotification('Suggestion skipped', 'info');
     }
-
-
 
 
     async function applyAllSuggestions() {
@@ -6094,10 +6012,9 @@ ${contract.content && contract.content.trim() !== '' ?
         let appliedCount = 0;
         let skippedCount = 0;
 
-        showLoader('Applying all suggestions to contract...');
+        showLoader('Applying all suggestions...');
 
         try {
-            // Get the editor
             const editor = document.getElementById('contractContent') ||
                 document.getElementById('contractContentEditor') ||
                 document.querySelector('.editor-paper[contenteditable="true"]');
@@ -6106,122 +6023,397 @@ ${contract.content && contract.content.trim() !== '' ?
                 throw new Error('Contract editor not found');
             }
 
-            let content = editor.innerHTML;
-            const improvements = [];
+            for (let index = 0; index < clauses.length; index++) {
+                const clause = clauses[index];
 
-            // Process each clause
-            clauses.forEach((clause, index) => {
-                // Skip if already replaced
                 if (clauseReplacementMap.has(index)) {
-                    return;
+                    continue;
                 }
 
                 const improvedVersion = clause.improved_version;
                 const originalText = clause.clause_text;
                 const clauseName = clause.clause_name;
 
-                // Skip if no improved version
                 if (!improvedVersion || improvedVersion === 'AI analysis unavailable - legal review recommended') {
                     skippedCount++;
-                    return;
+                    continue;
                 }
 
-                // Store for batch append if direct replacement fails
-                improvements.push({
-                    index: index,
-                    clauseName: clauseName,
-                    originalText: originalText,
-                    improvedVersion: improvedVersion
-                });
-            });
+                const applied = applyClauseReplacement(editor, originalText, improvedVersion, clauseName);
 
-            // Append all improvements at the end with clear section
-            if (improvements.length > 0) {
-                content += `
-
-<div style="background: linear-gradient(to bottom, #e8f5e9, #ffffff); padding: 2rem; margin-top: 2rem; border: 2px solid #4caf50; border-radius: 12px;">
-    <h3 style="color: #2e7d32; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
-        <i class="ti ti-sparkles"></i> AI-Suggested Clause Improvements
-    </h3>
-    <p style="color: #666; margin-bottom: 1.5rem; font-size: 0.95rem;">
-        The following clauses have been improved by AI analysis. Please review and integrate them into your contract.
-    </p>
-`;
-
-                improvements.forEach(item => {
-                    content += `
-    <div style="background: white; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #4caf50; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <h5 style="color: var(--primary-color); margin-bottom: 1rem;">
-            <i class="ti ti-file-text"></i> ${escapeHtml(item.clauseName)}
-        </h5>
-        
-        <div style="background: #f8f9fa; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem;">
-            <div style="font-size: 0.85rem; color: #666; margin-bottom: 0.5rem; font-weight: 600;">Original:</div>
-            <p style="margin: 0; font-size: 0.9rem; color: #333;">
-                ${escapeHtml(item.originalText.substring(0, 200))}${item.originalText.length > 200 ? '...' : ''}
-            </p>
-        </div>
-        
-        <div style="background: #e8f5e9; padding: 0.75rem; border-radius: 6px;">
-            <div style="font-size: 0.85rem; color: #2e7d32; margin-bottom: 0.5rem; font-weight: 600;">
-                <i class="ti ti-sparkles"></i> Improved Version:
-            </div>
-            <p style="margin: 0; font-size: 0.95rem; line-height: 1.6; color: #333;">
-                ${escapeHtml(item.improvedVersion)}
-            </p>
-        </div>
-    </div>
-`;
-
-                    // Mark as replaced
-                    clauseReplacementMap.set(item.index, {
-                        originalText: item.originalText,
-                        improvedVersion: item.improvedVersion,
-                        clauseName: item.clauseName
+                if (applied) {
+                    clauseReplacementMap.set(index, {
+                        originalText: originalText,
+                        improvedVersion: improvedVersion,
+                        clauseName: clauseName
                     });
-
                     appliedCount++;
-                });
 
-                content += `
-    <div style="background: #fff3cd; padding: 1rem; border-radius: 8px; margin-top: 1.5rem;">
-        <p style="margin: 0; color: #856404; font-size: 0.9rem;">
-            <i class="ti ti-info-circle"></i> <strong>Note:</strong> Please review these improvements and integrate them into the appropriate sections of your contract.
-        </p>
-    </div>
-</div>
-`;
+                    const clauseItem = document.getElementById(`clause-item-${index}`);
+                    if (clauseItem) {
+                        clauseItem.style.background = '#f0f0f0';
+                    }
+                } else {
+                    skippedCount++;
+                }
+
+                if (index % 3 === 0) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
             }
 
-            // Update the editor
-            editor.innerHTML = content;
-
             hideLoader();
-
-            // Close modal
             closeModal('clauseSuggestionModal');
 
-            // Show summary
-            showNotification(
-                `Applied ${appliedCount} suggestion(s) to contract. ${skippedCount > 0 ? `Skipped ${skippedCount} clause(s).` : ''} Please review and save.`,
-                'success'
-            );
+            let message = `Applied ${appliedCount} suggestion(s).`;
+            if (skippedCount > 0) {
+                message += ` Skipped ${skippedCount}.`;
+            }
 
-            // Auto-save if available
-            setTimeout(() => {
-                if (typeof autoSaveContract === 'function') {
-                    autoSaveContract();
-                }
-            }, 1000);
+            showNotification(message, appliedCount > 0 ? 'success' : 'warning');
+
+            if (appliedCount > 0 && typeof autoSaveContract === 'function') {
+                setTimeout(() => autoSaveContract(), 1000);
+            }
 
         } catch (error) {
             hideLoader();
-            console.error('Error applying all suggestions:', error);
-            showNotification('Failed to apply all suggestions. Please try individual acceptance.', 'error');
+            console.error('Error applying suggestions:', error);
+            showNotification('Failed to apply suggestions', 'error');
         }
     }
 
 
+
+
+    function applyClauseReplacement(editor, originalText, improvedVersion, clauseName) {
+        try {
+            let content = editor.innerHTML;
+            const plainContent = editor.innerText || editor.textContent || '';
+
+            console.log(`Applying: ${clauseName}`);
+
+            // STRATEGY 1: Find by heading
+            const headingPatterns = [
+                new RegExp(`\\b(Article|Section|Clause)?\\s*\\d+\\.?\\s*${escapeRegex(clauseName)}`, 'i'),
+                new RegExp(`\\b${escapeRegex(clauseName)}\\b`, 'i'),
+                new RegExp(`${escapeRegex(clauseName)}\\s*:`, 'i'),
+                new RegExp(`\\d+\\.\\d+\\s+${escapeRegex(clauseName)}`, 'i'),
+                new RegExp(`\\d*\\.?\\s*${escapeRegex(clauseName.toUpperCase())}`, 'i')
+            ];
+
+            for (let pattern of headingPatterns) {
+                const match = plainContent.match(pattern);
+                if (match) {
+                    console.log(`Found heading: "${match[0]}"`);
+
+                    // Extract the actual clause content after the heading
+                    const actualContent = extractClauseContent(plainContent, match[0], match.index);
+
+                    if (actualContent) {
+                        // Find and replace the actual clause content with strikethrough + improved version
+                        const contentToReplace = escapeRegex(actualContent);
+                        const replaceRegex = new RegExp(contentToReplace, 'i');
+
+                        if (replaceRegex.test(content)) {
+                            content = content.replace(replaceRegex, () => {
+                                return createSimpleReplacement(actualContent, improvedVersion);
+                            });
+
+                            editor.innerHTML = content;
+                            console.log(`Applied after heading`);
+                            return true;
+                        }
+                    }
+
+                    // If content extraction failed, insert after heading
+                    const headingRegex = new RegExp(escapeRegex(match[0]), 'gi');
+                    if (headingRegex.test(content)) {
+                        content = content.replace(headingRegex, (matched) => {
+                            return matched + '\n\n' + createSimpleReplacement(originalText, improvedVersion);
+                        });
+
+                        editor.innerHTML = content;
+                        console.log(`Applied after heading (fallback)`);
+                        return true;
+                    }
+                }
+            }
+
+            console.log(`Heading not found, trying content match...`);
+
+            // STRATEGY 2: Try to find the actual clause content
+            const searchText = originalText.trim().substring(0, Math.min(200, originalText.length));
+            const normalizedSearch = searchText.replace(/\s+/g, ' ');
+            const normalizedContent = plainContent.replace(/\s+/g, ' ');
+
+            if (normalizedContent.includes(normalizedSearch)) {
+                console.log(`Found content match`);
+
+                const searchRegex = new RegExp(escapeRegex(searchText).replace(/\s+/g, '\\s+'), 'i');
+
+                if (searchRegex.test(content)) {
+                    content = content.replace(searchRegex, (matched) => {
+                        return createSimpleReplacement(matched, improvedVersion);
+                    });
+
+                    editor.innerHTML = content;
+                    console.log(`Applied via content match`);
+                    return true;
+                }
+            }
+
+            // STRATEGY 3: Append at end if not found
+            console.log(`Adding at end of document`);
+            editor.innerHTML += '\n\n' + createSimpleReplacement(originalText, improvedVersion);
+            return true;
+
+        } catch (error) {
+            console.error('Error:', error);
+            return false;
+        }
+    }
+
+
+
+
+    function applyClauseWithTrackChanges(editor, originalText, improvedVersion, clauseName) {
+        try {
+            let content = editor.innerHTML;
+            const plainContent = editor.innerText || editor.textContent || '';
+
+            console.log(`🔍 Applying: ${clauseName}`);
+
+            // STRATEGY 1: Find by clause heading/title
+            const headingPatterns = [
+                new RegExp(`\\b(Article|Section|Clause)?\\s*\\d+\\.?\\s*${escapeRegex(clauseName)}`, 'i'),
+                new RegExp(`\\b${escapeRegex(clauseName)}\\b`, 'i'),
+                new RegExp(`${escapeRegex(clauseName)}\\s*:`, 'i'),
+                new RegExp(`\\d+\\.\\d+\\s+${escapeRegex(clauseName)}`, 'i'),
+                new RegExp(`\\d*\\.?\\s*${escapeRegex(clauseName.toUpperCase())}`, 'i')
+            ];
+
+            for (let pattern of headingPatterns) {
+                const match = plainContent.match(pattern);
+                if (match) {
+                    console.log(`✓ Found heading: "${match[0]}"`);
+
+                    const actualClauseContent = extractClauseContent(plainContent, match[0], match.index);
+                    const headingRegex = new RegExp(escapeRegex(match[0]), 'gi');
+
+                    if (headingRegex.test(content)) {
+                        content = content.replace(headingRegex, (matched) => {
+                            const displayOriginal = actualClauseContent || originalText;
+                            return matched + '\n' + createTrackChangesMarkup(displayOriginal, improvedVersion, clauseName, true);
+                        });
+
+                        editor.innerHTML = content;
+                        console.log(`✓ Applied in-place`);
+                        return true;
+                    }
+                }
+            }
+
+            console.log(`⚠️ Heading not found, trying content search...`);
+
+            // STRATEGY 2: Content-based matching
+            const searchText = originalText.trim().substring(0, Math.min(150, originalText.length));
+            const normalizedSearch = searchText.replace(/\s+/g, ' ');
+            const normalizedContent = plainContent.replace(/\s+/g, ' ');
+
+            if (normalizedContent.includes(normalizedSearch)) {
+                console.log(`✓ Found content match`);
+
+                const searchRegex = new RegExp(escapeRegex(searchText).replace(/\s+/g, '\\s+'), 'i');
+
+                if (searchRegex.test(content)) {
+                    content = content.replace(searchRegex, (matched) => {
+                        return createTrackChangesMarkup(originalText, improvedVersion, clauseName, true);
+                    });
+
+                    editor.innerHTML = content;
+                    console.log(`✓ Applied via content`);
+                    return true;
+                }
+            }
+
+            // STRATEGY 3: Add as proposal at end
+            console.log(`⚠️ Adding as proposal at end`);
+            editor.innerHTML += createTrackChangesMarkup(originalText, improvedVersion, clauseName, false);
+            return true;
+
+        } catch (error) {
+            console.error('❌ Error:', error);
+            return false;
+        }
+    }
+
+
+    /**
+     * Extract actual clause content from contract (between headings)
+     */
+
+    function extractClauseContent(plainText, headingText, headingIndex) {
+        try {
+            const startPos = headingIndex + headingText.length;
+
+            // Find next heading
+            const nextHeadingPattern = /\n\s*(Article|Section|Clause|\d+\.)\s+[A-Z]/g;
+            nextHeadingPattern.lastIndex = startPos;
+
+            const nextMatch = nextHeadingPattern.exec(plainText);
+            const endPos = nextMatch ? nextMatch.index : Math.min(startPos + 1000, plainText.length);
+
+            let content = plainText.substring(startPos, endPos).trim();
+
+            if (content.length > 1000) {
+                content = content.substring(0, 1000);
+            }
+
+            return content.length > 50 ? content : null;
+
+        } catch (error) {
+            return null;
+        }
+    }
+
+
+
+    function createSimpleReplacement(originalText, improvedVersion) {
+        return `<p style="text-decoration: line-through; margin: 0.5rem 0;">${escapeHtml(originalText)}</p>
+<p style="margin: 0.5rem 0;">${escapeHtml(improvedVersion)}</p>`;
+    }
+
+
+
+
+    /**
+     * Create HTML markup for track changes
+     */
+    function createTrackChangesMarkup(originalText, improvedVersion, clauseName, foundInPlace = true) {
+        if (foundInPlace) {
+            return `
+<div style="margin: 1.5rem 0; padding: 1.25rem; background: #f8f9fa; border-left: 4px solid #28a745; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
+    <div style="margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px dashed #dee2e6;">
+        <div style="font-size: 0.8rem; color: #dc3545; font-weight: 600; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">
+            <i class="ti ti-x"></i> Replaced
+        </div>
+        <p style="margin: 0; text-decoration: line-through; color: #6c757d; opacity: 0.6; line-height: 1.6; font-size: 0.9rem; font-style: italic;">
+            ${escapeHtml(originalText)}
+        </p>
+    </div>
+
+    <div style="background: linear-gradient(to right, #e8f5e9, #f1f8f4); padding: 1rem; border-radius: 6px; border-left: 3px solid #28a745;">
+        <div style="font-size: 0.8rem; color: #28a745; font-weight: 700; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 0.5rem;">
+            <i class="ti ti-sparkles" style="font-size: 1rem;"></i> 
+            <span>Improved Version</span>
+        </div>
+        <p style="margin: 0; line-height: 1.7; font-size: 0.95rem; color: #1a1a1a; font-weight: 500;">
+            ${escapeHtml(improvedVersion)}
+        </p>
+    </div>
+
+    <div style="margin-top: 0.75rem; font-size: 0.7rem; color: #6c757d; text-align: right; display: flex; justify-content: space-between; align-items: center;">
+        <span style="background: #e8f5e9; padding: 0.25rem 0.5rem; border-radius: 4px; color: #28a745; font-weight: 600;">
+            <i class="ti ti-check"></i> AI Suggestion Applied
+        </span>
+        <span><i class="ti ti-clock"></i> ${new Date().toLocaleString()}</span>
+    </div>
+</div>`;
+        } else {
+            return `
+<div style="margin: 2rem 0; padding: 1.5rem; background: #fff3cd; border: 2px solid #ffc107; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <div style="font-size: 1rem; color: #856404; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+        <i class="ti ti-alert-triangle"></i> 
+        <span>PROPOSED CHANGE - ${escapeHtml(clauseName)}</span>
+    </div>
+    
+    <div style="background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 3px solid #dc3545;">
+        <div style="font-size: 0.85rem; color: #dc3545; font-weight: 600; margin-bottom: 0.5rem;">
+            <i class="ti ti-file-text"></i> Current Version (Summary):
+        </div>
+        <p style="margin: 0; color: #6c757d; line-height: 1.6; font-size: 0.9rem; font-style: italic;">
+            ${escapeHtml(originalText.substring(0, 300))}${originalText.length > 300 ? '...' : ''}
+        </p>
+    </div>
+
+    <div style="background: #e8f5e9; padding: 1rem; border-radius: 8px; border-left: 3px solid #28a745;">
+        <div style="font-size: 0.85rem; color: #28a745; font-weight: 600; margin-bottom: 0.5rem;">
+            <i class="ti ti-sparkles"></i> Proposed Improved Version:
+        </div>
+        <p style="margin: 0; line-height: 1.6; font-size: 0.95rem; color: #1a1a1a; font-weight: 500;">
+            ${escapeHtml(improvedVersion)}
+        </p>
+    </div>
+
+    <div style="margin-top: 1rem; padding: 0.75rem; background: #fff; border-radius: 6px; border: 1px dashed #ffc107;">
+        <p style="margin: 0; font-size: 0.85rem; color: #856404;">
+            <i class="ti ti-info-circle"></i> <strong>Action Required:</strong> Please locate the "<strong>${escapeHtml(clauseName)}</strong>" section in your contract above and replace it with this improved version.
+        </p>
+    </div>
+
+    <div style="margin-top: 0.75rem; font-size: 0.75rem; color: #6c757d; text-align: right;">
+        <i class="ti ti-clock"></i> Suggested: ${new Date().toLocaleString()}
+    </div>
+</div>`;
+        }
+    }
+
+
+
+
+    function escapeRegex(text) {
+        return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+
+    /**
+     * Replace text in text nodes
+     */
+    function replaceInTextNodes(element, searchText, replaceFn) {
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+
+        const nodes = [];
+        let node;
+
+        while (node = walker.nextNode()) {
+            const normalizedText = node.textContent.replace(/\s+/g, ' ');
+            if (normalizedText.includes(searchText)) {
+                nodes.push(node);
+            }
+        }
+
+        nodes.forEach(node => {
+            replaceFn(node, node.textContent);
+        });
+    }
+
+    /**
+     * Find text node containing specific text
+     */
+    function findTextNode(element, searchText) {
+        const walker = document.createTreeWalker(
+            element,
+            NodeFilter.SHOW_TEXT,
+            null,
+            false
+        );
+
+        let node;
+        while (node = walker.nextNode()) {
+            const normalizedText = node.textContent.replace(/\s+/g, ' ');
+            if (normalizedText.includes(searchText)) {
+                return node;
+            }
+        }
+
+        return null;
+    }
 
 
     async function downloadClauseAnalysis() {
@@ -6479,6 +6671,7 @@ ${contract.content && contract.content.trim() !== '' ?
 
     // Helper function to escape HTML
     function escapeHtml(text) {
+        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -6746,13 +6939,7 @@ ${contract.content && contract.content.trim() !== '' ?
             </div>
             <p style="font-size: 0.875rem; color: var(--text-muted); margin: 0.5rem 0;">${version.notes || version.type || 'No notes'}</p>
             <p style="font-size: 0.8rem; margin: 0;">Modified by: ${version.created_by || 'Unknown'}</p>
-            ${index > 0 ? `
-                <div style="margin-top: 0.5rem;">
-                    <button class="btn btn-sm btn-outline-secondary" onclick="restoreVersion(${version.id})">
-                        Restore This Version
-                    </button>
-                </div>
-            ` : ''}
+           
         </div>
     `).join('');
     }
@@ -12302,42 +12489,42 @@ Generated by CALIM 360 Smart CLM
 
 
     function updateWorkflowStepper(workflow) {
-    if (!workflow || !workflow.steps) return;
-    
-    const stepperSteps = document.querySelectorAll('.stepper-step');
-    const progressBar = document.getElementById('stepperProgress');
-    
-    let activeStage = 0;
-    const totalSteps = workflow.steps.length;
-    
-    workflow.steps.forEach((step, index) => {
-        const stepEl = stepperSteps[index];
-        if (!stepEl) return;
-        
-        // Clear previous classes
-        stepEl.classList.remove('completed', 'active', 'pending');
-        
-        // Update based on status
-        if (step.status === 'completed') {
-            stepEl.classList.add('completed');
-            stepEl.querySelector('.step-date').textContent = step.completed_date || 'Completed';
-            activeStage = index + 1;
-        } else if (step.status === 'active') {
-            stepEl.classList.add('active');
-            stepEl.querySelector('.step-date').textContent = 'In Progress';
-            activeStage = index + 1;
-        } else {
-            stepEl.classList.add('pending');
-            stepEl.querySelector('.step-date').textContent = 'Pending';
+        if (!workflow || !workflow.steps) return;
+
+        const stepperSteps = document.querySelectorAll('.stepper-step');
+        const progressBar = document.getElementById('stepperProgress');
+
+        let activeStage = 0;
+        const totalSteps = workflow.steps.length;
+
+        workflow.steps.forEach((step, index) => {
+            const stepEl = stepperSteps[index];
+            if (!stepEl) return;
+
+            // Clear previous classes
+            stepEl.classList.remove('completed', 'active', 'pending');
+
+            // Update based on status
+            if (step.status === 'completed') {
+                stepEl.classList.add('completed');
+                stepEl.querySelector('.step-date').textContent = step.completed_date || 'Completed';
+                activeStage = index + 1;
+            } else if (step.status === 'active') {
+                stepEl.classList.add('active');
+                stepEl.querySelector('.step-date').textContent = 'In Progress';
+                activeStage = index + 1;
+            } else {
+                stepEl.classList.add('pending');
+                stepEl.querySelector('.step-date').textContent = 'Pending';
+            }
+        });
+
+        // Update progress bar
+        if (progressBar && totalSteps > 0) {
+            const progressPercent = ((activeStage - 1) / (totalSteps - 1)) * 100;
+            progressBar.style.width = `${progressPercent}%`;
         }
-    });
-    
-    // Update progress bar
-    if (progressBar && totalSteps > 0) {
-        const progressPercent = ((activeStage - 1) / (totalSteps - 1)) * 100;
-        progressBar.style.width = `${progressPercent}%`;
     }
-}
 
 
 

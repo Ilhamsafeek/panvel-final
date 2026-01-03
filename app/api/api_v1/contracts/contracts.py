@@ -4749,6 +4749,7 @@ Selected Clauses: {', '.join(selected_clause_descriptions) if selected_clause_de
 5. {additional_requirements}
 6. {payment_terms}
 7. {user_prompt}
+8. Dont include signature section
 
 **FORMAT:**
 - Clean HTML: <h2> for sections, <h3> for subsections, <p> for paragraphs
