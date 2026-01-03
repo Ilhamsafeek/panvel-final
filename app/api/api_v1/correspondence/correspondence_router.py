@@ -440,7 +440,7 @@ async def get_projects_with_documents(
         company_id = current_user.company_id
         logger.info(f"📁 Loading projects for user {current_user.id}, company_id={company_id}")
         
-        # Get ALL projects for the company (removed status filter)
+        # Get ALL projects for the company
         projects_query = text("""
             SELECT 
                 p.id,
@@ -455,12 +455,11 @@ async def get_projects_with_documents(
         """)
         
         projects_result = db.execute(projects_query, {"company_id": company_id}).fetchall()
-        
         logger.info(f"📊 Found {len(projects_result)} projects for company {company_id}")
         
         projects = []
         for proj in projects_result:
-            # Method 1: Get documents directly linked via project_documents table
+            # Method 1: Documents directly linked via project_documents table
             direct_docs_query = text("""
                 SELECT 
                     d.id, d.document_name, d.document_type, d.file_path,
@@ -471,7 +470,7 @@ async def get_projects_with_documents(
                 WHERE pd.project_id = :project_id
             """)
             
-            # Method 2: Get documents linked via contracts
+            # Method 2: Documents linked via contracts
             contract_docs_query = text("""
                 SELECT 
                     d.id, d.document_name, d.document_type, d.file_path,
@@ -482,7 +481,7 @@ async def get_projects_with_documents(
                 WHERE c.project_id = :project_id
             """)
             
-            # Method 3: Get documents with project_id in metadata (from upload)
+            # Method 3: Documents with project_id in metadata
             metadata_docs_query = text("""
                 SELECT 
                     d.id, d.document_name, d.document_type, d.file_path,
@@ -511,6 +510,9 @@ async def get_projects_with_documents(
                 except Exception as e:
                     logger.warning(f"{name} docs query error: {e}")
             
+            # ⭐ SORT DOCUMENTS BY uploaded_at DESC (NEWEST FIRST)
+            all_docs.sort(key=lambda x: x.uploaded_at if x.uploaded_at else datetime.min, reverse=True)
+            
             documents = []
             for doc in all_docs:
                 documents.append({
@@ -535,7 +537,7 @@ async def get_projects_with_documents(
                 "documents": documents
             })
         
-        logger.info(f" Returning {len(projects)} projects with documents")
+        logger.info(f"✅ Returning {len(projects)} projects with documents")
         
         return {
             "success": True,
@@ -544,7 +546,7 @@ async def get_projects_with_documents(
         }
         
     except Exception as e:
-        logger.error(f" Error loading projects: {str(e)}")
+        logger.error(f"❌ Error loading projects: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(
@@ -552,7 +554,7 @@ async def get_projects_with_documents(
             detail=f"Failed to load projects: {str(e)}"
         )
 
-
+        
 # =====================================================
 # FALLBACK ANALYSIS FUNCTION
 # =====================================================

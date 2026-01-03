@@ -1592,9 +1592,9 @@
                     <button class="btn-sm primary" onclick="openUploadModal()" title="Upload Documents">
                         <i class="ti ti-upload"></i> Upload
                     </button>
-                    <button class="btn-sm" onclick="selectAllDocs()" id="selectAllBtn" title="Select All">
+                    <!-- <button class="btn-sm" onclick="selectAllDocs()" id="selectAllBtn" title="Select All">
                         <i class="ti ti-checks"></i>
-                    </button>
+                    </button> -->
                 </div>
             </div>
 
@@ -1827,6 +1827,9 @@
             lastUserQuery: ''
         };
 
+        const MAX_DOCUMENTS_FOR_AI = 10;
+
+
         // =====================================================
         // INITIALIZATION
         // =====================================================
@@ -1993,10 +1996,11 @@
                 console.log('📊 Total documents in global:', state.allDocumentsGlobal.length);
 
                 if (state.analysisMode === 'document') {
-                    // Document mode: Show ALL documents immediately
-                    state.allDocuments = [...state.allDocumentsGlobal];
-                    state.filteredDocs = [...state.allDocuments];
-                    console.log('📄 Document mode: Set', state.allDocuments.length, 'documents to display');
+                    // Document mode: Show ONLY STANDALONE documents
+                    const standaloneOnly = state.allDocumentsGlobal.filter(doc => doc.is_standalone === true);
+                    state.allDocuments = [...standaloneOnly];
+                    state.filteredDocs = [...standaloneOnly];
+                    console.log(`📄 Document mode: Set ${standaloneOnly.length} standalone documents (excluded ${state.allDocumentsGlobal.length - standaloneOnly.length} project docs)`);
                     renderDocs();
                 } else {
                     // Project mode: Wait for project selection
@@ -2026,6 +2030,7 @@
         // File: app/static/templates/screens/correspondence/SCR_044_correspondence_management.html
         // FIND and REPLACE window.onModeChange:
 
+
         window.onModeChange = function (mode) {
             console.log(`🔄 Switching to ${mode} mode`);
 
@@ -2033,7 +2038,6 @@
             state.selectedDocs.clear();
             state.currentPage = 1;
 
-            // Update mode cards UI
             document.querySelectorAll('.mode-card').forEach(card => {
                 card.classList.remove('active');
                 if (card.dataset.mode === mode) {
@@ -2045,32 +2049,33 @@
             const contractSelection = document.getElementById('contractSelection');
 
             if (mode === 'project') {
-                // PROJECT MODE: Show project selector, hide contract filter
+                // PROJECT MODE
                 if (projectSelection) projectSelection.style.display = 'block';
                 if (contractSelection) contractSelection.style.display = 'none';
 
-                // Reset selections
                 state.selectedProject = null;
                 state.allDocuments = [];
                 state.filteredDocs = [];
 
                 const projectSelect = document.getElementById('projectSelect');
-                if (projectSelect) {
-                    projectSelect.value = '';
-                }
+                if (projectSelect) projectSelect.value = '';
 
                 document.getElementById('chatHeaderSubtitle').textContent = 'Select a project to begin';
 
             } else {
-                // DOCUMENT MODE: Hide project selector, show contract filter, display ALL documents
+                // DOCUMENT MODE: Show ONLY standalone documents
                 if (projectSelection) projectSelection.style.display = 'none';
                 if (contractSelection) contractSelection.style.display = 'block';
 
-                // Show ALL documents (both project and standalone)
-                state.allDocuments = [...state.allDocumentsGlobal];
-                state.filteredDocs = [...state.allDocuments];
+                // ⭐ FILTER TO SHOW ONLY STANDALONE DOCUMENTS
+                const standaloneOnly = state.allDocumentsGlobal.filter(doc => doc.is_standalone === true);
+                state.allDocuments = [...standaloneOnly];
+                state.filteredDocs = [...standaloneOnly];
 
-                document.getElementById('chatHeaderSubtitle').textContent = `${state.allDocuments.length} documents available`;
+                document.getElementById('chatHeaderSubtitle').textContent =
+                    `${standaloneOnly.length} standalone document${standaloneOnly.length !== 1 ? 's' : ''}`;
+
+                console.log(`📄 Document mode: ${standaloneOnly.length} standalone docs (excluded ${state.allDocumentsGlobal.length - standaloneOnly.length} project docs)`);
             }
 
             renderDocs();
@@ -2078,7 +2083,6 @@
 
             console.log(`✅ ${mode} mode active. Documents: ${state.allDocuments.length}`);
         };
-
 
 
         window.onProjectChange = function () {
@@ -2115,7 +2119,7 @@
         // =====================================================
         window.setAnalysisMode = function (mode) {
             state.analysisMode = mode;
-            state.currentPage = 1; // Reset pagination
+            state.currentPage = 1;
             state.selectedDocs.clear();
 
             document.querySelectorAll('.mode-card').forEach(card => {
@@ -2127,79 +2131,65 @@
             const contractSelection = document.getElementById('contractSelection');
 
             if (mode === 'document') {
-                // Document Level: Hide project selection, show contract filter, load all docs
+                // Document Level: Show ONLY standalone documents
                 document.getElementById('docsTitle').textContent = 'Select Document';
 
-                // Safety check for selectAllBtn
-                if (selectAllBtn) {
-                    selectAllBtn.style.display = 'none';
-                }
+                if (selectAllBtn) selectAllBtn.style.display = 'none';
+                if (projectSelection) projectSelection.style.display = 'none';
+                if (contractSelection) contractSelection.style.display = 'block';
 
-                // Safety check for projectSelection
-                if (projectSelection) {
-                    projectSelection.style.display = 'none';
-                }
-
-                // Safety check for contractSelection - only access if it exists
-                if (contractSelection) {
-                    contractSelection.style.display = 'block';
-                } else {
-                    console.warn('contractSelection element not found in HTML');
-                }
-
-                // Load all documents from all projects
-                state.allDocuments = [...state.allDocumentsGlobal];
-                state.filteredDocs = [...state.allDocuments];
+                // ⭐ FILTER TO SHOW ONLY STANDALONE DOCUMENTS
+                const standaloneOnly = state.allDocumentsGlobal.filter(doc => doc.is_standalone === true);
+                state.allDocuments = [...standaloneOnly];
+                state.filteredDocs = [...standaloneOnly];
                 state.selectedProject = null;
 
-                document.getElementById('chatHeaderSubtitle').textContent = 'Single document analysis';
+                document.getElementById('chatHeaderSubtitle').textContent =
+                    `${standaloneOnly.length} standalone document${standaloneOnly.length !== 1 ? 's' : ''}`;
+
+                console.log(`📄 Document mode: ${standaloneOnly.length} standalone docs only`);
             } else {
-                // Project Level: Show project selection, hide contract filter
+                // Project Level: Show project selection
                 document.getElementById('docsTitle').textContent = 'Documents';
 
-                // Safety check for selectAllBtn
-                if (selectAllBtn) {
-                    selectAllBtn.style.display = 'flex';
-                }
+                if (selectAllBtn) selectAllBtn.style.display = 'flex';
+                if (projectSelection) projectSelection.style.display = 'block';
+                if (contractSelection) contractSelection.style.display = 'none';
 
-                // Safety check for projectSelection
-                if (projectSelection) {
-                    projectSelection.style.display = 'block';
-                }
-
-                // Safety check for contractSelection
-                if (contractSelection) {
-                    contractSelection.style.display = 'none';
-                }
-
-                // Reset to require project selection
                 state.allDocuments = [];
                 state.filteredDocs = [];
 
-                const projectSelect = document.getElementById('projectSelect');
-                if (projectSelect) {
-                    projectSelect.value = '';
-                }
-
                 document.getElementById('chatHeaderSubtitle').textContent = 'Select a project to begin';
+
+                console.log('📁 Project mode: waiting for project selection');
             }
 
             renderDocs();
             updateSelectionUI();
         };
-        window.onContractFilter = function () {
-            const contractNumber = document.getElementById('contractSelect').value;
-            state.selectedContract = contractNumber;
-            state.currentPage = 1;
 
-            if (contractNumber) {
-                state.filteredDocs = state.allDocumentsGlobal.filter(doc => doc.contract_number === contractNumber);
+
+        window.onContractFilter = function () {
+            const select = document.getElementById('contractSelect');
+            state.selectedContract = select.value;
+
+            // In document mode, filter within standalone documents only
+            const baseDocs = state.analysisMode === 'document'
+                ? state.allDocumentsGlobal.filter(doc => doc.is_standalone === true)
+                : state.allDocuments;
+
+            // Apply contract filter if selected
+            if (state.selectedContract) {
+                state.filteredDocs = baseDocs.filter(doc =>
+                    doc.contract_number === state.selectedContract
+                );
             } else {
-                state.filteredDocs = [...state.allDocumentsGlobal];
+                state.filteredDocs = [...baseDocs];
             }
 
-            state.allDocuments = [...state.filteredDocs];
+            state.currentPage = 1;
             renderDocs();
+            updateSelectionUI();
         };
 
         // =====================================================
@@ -2359,14 +2349,16 @@
         // =====================================================
         window.toggleDoc = function (docId) {
             if (state.analysisMode === 'document') {
-                // Single selection for document mode
                 state.selectedDocs.clear();
                 state.selectedDocs.add(docId);
             } else {
-                // Multi-selection for project mode
                 if (state.selectedDocs.has(docId)) {
                     state.selectedDocs.delete(docId);
                 } else {
+                    if (state.selectedDocs.size >= MAX_DOCUMENTS_FOR_AI) {
+                        showToast(`Maximum ${MAX_DOCUMENTS_FOR_AI} documents allowed for AI analysis`, 'warning');
+                        return;
+                    }
                     state.selectedDocs.add(docId);
                 }
             }
@@ -2376,11 +2368,21 @@
 
         window.selectAllDocs = function () {
             if (state.analysisMode === 'document') return;
-            state.filteredDocs.forEach(doc => state.selectedDocs.add(doc.id));
+
+            const docsToSelect = state.filteredDocs.slice(0, MAX_DOCUMENTS_FOR_AI);
+            state.selectedDocs.clear();
+            docsToSelect.forEach(doc => state.selectedDocs.add(doc.id));
+
             renderDocs();
             updateSelectionUI();
-            showToast(`Selected ${state.filteredDocs.length} documents`, 'success');
+
+            if (state.filteredDocs.length > MAX_DOCUMENTS_FOR_AI) {
+                showToast(`Selected first ${MAX_DOCUMENTS_FOR_AI} of ${state.filteredDocs.length} documents (AI limit)`, 'info');
+            } else {
+                showToast(`Selected ${docsToSelect.length} documents`, 'success');
+            }
         };
+
 
         window.clearDocSelection = function () {
             state.selectedDocs.clear();
@@ -2703,16 +2705,24 @@
         // =====================================================
         window.submitQuery = async function () {
             const query = document.getElementById('queryInput').value.trim();
-            if (!query || state.selectedDocs.size === 0) {
-                if (state.selectedDocs.size === 0) {
-                    showToast('Please select at least one document', 'warning');
-                }
+
+            if (!query) {
+                showToast('Please enter a query', 'warning');
                 return;
             }
 
-            // Save for regeneration
-            state.lastUserQuery = query;
+            if (state.selectedDocs.size === 0) {
+                showToast('Please select at least one document', 'warning');
+                return;
+            }
 
+            if (state.selectedDocs.size > MAX_DOCUMENTS_FOR_AI) {
+                showToast(`Maximum ${MAX_DOCUMENTS_FOR_AI} documents allowed for AI analysis`, 'error');
+                return;
+            }
+
+            // REST OF THE FUNCTION STAYS THE SAME
+            state.lastUserQuery = query;
             document.getElementById('welcomeState').style.display = 'none';
             addMessage('user', query);
 
@@ -3131,25 +3141,25 @@
 
 
 
-     document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', () => {
 
-            // Sidebar hover toggle
-            const sidebar = document.getElementById('sidebar');
-            const menuBtn = document.querySelector('.header-btn.mobile-menu-btn');
+        // Sidebar hover toggle
+        const sidebar = document.getElementById('sidebar');
+        const menuBtn = document.querySelector('.header-btn.mobile-menu-btn');
 
-            if (sidebar) {
-               
-               
-                    if (!sidebar.classList.contains('collapsed')) {
-                        toggleSidebar();
-                      
-                    }
-               
+        if (sidebar) {
+
+
+            if (!sidebar.classList.contains('collapsed')) {
+                toggleSidebar();
+
             }
-          
-        });
 
-        
+        }
+
+    });
+
+
 
 
 </script>
