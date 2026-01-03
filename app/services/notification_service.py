@@ -352,7 +352,7 @@ class NotificationTemplates:
     @staticmethod
     def contract_expiring(contract_number: str, days: int) -> Dict:
         return {
-            "title": f"⏰ Contract Expiring in {days} Days",
+            "title": f" Contract Expiring in {days} Days",
             "message": f"Contract {contract_number} will expire in {days} days. Consider renewal.",
             "type": "reminder",
             "priority": "high" if days <= 30 else "normal"

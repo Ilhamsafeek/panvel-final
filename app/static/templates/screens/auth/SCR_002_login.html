@@ -835,7 +835,7 @@ async function handleLogin() {
         const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // ✅ ADD THIS for session cookies
+            credentials: 'include', //  ADD THIS for session cookies
             body: JSON.stringify(data)
         });
 
@@ -850,7 +850,7 @@ async function handleLogin() {
             } else {
                 showAlert('Login successful! Redirecting...', 'success');
                 
-                // ✅ Store user data (optional, since cookies are primary)
+                //  Store user data (optional, since cookies are primary)
                 if (result.user) {
                     localStorage.setItem('user_id', result.user.id);
                     localStorage.setItem('user_email', result.user.email);
@@ -864,7 +864,7 @@ async function handleLogin() {
                 }, 1500);
             }
         } else {
-            // ✅ CRITICAL FIX: Check result.detail first (FastAPI standard)
+            //  CRITICAL FIX: Check result.detail first (FastAPI standard)
             const errorMessage = result.detail || result.message || 'Invalid email or password';
             showAlert(errorMessage, 'error');
         }

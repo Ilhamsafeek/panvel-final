@@ -270,7 +270,7 @@ Draft the clause now:"""
             word_count = len(contract_text.split())
             tokens_used = message.usage.input_tokens + message.usage.output_tokens
             
-            logger.info(f"✅ Claude generated legally binding {contract_type}: {word_count} words, {tokens_used} tokens")
+            logger.info(f" Claude generated legally binding {contract_type}: {word_count} words, {tokens_used} tokens")
             
             # Warn if content seems too short for a binding contract
             if word_count < 2500:

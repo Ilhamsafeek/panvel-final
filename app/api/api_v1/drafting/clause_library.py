@@ -52,7 +52,7 @@ def generate_clause_code(db: Session, company_id: int) -> str:
         next_number = max_number + 1
         new_code = f"CL{str(next_number).zfill(4)}"
         
-        logger.info(f"✅ Generated clause code: {new_code} (max was {max_number})")
+        logger.info(f" Generated clause code: {new_code} (max was {max_number})")
         return new_code
         
     except Exception as e:
@@ -138,7 +138,7 @@ async def create_clause(
             db.commit()
             db.refresh(new_clause)
             
-            logger.info(f"✅ Clause created successfully: {new_clause.id} - {new_clause.clause_code}")
+            logger.info(f" Clause created successfully: {new_clause.id} - {new_clause.clause_code}")
 
             return {
                 "success": True,
@@ -358,7 +358,7 @@ async def update_clause(
                 detail="Failed to update clause due to constraint violation."
             )
 
-        logger.info(f"✅ Clause updated successfully: {clause.id}")
+        logger.info(f" Clause updated successfully: {clause.id}")
 
         return {
             "success": True,
@@ -422,7 +422,7 @@ async def delete_clause(
                 detail="Failed to delete clause"
             )
 
-        logger.info(f"✅ Clause deleted successfully: {clause.id}")
+        logger.info(f" Clause deleted successfully: {clause.id}")
 
         return {
             "success": True,

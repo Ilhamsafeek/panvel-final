@@ -1761,7 +1761,7 @@
     }
   
 
-// ✅ COMPLETE ENHANCED VERSION - With Risk Analysis Results Display
+//  COMPLETE ENHANCED VERSION - With Risk Analysis Results Display
 async function processRiskAnalysisUpload(filename) {
     const profileType = document.getElementById('uploadProfileType').value;
 
@@ -1808,13 +1808,13 @@ async function processRiskAnalysisUpload(filename) {
         if (data.success) {
             // Complete all steps
             completeProgress();
-            updateLoadingMessage('✅ Upload and analysis complete!');
+            updateLoadingMessage(' Upload and analysis complete!');
 
             // Hide loading overlay after brief delay
             setTimeout(() => {
                 hideLoadingOverlay();
 
-                // ✅ NEW: Fetch and display risk analysis results
+                //  NEW: Fetch and display risk analysis results
                 if (data.contract_id) {
                     fetchAndDisplayRiskAnalysis(data.contract_id, data.contract_number || filename);
                 } else {
@@ -1832,11 +1832,11 @@ async function processRiskAnalysisUpload(filename) {
 }
 
 // =====================================================
-// ✅ NEW FUNCTION: Fetch and Display Risk Analysis Results
+//  NEW FUNCTION: Fetch and Display Risk Analysis Results
 // =====================================================
 async function fetchAndDisplayRiskAnalysis(contractId, contractTitle) {
     try {
-        // ✅ Show loading modal FIRST
+        //  Show loading modal FIRST
         showRiskAnalysisLoadingModal(contractTitle);
 
         // Fetch the risk analysis from the backend
@@ -1868,7 +1868,7 @@ async function fetchAndDisplayRiskAnalysis(contractId, contractTitle) {
 }
 
 // =====================================================
-// ✅ NEW: Loading Modal while fetching results
+//  NEW: Loading Modal while fetching results
 // =====================================================
 function showRiskAnalysisLoadingModal(contractTitle) {
     // Remove any existing modal
@@ -1926,7 +1926,7 @@ function showRiskAnalysisLoadingModal(contractTitle) {
 }
 
 // =====================================================
-// ✅ NEW FUNCTION: Display Risk Analysis Results Modal
+//  NEW FUNCTION: Display Risk Analysis Results Modal
 // =====================================================
 function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
     // Remove any existing modal
@@ -2082,7 +2082,7 @@ function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
 // Helper Functions
 // =====================================================
 
-// ✅ Helper to safely extract text from string or object
+//  Helper to safely extract text from string or object
 function extractText(value) {
     if (!value) return '';
     if (typeof value === 'string') return value;

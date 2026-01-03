@@ -50,6 +50,7 @@ from app.api.api_v1.auth.password_recovery import router as password_recovery_ro
 from app.api.api_v1.users.settings import router as settings_router
 from app.api.api_v1.users.users import router as users_router
 from app.api.api_v1.reports.analytics_router import router as analytics_router
+from app.api.api_v1.auth.email_verification import router as email_verification_router
 
 admin_router = None
 try:
@@ -358,8 +359,13 @@ app.include_router(
     tags=["workflow"]
 )
 
+
+app.include_router(email_verification_router)
+logger.info("Email verification router registered")
+
+
 app.include_router(password_recovery_router)
-logger.info("✅ Password recovery router registered at /api/auth")
+logger.info(" Password recovery router registered at /api/auth")
 
 app.include_router(analytics_router)
 app.include_router(terminal_router, prefix="/terminal")
@@ -485,7 +491,7 @@ app.include_router(login_router)
 app.include_router(logout_router)
 app.include_router(password_recovery_router)  # <-- ADD THIS LINE
 
-logger.info("✅ Auth routers registered")
+logger.info(" Auth routers registered")
 
 # =====================================================
 # STATIC FILES AND TEMPLATES
@@ -529,7 +535,7 @@ async def legacy_login(request: Request, db: Session = Depends(get_db)):
     """Legacy login endpoint for backward compatibility"""
     try:
         body = await request.json()
-        logger.info(f"🔐 Login request received: {body.get('email', 'unknown')}")
+        logger.info(f" Login request received: {body.get('email', 'unknown')}")
         
         from app.api.api_v1.auth.login import login
         login_data = LoginRequest(**body)
@@ -1497,7 +1503,7 @@ if __name__ == "__main__":
     print(f"🌐 Application: http://localhost:{port}")
     print(f"📋 Registration: http://localhost:{port}/register")
     print(f"✉️  Email Verification: http://localhost:{port}/verify-email")
-    print(f"🔐 Login: http://localhost:{port}/login")
+    print(f" Login: http://localhost:{port}/login")
     print(f"📊 Dashboard: http://localhost:{port}/dashboard")
     print(f"🏥 Health Check: http://localhost:{port}/health")
     print("=" * 60)

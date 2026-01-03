@@ -49,14 +49,14 @@ async def get_current_user(
         is_web_request = "text/html" in accept_header
         
         if is_web_request:
-            logger.warning(f"🔒 Unauthorized web access to: {request.url.path}")
+            logger.warning(f" Unauthorized web access to: {request.url.path}")
             raise HTTPException(
                 status_code=status.HTTP_303_SEE_OTHER,
                 detail="Not authenticated",
                 headers={"Location": "/login"}
             )
         else:
-            logger.warning(f"🔒 Unauthorized API access to: {request.url.path}")
+            logger.warning(f" Unauthorized API access to: {request.url.path}")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Not authenticated",
@@ -101,7 +101,7 @@ async def get_current_user(
                 )
         
         if not user.is_active:
-            logger.warning(f"🔒 Inactive user attempted access: {user.email}")
+            logger.warning(f" Inactive user attempted access: {user.email}")
             
             # Clear the cookie for inactive users
             response.delete_cookie(

@@ -1584,7 +1584,7 @@
     // SELECT CONTRACT
     // =============================================
     function selectContract(contractId, contractNumber, contractTitle, status) {
-        console.log('✅ Selected contract:', contractId, contractNumber);
+        console.log(' Selected contract:', contractId, contractNumber);
 
         // Set hidden input
         document.getElementById('selectedContractId').value = contractId;
@@ -1690,7 +1690,7 @@
             return;
         }
 
-        console.log('✅ Found select element:', select.id);
+        console.log(' Found select element:', select.id);
         console.log('📏 Current options:', select.options.length);
 
         // Clear and add default option
@@ -1713,7 +1713,7 @@
 
                 if (selectedContractId && contract.id == selectedContractId) {
                     option.selected = true;
-                    console.log('✅ Pre-selected:', contract.contract_number);
+                    console.log(' Pre-selected:', contract.contract_number);
                 }
 
                 select.appendChild(option);
@@ -1728,7 +1728,7 @@
             }
         });
 
-        console.log(`✅ Total added: ${addedCount} contracts`);
+        console.log(` Total added: ${addedCount} contracts`);
         console.log(`📊 Final dropdown options: ${select.options.length}`);
 
         // Verify dropdown is visible
@@ -2103,9 +2103,9 @@ async function editObligation(id) {
             if (contractsList.length === 0) {
                 console.log('📥 Contracts not loaded yet, loading now...');
                 await loadContracts();
-                console.log('✅ Contracts loaded:', contractsList.length);
+                console.log(' Contracts loaded:', contractsList.length);
             } else {
-                console.log('✅ Contracts already loaded:', contractsList.length);
+                console.log(' Contracts already loaded:', contractsList.length);
             }
             
             // Find contract in the list
@@ -2116,7 +2116,7 @@ async function editObligation(id) {
             });
             
             if (contract) {
-                console.log('✅ Found contract in list:', {
+                console.log(' Found contract in list:', {
                     id: contract.id,
                     number: contract.contract_number,
                     title: contract.contract_title
@@ -2130,7 +2130,7 @@ async function editObligation(id) {
                     contract.status || 'active'
                 );
                 
-                console.log('✅ Contract selected successfully');
+                console.log(' Contract selected successfully');
             } else {
                 // Contract not in list - use obligation data as fallback
                 console.warn('⚠️ Contract not found in contractsList');
@@ -2170,7 +2170,7 @@ async function editObligation(id) {
                     `;
                     selectedDiv.style.display = 'block';
                     
-                    console.log('✅ Contract display set from obligation data');
+                    console.log(' Contract display set from obligation data');
                 } else {
                     console.error('❌ No contract information available');
                     clearContractSelection();
@@ -2535,7 +2535,7 @@ async function editObligation(id) {
 
         // Pre-load contracts
         loadContracts().then(() => {
-            console.log('✅ Contracts pre-loaded');
+            console.log(' Contracts pre-loaded');
         });
 
         // Contract search input with debounce

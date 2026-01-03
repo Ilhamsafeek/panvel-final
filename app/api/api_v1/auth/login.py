@@ -112,7 +112,7 @@ async def login(
             
             # Store OTP temporarily (in production, use Redis or temp table)
             # For now, we'll log it
-            logger.info(f"🔐 2FA OTP for {user.email}: {otp_code} (expires in 5 minutes)")
+            logger.info(f" 2FA OTP for {user.email}: {otp_code} (expires in 5 minutes)")
             
             # TODO: Send OTP via SMS/Email based on user preference
             # await send_otp_email(user.email, user.first_name, otp_code)

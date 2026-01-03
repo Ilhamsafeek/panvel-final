@@ -104,7 +104,7 @@ async def send_password_reset_email(email: str, reset_link: str, user_name: str)
         
         # Create email message
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = "🔐 Password Reset Request - CALIM 360"
+        msg['Subject'] = " Password Reset Request - CALIM 360"
         msg['From'] = f"CALIM 360 <{from_email}>"
         msg['To'] = email
         
@@ -129,7 +129,7 @@ async def send_password_reset_email(email: str, reset_link: str, user_name: str)
         <body>
             <div class="container">
                 <div class="header">
-                    <div style="font-size: 48px; margin-bottom: 10px;">🔐</div>
+                    <div style="font-size: 48px; margin-bottom: 10px;"></div>
                     <h1>Password Reset Request</h1>
                 </div>
                 <div class="content">
@@ -181,24 +181,24 @@ CALIM 360 - Smart Contract Lifecycle Management
         logger.info(f"🔌 Connecting to SMTP server: {smtp_host}:{smtp_port}")
         
         if smtp_port == 465:
-            logger.info("🔒 Using SSL connection (port 465)")
+            logger.info(" Using SSL connection (port 465)")
             with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=30) as server:
                 logger.info("🔑 Logging in to SMTP server...")
                 server.login(smtp_user, smtp_password)
                 logger.info("📤 Sending email...")
                 server.send_message(msg)
-                logger.info("✅ Email sent via SSL")
+                logger.info(" Email sent via SSL")
         else:
-            logger.info("🔒 Using TLS connection (port 587)")
+            logger.info(" Using TLS connection (port 587)")
             with smtplib.SMTP(smtp_host, smtp_port, timeout=30) as server:
                 server.starttls()
                 logger.info("🔑 Logging in to SMTP server...")
                 server.login(smtp_user, smtp_password)
                 logger.info("📤 Sending email...")
                 server.send_message(msg)
-                logger.info("✅ Email sent via TLS")
+                logger.info(" Email sent via TLS")
         
-        logger.info(f"✅ Password reset email successfully sent to: {email}")
+        logger.info(f" Password reset email successfully sent to: {email}")
         return True
         
     except smtplib.SMTPAuthenticationError as e:
@@ -231,7 +231,7 @@ async def send_password_changed_confirmation(email: str, user_name: str):
             return False
         
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = "✅ Password Changed Successfully - CALIM 360"
+        msg['Subject'] = " Password Changed Successfully - CALIM 360"
         msg['From'] = f"CALIM 360 <{from_email}>"
         msg['To'] = email
         
@@ -241,7 +241,7 @@ async def send_password_changed_confirmation(email: str, user_name: str):
         <body style="font-family: Arial, sans-serif;">
             <div style="max-width: 600px; margin: 20px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                 <div style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 40px 30px; text-align: center;">
-                    <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                    <div style="font-size: 48px; margin-bottom: 10px;"></div>
                     <h1 style="margin: 0;">Password Changed Successfully</h1>
                 </div>
                 <div style="padding: 40px 30px;">
@@ -253,7 +253,7 @@ async def send_password_changed_confirmation(email: str, user_name: str):
                         <li>Account: {email}</li>
                     </ul>
                     <div style="background: #fff3cd; border-left: 4px solid #f0ad4e; padding: 15px; margin: 20px 0; border-radius: 6px;">
-                        <strong style="color: #856404;">🔒 Security Notice:</strong>
+                        <strong style="color: #856404;"> Security Notice:</strong>
                         <p style="margin: 5px 0 0 0;">If you didn't make this change, contact support immediately.</p>
                     </div>
                 </div>
@@ -278,7 +278,7 @@ async def send_password_changed_confirmation(email: str, user_name: str):
                 server.login(smtp_user, smtp_password)
                 server.send_message(msg)
         
-        logger.info(f"✅ Password changed confirmation sent to: {email}")
+        logger.info(f" Password changed confirmation sent to: {email}")
         return True
         
     except Exception as e:
@@ -343,7 +343,7 @@ async def forgot_password(
             )
         
         client_ip = get_client_ip(request)
-        logger.info(f"🔐 Password reset requested for: {email} from IP: {client_ip}")
+        logger.info(f" Password reset requested for: {email} from IP: {client_ip}")
         
         user = db.query(User).filter(User.email == email).first()
         
@@ -394,7 +394,7 @@ async def forgot_password(
                 details=f"Reset token generated, expires at {token_expiry.isoformat()}"
             )
             
-            logger.info(f"✅ Password reset token generated for: {email}")
+            logger.info(f" Password reset token generated for: {email}")
             logger.info(f"🔗 Reset link: {reset_link}")
             
             return {
@@ -465,7 +465,7 @@ async def reset_password(
             """)
             db.execute(invalidate_query, {"user_id": user.id})
             db.commit()
-            logger.info(f"🔒 All sessions invalidated for user: {user.email}")
+            logger.info(f" All sessions invalidated for user: {user.email}")
         except Exception as session_error:
             logger.warning(f"⚠️ Could not invalidate sessions: {str(session_error)}")
         
@@ -480,7 +480,7 @@ async def reset_password(
             details="Password successfully reset via email link"
         )
         
-        logger.info(f"✅ Password successfully reset for: {user.email}")
+        logger.info(f" Password successfully reset for: {user.email}")
         
         return {
             "success": True,

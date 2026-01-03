@@ -64,6 +64,10 @@ class AIContractGenerationRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 
+class UpdateMetadataRequest(BaseModel):
+    """Request to update contract AI generation metadata"""
+    ai_generation_params: Dict[str, Any]
+
 
 # =====================================================
 # EXISTING ENDPOINT: GET MY CONTRACTS
@@ -503,7 +507,7 @@ async def generate_contract_with_ai(
         # Generate contract number
         contract_number = generate_contract_number(db, current_user.company_id)
         
-        # ✅ SAVE GENERATION PARAMS AS JSON
+        #  SAVE GENERATION PARAMS AS JSON
         generation_params_json = json.dumps({
             "contract_type": request_data.contract_type,
             "profile_type": request_data.profile_type,
@@ -531,8 +535,8 @@ async def generate_contract_with_ai(
             "currency": request_data.currency,
             "status": "draft",
             "current_version": 1,
-            "is_ai_generated": 1,  # ✅ Mark as AI-generated
-            "ai_generation_params": generation_params_json,  # ✅ Save params
+            "is_ai_generated": 1,  #  Mark as AI-generated
+            "ai_generation_params": generation_params_json,  #  Save params
             "created_by": str(current_user.id),
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow()
@@ -553,9 +557,9 @@ async def generate_contract_with_ai(
         contract_id = result.fetchone()[0]
         db.commit()
         
-        logger.info(f"✅ Contract created: {contract_number} (ID: {contract_id})")
+        logger.info(f" Contract created: {contract_number} (ID: {contract_id})")
         
-        # ✅ RETURN JUST THE CONTRACT ID - NO PARAMS IN URL
+        #  RETURN JUST THE CONTRACT ID - NO PARAMS IN URL
         return {
             "id": contract_id,
             "contract_id": contract_id,
@@ -4709,7 +4713,7 @@ async def stream_ai_contract_generation(
         jurisdiction = request_data.get("jurisdiction", "Qatar")
 
 
-        # ✅ EXTRACT METADATA WITH SPECIAL REQUIREMENTS
+        #  EXTRACT METADATA WITH SPECIAL REQUIREMENTS
         metadata = request_data.get("metadata", {})
         additional_requirements = metadata.get("additional_requirements", "")
         user_prompt = metadata.get("prompt", "")
@@ -4774,7 +4778,7 @@ Generate the complete contract now:"""
                     tokens_used = final_message.usage.input_tokens + final_message.usage.output_tokens
                     word_count = len(accumulated_text.split())
                     
-                    logger.info(f"✅ Generated {word_count} words, {tokens_used} tokens")
+                    logger.info(f" Generated {word_count} words, {tokens_used} tokens")
                     
                     # Clean up markdown
                     for marker in ["```html", "```"]:
@@ -4848,3 +4852,83 @@ Generate the complete contract now:"""
     except Exception as e:
         logger.error(f"❌ Stream setup error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# Add this endpoint to your router
+@router.put("/{contract_id}/update-metadata")
+async def update_contract_metadata(
+    contract_id: int,
+    request_data: UpdateMetadataRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update AI generation parameters for a contract
+    This allows regeneration with modified metadata
+    """
+    try:
+        logger.info(f"📝 Updating metadata for contract {contract_id}")
+        logger.info(f"📦 New params: {json.dumps(request_data.ai_generation_params, indent=2)}")
+
+        # Verify contract exists and belongs to user's company
+        contract_check = db.execute(text("""
+            SELECT id, contract_number, is_ai_generated 
+            FROM contracts 
+            WHERE id = :contract_id 
+            AND company_id = :company_id
+        """), {
+            "contract_id": contract_id,
+            "company_id": current_user.company_id
+        }).fetchone()
+
+        if not contract_check:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Contract not found"
+            )
+
+        # Verify it's an AI-generated contract
+        if not contract_check.is_ai_generated:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot update metadata for non-AI-generated contracts"
+            )
+
+        # Convert params to JSON string
+        params_json = json.dumps(request_data.ai_generation_params)
+
+        # Update the metadata
+        db.execute(text("""
+            UPDATE contracts 
+            SET ai_generation_params = :params,
+                updated_at = :updated_at
+            WHERE id = :contract_id
+        """), {
+            "params": params_json,
+            "updated_at": datetime.utcnow(),
+            "contract_id": contract_id
+        })
+
+        db.commit()
+
+        logger.info(f"✅ Metadata updated for contract {contract_check.contract_number}")
+
+        return {
+            "success": True,
+            "message": "Metadata updated successfully",
+            "contract_id": contract_id,
+            "contract_number": contract_check.contract_number,
+            "updated_params": request_data.ai_generation_params
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error updating metadata: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update metadata: {str(e)}"
+        )
+

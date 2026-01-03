@@ -62,7 +62,7 @@ async def add_comment_to_contract(
     try:
         logger.info(f"💬 Adding comment to contract {request.contract_id} by user {current_user.id}")
         
-        # ✅ SIMPLIFIED: Just verify contract exists
+        #  SIMPLIFIED: Just verify contract exists
         contract = db.query(Contract).filter(
             Contract.id == request.contract_id
         ).first()
@@ -70,9 +70,9 @@ async def add_comment_to_contract(
         if not contract:
             raise HTTPException(status_code=404, detail="Contract not found")
         
-        # ✅ NO PERMISSION CHECKS - All authenticated users can comment
+        #  NO PERMISSION CHECKS - All authenticated users can comment
         
-        # ✅ Insert comment
+        #  Insert comment
         query = text("""
             INSERT INTO contract_comments 
             (contract_id, user_id, comment_text, selected_text, created_at)
@@ -91,7 +91,7 @@ async def add_comment_to_contract(
         
         comment_id = result.lastrowid
         
-        logger.info(f"✅ Comment {comment_id} added successfully")
+        logger.info(f" Comment {comment_id} added successfully")
         
         return {
             "success": True,
@@ -134,14 +134,14 @@ async def get_contract_comments(
     try:
         logger.info(f"📖 Getting comments for contract {contract_id}")
         
-        # ✅ SIMPLIFIED: Just verify contract exists
+        #  SIMPLIFIED: Just verify contract exists
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise HTTPException(status_code=404, detail="Contract not found")
         
-        # ✅ NO PERMISSION CHECKS - All authenticated users can view comments
+        #  NO PERMISSION CHECKS - All authenticated users can view comments
         
-        # ✅ Get comments
+        #  Get comments
         query = text("""
             SELECT 
                 cc.id,
@@ -171,7 +171,7 @@ async def get_contract_comments(
                 'created_at': row.created_at.isoformat() if row.created_at else None
             })
         
-        logger.info(f"✅ Found {len(comments)} comments")
+        logger.info(f" Found {len(comments)} comments")
         
         return {
             'success': True,
@@ -223,7 +223,7 @@ async def delete_comment(
         db.execute(delete_query, {'comment_id': comment_id})
         db.commit()
         
-        logger.info(f"✅ Comment {comment_id} deleted successfully")
+        logger.info(f" Comment {comment_id} deleted successfully")
         
         return {
             'success': True,

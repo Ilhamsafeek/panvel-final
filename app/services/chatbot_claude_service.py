@@ -502,9 +502,9 @@ Use these emoji icons strategically:
 -  **Document References**
 - 👤 **User/Role References**
 - 🌐 **External Links/APIs**
-- 🔐 **Security & Compliance**
+-  **Security & Compliance**
 - 💰 **Financial Implications**
-- ⏰ **Deadlines & Timelines**
+-  **Deadlines & Timelines**
 - 📊 **Data & Analytics**
 - 🤝 **Negotiation & Agreement**
 
@@ -970,7 +970,7 @@ I can help you with contract-related questions. Here's general guidance:
 • ** Qatar Compliance**: Ensure QFCRA compliance for financial contracts
 • ** Clause Library**: Use pre-approved clauses from clause library
 • ** Version Control**: All changes tracked in `contract_versions` table
-• **🔐 Security**: Documents encrypted, blockchain audit trail via Hyperledger Fabric
+• ** Security**: Documents encrypted, blockchain audit trail via Hyperledger Fabric
 
 **Workflow Options:**
 1. **Use Master Workflow** - Apply company default
@@ -1044,7 +1044,7 @@ CALIM360 provides comprehensive obligation management:
 • Assign owners and escalation contacts
 
 **Tracking Features:**
-• **⏰ Threshold Dates**: Early warning alerts
+• ** Threshold Dates**: Early warning alerts
 • **📊 Progress Tracking**: Update completion percentage
 • **🚨 Escalation**: Automatic escalation past due date
 • **📌 Reminders**: Email/SMS notifications
@@ -1106,9 +1106,9 @@ Master/Contract workflow includes E-SIGN stage after final approval, before coun
 Ensure all signatories have valid email addresses and QID verification where required.
 
 **Security:**
-🔐 End-to-end encryption
-🔐 Two-factor authentication optional
-🔐 Blockchain audit trail
+ End-to-end encryption
+ Two-factor authentication optional
+ Blockchain audit trail
 
 Need help with signature configuration?"""
         

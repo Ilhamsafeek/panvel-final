@@ -355,7 +355,7 @@ async def get_standalone_documents(
                 "metadata": json.loads(row.metadata) if row.metadata else {}
             })
         
-        logger.info(f"✅ Loaded {len(documents)} standalone documents")
+        logger.info(f" Loaded {len(documents)} standalone documents")
         
         return {
             "success": True,
@@ -537,7 +537,7 @@ async def get_projects_with_documents(
                 "documents": documents
             })
         
-        logger.info(f"✅ Returning {len(projects)} projects with documents")
+        logger.info(f" Returning {len(projects)} projects with documents")
         
         return {
             "success": True,
@@ -982,7 +982,7 @@ async def download_ai_response(
         # Generate filename
         filename = f"correspondence_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
         
-        logger.info(f"✅ Word document generated: {filename}")
+        logger.info(f" Word document generated: {filename}")
         
         # Return as streaming response
         return StreamingResponse(

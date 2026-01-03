@@ -72,7 +72,7 @@ async def approve_reject_workflow(
             logger.error(f"❌ No active workflow found for contract {request.contract_id} in company {company_id}")
             raise HTTPException(status_code=404, detail="No active workflow found for this contract in your company")
         
-        logger.info(f"✅ Workflow found:")
+        logger.info(f" Workflow found:")
         logger.info(f"   - Workflow Instance ID: {workflow.id}")
         logger.info(f"   - Workflow ID: {workflow.workflow_id}")
         logger.info(f"   - Current Step: {workflow.current_step}")
@@ -83,7 +83,7 @@ async def approve_reject_workflow(
         # =====================================================
         if request.action == "approve":
             logger.info("="*80)
-            logger.info("✅ PROCESSING APPROVAL")
+            logger.info(" PROCESSING APPROVAL")
             logger.info("="*80)
             
             # Get total steps in this workflow
@@ -117,7 +117,7 @@ async def approve_reject_workflow(
                     "next_step": workflow.current_step + 1,
                     "workflow_id": workflow.id
                 })
-                logger.info(f"✅ Workflow instance {workflow.id} marked as completed")
+                logger.info(f" Workflow instance {workflow.id} marked as completed")
 
                 logger.info(f"📋 Processing request type: {request.request_type}")
                 
@@ -132,7 +132,7 @@ async def approve_reject_workflow(
                         WHERE id = :contract_id
                     """)
                     db.execute(update_contract, {"contract_id": request.contract_id})
-                    logger.info("✅ Contract status updated: review_completed")
+                    logger.info(" Contract status updated: review_completed")
                     
                 elif request.request_type == "counterparty_review":
                     logger.info("🔄 Counterparty Review completed - updating contract status...")
@@ -143,7 +143,7 @@ async def approve_reject_workflow(
                         WHERE id = :contract_id
                     """)
                     db.execute(update_contract, {"contract_id": request.contract_id})
-                    logger.info("✅ Contract status updated: counterparty_review_completed")
+                    logger.info(" Contract status updated: counterparty_review_completed")
                 
                 elif request.request_type == "approval":
                     logger.info("🔄 Final Approval completed - updating contract status...")
@@ -154,7 +154,7 @@ async def approve_reject_workflow(
                         WHERE id = :contract_id
                     """)
                     db.execute(update_contract, {"contract_id": request.contract_id})
-                    logger.info("✅ Contract status updated: approved")
+                    logger.info(" Contract status updated: approved")
                 else:
                     logger.warning(f"⚠️ Unknown request type: {request.request_type}")
                 
@@ -185,7 +185,7 @@ async def approve_reject_workflow(
                         "title": "Contract Approved",
                         "message": f"Contract {contract_info.contract_number} - {contract_info.contract_title} has been fully approved."
                     })
-                    logger.info("✅ Notification created successfully")
+                    logger.info(" Notification created successfully")
                 else:
                     logger.warning("⚠️ Contract owner not found or invalid")
                 
@@ -216,7 +216,7 @@ async def approve_reject_workflow(
                 }).first()
                 
                 if next_approver:
-                    logger.info(f"✅ Next approver found:")
+                    logger.info(f" Next approver found:")
                     logger.info(f"   - Name: {next_approver.first_name} {next_approver.last_name}")
                     logger.info(f"   - Email: {next_approver.email}")
                     logger.info(f"   - User ID: {next_approver.id}")
@@ -234,14 +234,14 @@ async def approve_reject_workflow(
                     "next_step": next_step,
                     "workflow_id": workflow.id
                 })
-                logger.info(f"✅ Workflow updated to step {next_step}")
+                logger.info(f" Workflow updated to step {next_step}")
                 
                 if next_approver:
                     approver_name = f"{next_approver.first_name} {next_approver.last_name}".strip()
                     if not approver_name:
                         approver_name = next_approver.email
                     message = f"Sent to {approver_name} for further approval"
-                    logger.info(f"✅ {message}")
+                    logger.info(f" {message}")
                     
                     # Create notification for next approver
                     logger.info("📧 Creating notification for next approver...")
@@ -265,10 +265,10 @@ async def approve_reject_workflow(
                         "title": "Contract Requires Your Approval",
                         "message": f"Contract {contract_info.contract_number} - {contract_info.contract_title} is waiting for your approval."
                     })
-                    logger.info("✅ Notification created for next approver")
+                    logger.info(" Notification created for next approver")
                 else:
                     message = f"Approved and moved to step {next_step}"
-                    logger.info(f"✅ {message}")
+                    logger.info(f" {message}")
             
             # Log approval in audit_logs (this works correctly with INT IDs)
             logger.info("📝 Creating audit log entry for approval...")
@@ -289,14 +289,14 @@ async def approve_reject_workflow(
                 "contract_id": request.contract_id,
                 "action_details": json.dumps(audit_details)
             })
-            logger.info(f"✅ Audit log created: {audit_details}")
+            logger.info(f" Audit log created: {audit_details}")
             
             logger.info("💾 Committing transaction...")
             db.commit()
-            logger.info("✅ Transaction committed successfully")
+            logger.info(" Transaction committed successfully")
             
             logger.info("="*80)
-            logger.info(f"✅ APPROVAL PROCESSED SUCCESSFULLY")
+            logger.info(f" APPROVAL PROCESSED SUCCESSFULLY")
             logger.info(f"📨 Response: {message}")
             logger.info("="*80)
             
@@ -329,7 +329,7 @@ async def approve_reject_workflow(
                 "contract_id": request.contract_id,
                 "action_details": json.dumps(audit_details)
             })
-            logger.info(f"✅ Audit log created: {audit_details}")
+            logger.info(f" Audit log created: {audit_details}")
 
             # Handle rejection for both initiator and counterparty internal reviews
             if request.request_type == "internal_review":
@@ -342,7 +342,7 @@ async def approve_reject_workflow(
                     WHERE id = :contract_id
                 """)    
                 db.execute(update_contract, {"contract_id": request.contract_id})
-                logger.info("✅ Contract status updated to 'draft' with approval_status 'initiator_team_rejected'")
+                logger.info(" Contract status updated to 'draft' with approval_status 'initiator_team_rejected'")
 
                 logger.info("🔄 Resetting workflow to step 1...")
                 update_workflow = text("""
@@ -355,7 +355,7 @@ async def approve_reject_workflow(
                     "next_step": workflow.current_step + 1,
                     "workflow_id": workflow.id
                 })
-                logger.info("✅ Workflow reset to step 1 with status 'active'")
+                logger.info(" Workflow reset to step 1 with status 'active'")
                 
             elif request.request_type == "counterparty_internal_review":
                 logger.info("🔄 Counterparty Internal Review rejected - resetting contract to counterparty review...")
@@ -368,8 +368,8 @@ async def approve_reject_workflow(
                     WHERE id = :contract_id
                 """)    
                 db.execute(update_contract, {"contract_id": request.contract_id})
-                logger.info("✅ Contract status updated to 'counterparty_internal_review' with approval_status 'counterparty_team_rejected'")
-                logger.info("✅ Workflow status set to 'pending'")
+                logger.info(" Contract status updated to 'counterparty_internal_review' with approval_status 'counterparty_team_rejected'")
+                logger.info(" Workflow status set to 'pending'")
 
                 logger.info("🔄 Resetting counterparty workflow to step 1...")
                 update_workflow = text("""
@@ -382,7 +382,7 @@ async def approve_reject_workflow(
                     "next_step": workflow.current_step + 1,
                     "workflow_id": workflow.id
                 })
-                logger.info("✅ Counterparty workflow reset to step 1 with status 'pending'")
+                logger.info(" Counterparty workflow reset to step 1 with status 'pending'")
                 
             else:
                 logger.info(f"ℹ️ Request type '{request.request_type}' - no additional contract updates")
@@ -393,10 +393,10 @@ async def approve_reject_workflow(
             
             logger.info("💾 Committing transaction...")
             db.commit()
-            logger.info("✅ Transaction committed successfully")
+            logger.info(" Transaction committed successfully")
             
             logger.info("="*80)
-            logger.info("✅ REJECTION PROCESSED SUCCESSFULLY")
+            logger.info(" REJECTION PROCESSED SUCCESSFULLY")
             logger.info("📨 Response: Rejection comment saved")
             logger.info("="*80)
             

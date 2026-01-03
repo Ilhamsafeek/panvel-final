@@ -1933,7 +1933,7 @@
                             });
                         });
 
-                        console.log('✅ Loaded', state.projectsList.length, 'projects');
+                        console.log(' Loaded', state.projectsList.length, 'projects');
                         console.log('📄 Total project documents:', state.allDocumentsGlobal.length);
                     } else {
                         console.error('❌ Projects API failed:', response.status);
@@ -1970,7 +1970,7 @@
                             });
                         });
 
-                        console.log('✅ Loaded', (standaloneData.documents || []).length, 'standalone documents');
+                        console.log(' Loaded', (standaloneData.documents || []).length, 'standalone documents');
                     } else {
                         console.error('❌ Standalone API failed:', standaloneResponse.status);
                     }
@@ -2010,7 +2010,7 @@
                     renderDocs();
                 }
 
-                console.log('✅ === LOADING COMPLETE ===');
+                console.log(' === LOADING COMPLETE ===');
                 console.log('📊 Final State:');
                 console.log('  - Projects:', state.projectsList.length);
                 console.log('  - Total Documents (Global):', state.allDocumentsGlobal.length);
@@ -2081,7 +2081,7 @@
             renderDocs();
             updateSelectionUI();
 
-            console.log(`✅ ${mode} mode active. Documents: ${state.allDocuments.length}`);
+            console.log(` ${mode} mode active. Documents: ${state.allDocuments.length}`);
         };
 
 

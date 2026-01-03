@@ -709,7 +709,7 @@ function openModal(modalId) {
 }
 
 function closeModal(modalId) {
-    console.log('🔒 Closing modal:', modalId);
+    console.log(' Closing modal:', modalId);
     const modal = document.getElementById(modalId);
     if (!modal) {
         console.error(' Modal not found:', modalId);
@@ -1202,7 +1202,7 @@ async function saveContract() {
             const result = await response.json();
             contractId = result.id || result.contract_id;
 
-            console.log('✅ Contract metadata created with ID:', contractId);
+            console.log(' Contract metadata created with ID:', contractId);
 
             // Hide loader
             hideLoader();

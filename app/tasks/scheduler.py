@@ -80,7 +80,7 @@ class NotificationScheduler:
     async def scan_obligations_job(self):
         """Daily obligation scan job"""
         try:
-            logger.info("⏰ Starting daily obligation scan...")
+            logger.info(" Starting daily obligation scan...")
             
             with get_db_session() as db:
                 service = ObligationMonitorService(db)
@@ -94,7 +94,7 @@ class NotificationScheduler:
     async def urgent_obligation_check(self):
         """Hourly check for urgent obligations (due within 24 hours)"""
         try:
-            logger.info("⏰ Checking urgent obligations...")
+            logger.info(" Checking urgent obligations...")
             
             with get_db_session() as db:
                 from app.models.obligation import Obligation, ObligationStatus
@@ -144,7 +144,7 @@ class NotificationScheduler:
     async def send_pending_reminders(self):
         """Send reminder notifications for pending approvals"""
         try:
-            logger.info("⏰ Sending reminder notifications...")
+            logger.info(" Sending reminder notifications...")
             
             with get_db_session() as db:
                 from app.models.workflow import ApprovalRequest
@@ -191,7 +191,7 @@ class NotificationScheduler:
     async def cleanup_old_notifications(self):
         """Cleanup old read notifications"""
         try:
-            logger.info("⏰ Cleaning up old notifications...")
+            logger.info(" Cleaning up old notifications...")
             
             with get_db_session() as db:
                 service = NotificationService(db)
@@ -205,7 +205,7 @@ class NotificationScheduler:
     async def retry_failed_notifications(self):
         """Retry failed notification sends"""
         try:
-            logger.info("⏰ Retrying failed notifications...")
+            logger.info(" Retrying failed notifications...")
             
             with get_db_session() as db:
                 from app.models.notification import Notification, NotificationStatus

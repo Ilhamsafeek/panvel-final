@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setLoading(true);
 
         try {
-            console.log('🔐 Attempting login for:', email);
+            console.log(' Attempting login for:', email);
             
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
@@ -54,11 +54,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
             console.log('📡 Response status:', response.status);
 
-            // ✅ CRITICAL FIX: Always parse JSON response, even for errors
+            //  CRITICAL FIX: Always parse JSON response, even for errors
             const data = await response.json();
             console.log('📦 Response data:', data);
 
-            // ✅ FIXED: Check response.ok (status 200-299) not data.success
+            //  FIXED: Check response.ok (status 200-299) not data.success
             if (response.ok && data.success) {
                 // Check for 2FA requirement
                 if (data.requires_2fa) {
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 // Login successful
-                console.log('✅ Login successful');
+                console.log(' Login successful');
                 showSuccess('Login successful! Redirecting to dashboard...');
 
                 // Store user info in localStorage (optional, since we're using cookies)
@@ -95,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     window.location.href = redirectUrl;
                 }, 1000);
             } else {
-                // ✅ CRITICAL FIX: Show the ACTUAL error message from backend
+                //  CRITICAL FIX: Show the ACTUAL error message from backend
                 let errorMessage = 'Login failed';
                 
                 // Try different error message formats
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function showSuccess(message) {
-        console.log('✅ Showing success:', message);
+        console.log(' Showing success:', message);
         if (successDiv) {
             const successMessage = successDiv.querySelector('span');
             if (successMessage) {
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // =====================================================
     
     function show2FAForm(email) {
-        console.log('🔐 2FA required for:', email);
+        console.log(' 2FA required for:', email);
         showError('Two-factor authentication is required. Please enter the OTP sent to your device.');
         
         // TODO: Show 2FA input modal or redirect to 2FA page
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // =====================================================
     
     function showSecurityQuestionForm(email) {
-        console.log('🔒 Security question required for:', email);
+        console.log(' Security question required for:', email);
         showError('Please answer your security question to continue.');
         
         // TODO: Show security question modal or redirect to security question page

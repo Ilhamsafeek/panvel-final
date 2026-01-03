@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - CALIM 360</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.34.0/tabler-icons.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #1a5f7a;
+            --primary-hover: #154d63;
+            --secondary-color: #2762cb;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --text-color: #333;
+            --text-muted: #6c757d;
+            --background: #f5f7fa;
+            --background-light: #ffffff;
+            --border-color: #dee2e6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .auth-card {
+            background: var(--background-light);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 3rem 2.5rem;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .auth-logo h1 {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .auth-logo p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .alert {
+            display: none;
+            padding: 1rem 1.25rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .alert i {
+            font-size: 1.5rem;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .loader-icon {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .rotating {
+            animation: rotate 1s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .info-box {
+            background: var(--background);
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .info-box strong {
+            display: block;
+            color: var(--primary-color);
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .info-box ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-box li {
+            padding: 0.5rem 0;
+            padding-left: 1.75rem;
+            position: relative;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .info-box li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(26, 95, 122, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1e4fa0;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .auth-footer p {
+            margin-bottom: 0.5rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
+        .footer-links span {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .success-icon, .error-icon {
+            font-size: 64px;
+            margin-bottom: 1rem;
+        }
+
+        .success-icon {
+            color: var(--success-color);
+        }
+
+        .error-icon {
+            color: var(--error-color);
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .section-padding {
+            padding: 2rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .auth-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .auth-logo h1 {
+                font-size: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <!-- Logo -->
+            <div class="auth-logo">
+                <h1>CALIM 360</h1>
+                <p>Smart Contract Lifecycle Management</p>
+            </div>
+
+            <!-- Alerts -->
+            <div class="alert alert-success" id="successAlert">
+                <i class="ti ti-circle-check"></i>
+                <span id="successMessage">Email verified successfully!</span>
+            </div>
+
+            <div class="alert alert-error" id="errorAlert">
+                <i class="ti ti-alert-circle"></i>
+                <span id="errorMessage">Verification failed</span>
+            </div>
+
+            <!-- Verification Content -->
+            <div id="verificationContent">
+                <!-- Loading State -->
+                <div id="verifyingSection" class="text-center section-padding">
+                    <div class="loader-icon">
+                        <i class="ti ti-loader rotating"></i>
+                    </div>
+                    <h2 style="color: var(--text-color);">Verifying Your Email</h2>
+                    <p>Please wait while we verify your email address...</p>
+                </div>
+
+                <!-- Success State -->
+                <div id="successSection" class="text-center section-padding" style="display: none;">
+                    <div class="success-icon">
+                        <i class="ti ti-circle-check"></i>
+                    </div>
+                    <h2 style="color: var(--success-color);">Email Verified Successfully!</h2>
+                    <p style="font-size: 1.1rem;">Your account has been activated. You can now log in to access CALIM 360.</p>
+                    
+                    <div class="info-box">
+                        <strong>What's Next?</strong>
+                        <ul>
+                            <li>Log in to your account</li>
+                            <li>Complete your profile setup</li>
+                            <li>Start managing contracts</li>
+                            <li>Explore AI-powered features</li>
+                        </ul>
+                    </div>
+
+                    <a href="/login" class="btn btn-primary">
+                        <i class="ti ti-login"></i>
+                        Go to Login
+                    </a>
+                    <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted);">
+                        Redirecting to login in <span id="countdown">3</span> seconds...
+                    </p>
+                </div>
+
+                <!-- Error State -->
+                <div id="errorSection" class="text-center section-padding" style="display: none;">
+                    <div class="error-icon">
+                        <i class="ti ti-alert-triangle"></i>
+                    </div>
+                    <h2 style="color: var(--error-color);">Verification Failed</h2>
+                    <p id="errorDetailMessage" style="font-size: 1.1rem;">
+                        The verification link is invalid or has expired.
+                    </p>
+                    
+                    <div class="info-box" style="border-left-color: var(--error-color);">
+                        <strong style="color: var(--error-color);">What can you do?</strong>
+                        <ul>
+                            <li>Request a new verification email from the registration page</li>
+                            <li>Check that you clicked the most recent verification link</li>
+                            <li>Contact support if the problem persists</li>
+                        </ul>
+                    </div>
+
+                    <div class="button-group">
+                        <a href="/register" class="btn btn-secondary">
+                            <i class="ti ti-user-plus"></i>
+                            Register Again
+                        </a>
+                        <button onclick="location.href='/login'" class="btn btn-outline">
+                            <i class="ti ti-login"></i>
+                            Go to Login
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="auth-footer">
+            <p>&copy; 2025 CALIM 360. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="/terms">Terms of Service</a>
+                <span>|</span>
+                <a href="/privacy">Privacy Policy</a>
+                <span>|</span>
+                <a href="mailto:sales@calim360.com">Contact Support</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get token from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        // Auto-verify on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (!token) {
+                showError('No verification token provided. Please use the link from your email.');
+                return;
+            }
+
+            await verifyEmail(token);
+        });
+
+        async function verifyEmail(token) {
+            try {
+                console.log('Verifying email with token:', token.substring(0, 20) + '...');
+
+                const response = await fetch('/api/auth/verify-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+
+                const result = await response.json();
+                console.log('📡 Verification response:', result);
+
+                if (response.ok && result.success) {
+                    showSuccess(result.message || 'Email verified successfully!');
+                } else {
+                    showError(result.message || result.detail || 'Verification failed. Please try again.');
+                }
+            } catch (error) {
+                console.error('❌ Verification error:', error);
+                showError('Network error. Please check your connection and try again.');
+            }
+        }
+
+        function showSuccess(message) {
+            document.getElementById('verifyingSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'none';
+            document.getElementById('successSection').style.display = 'block';
+            
+            // Countdown timer
+            let seconds = 3;
+            const countdownElement = document.getElementById('countdown');
+            
+            const countdown = setInterval(() => {
+                seconds--;
+                countdownElement.textContent = seconds;
+                
+                if (seconds <= 0) {
+                    clearInterval(countdown);
+                    window.location.href = '/login';
+                }
+            }, 1000);
+        }
+
+        function showError(message) {
+            document.getElementById('verifyingSection').style.display = 'none';
+            document.getElementById('successSection').style.display = 'none';
+            document.getElementById('errorSection').style.display = 'block';
+            document.getElementById('errorDetailMessage').textContent = message;
+        }
+    </script>
+</body>
+</html>

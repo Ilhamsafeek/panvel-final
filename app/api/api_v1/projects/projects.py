@@ -1151,7 +1151,7 @@ async def upload_project_documents(
                     "uploaded_at": datetime.utcnow().isoformat()
                 })
                 
-                logger.info(f"✅ Uploaded: {file.filename} (ID: {doc_id})")
+                logger.info(f" Uploaded: {file.filename} (ID: {doc_id})")
                 
             except Exception as e:
                 logger.error(f"❌ Error uploading {file.filename}: {str(e)}")
@@ -1246,7 +1246,7 @@ async def get_project_documents(
                 "uploaded_by_name": row.uploaded_by_name or "Unknown"
             })
         
-        logger.info(f"✅ Found {len(documents)} documents")
+        logger.info(f" Found {len(documents)} documents")
         
         return {
             "success": True,

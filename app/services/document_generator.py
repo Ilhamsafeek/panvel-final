@@ -146,7 +146,7 @@ class DocumentGenerator:
             doc.save(docx_buffer)
             docx_buffer.seek(0)
             
-            logger.info("✅ Word document generated successfully")
+            logger.info(" Word document generated successfully")
             return docx_buffer
             
         except Exception as e:

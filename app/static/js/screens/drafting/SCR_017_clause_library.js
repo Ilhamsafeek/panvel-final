@@ -521,7 +521,7 @@ function editClauseFromDetail() {
     // Open edit modal
     document.getElementById('addClauseModal').classList.add('show');
     
-    console.log('✅ Edit form populated with ALL clause data including code:', clause.clause_code);
+    console.log(' Edit form populated with ALL clause data including code:', clause.clause_code);
 }
 
 
@@ -590,7 +590,7 @@ async function deleteClause(clauseId) {
         }
         
         const result = await response.json();
-        console.log('✅ Clause deleted:', result);
+        console.log(' Clause deleted:', result);
         
         // Close detail modal if open
         closeModal('clauseDetailModal');
