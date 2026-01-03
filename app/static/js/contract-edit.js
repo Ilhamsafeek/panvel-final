@@ -4,7 +4,7 @@
 // =====================================================
 
 // Global variables (keep existing)
-let trackChangesEnabled = false;
+// let trackChangesEnabled = false;
 let draggedElement = null;
 
 // =====================================================

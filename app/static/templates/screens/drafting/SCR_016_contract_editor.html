@@ -2610,6 +2610,246 @@
             transform: rotate(360deg);
         }
     }
+
+
+    /* Regenerate Modal Styles */
+    #regenerateContractModal .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #regenerateContractModal .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    #regenerateContractModal .modal-content {
+        position: relative;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        z-index: 10001;
+    }
+
+    #regenerateContractModal .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    #regenerateContractModal .modal-header h3 {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #2762CB;
+    }
+
+    #regenerateContractModal .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+        transition: color 0.2s;
+    }
+
+    #regenerateContractModal .modal-close:hover {
+        color: #000;
+    }
+
+    #regenerateContractModal .modal-body {
+        padding: 1.5rem;
+    }
+
+    #regenerateContractModal .modal-footer {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        padding: 1.5rem;
+        border-top: 1px solid #dee2e6;
+    }
+
+    #regenerateContractModal .alert-info {
+        background: #e3f2fd;
+        border: 1px solid #2196f3;
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        gap: 0.75rem;
+        color: #1565c0;
+    }
+
+    #regenerateContractModal .alert-info i {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+    }
+
+    /* Form styling */
+    #regenerateContractModal .form-group {
+        margin-bottom: 0;
+    }
+
+    #regenerateContractModal .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #333;
+        font-size: 0.875rem;
+    }
+
+    #regenerateContractModal .form-control {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        transition: border-color 0.2s;
+    }
+
+    #regenerateContractModal .form-control:focus {
+        outline: none;
+        border-color: #2762CB;
+        box-shadow: 0 0 0 3px rgba(39, 98, 203, 0.1);
+    }
+
+    #regenerateContractModal textarea.form-control {
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    /* Buttons */
+    #regenerateContractModal .btn {
+        padding: 0.5rem 1.25rem;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s;
+    }
+
+    #regenerateContractModal .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    #regenerateContractModal .btn-secondary:hover {
+        background: #5a6268;
+    }
+
+    #regenerateContractModal .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    #regenerateContractModal .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    #regenerateContractModal .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+</style>
+
+
+
+<style>
+/* Drag and drop hover effect */
+#uploadZoneDoc:hover {
+    border-color: var(--primary-color);
+    background: var(--primary-bg);
+}
+
+#uploadZoneDoc.dragging {
+    border-color: var(--primary-color);
+    background: var(--primary-bg);
+    transform: scale(1.02);
+}
+
+/* File item styling */
+.file-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: background 0.2s;
+}
+
+.file-item:hover {
+    background: var(--secondary-bg);
+}
+
+.file-item:last-child {
+    border-bottom: none;
+}
+
+.file-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 1.5rem;
+    margin-right: 1rem;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-color);
+}
+
+.file-meta {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.file-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Document type badges */
+.doc-type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.doc-type-exhibit { background: #e3f2fd; color: #1976d2; }
+.doc-type-amendment { background: #fff3e0; color: #f57c00; }
+.doc-type-certificate { background: #e8f5e9; color: #388e3c; }
+.doc-type-draft { background: #f3e5f5; color: #7b1fa2; }
+.doc-type-other { background: #f5f5f5; color: #616161; }
+
 </style>
 
 
@@ -3075,90 +3315,140 @@
 
 <!-- Documents Modal -->
 <div class="modal" id="documentsModal">
-    <div class="modal-content">
+    <div class="modal-content modal-lg">
         <div class="modal-header">
             <h3 class="modal-title">
                 <i class="ti ti-paperclip"></i>
-                Attach Documents
+                Attach Supporting Documents
             </h3>
             <button class="modal-close" onclick="closeModal('documentsModal')">
                 <i class="ti ti-x"></i>
             </button>
         </div>
         <div class="modal-body">
-            <!-- Existing Documents -->
+            
+            <!-- Upload Section -->
             <div style="margin-bottom: 2rem;">
-                <h5 style="margin-bottom: 1rem;">Previously Attached Documents</h5>
-
-                <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-color);">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="ti ti-file-text" style="color: var(--primary-color);"></i>
-                            <span>Technical Specifications.pdf</span>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-outline-secondary" onclick="viewDocument('tech-specs')">
-                                <i class="ti ti-eye"></i>
-                                View
-                            </button>
-                            <button class="btn btn-outline-secondary" onclick="downloadDocument('tech-specs')">
-                                <i class="ti ti-download"></i>
-                                Download
-                            </button>
-                        </div>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="ti ti-file-spreadsheet" style="color: var(--success-color);"></i>
-                            <span>Budget Analysis.xlsx</span>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn btn-outline-secondary" onclick="viewDocument('budget')">
-                                <i class="ti ti-eye"></i>
-                                View
-                            </button>
-                            <button class="btn btn-outline-secondary" onclick="downloadDocument('budget')">
-                                <i class="ti ti-download"></i>
-                                Download
-                            </button>
-                        </div>
-                    </div>
+                <h5 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="ti ti-upload" style="color: var(--primary-color);"></i>
+                    Upload New Documents
+                </h5>
+                
+                <!-- Document Type Selection -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                        Document Type <span style="color: var(--danger-color);">*</span>
+                    </label>
+                    <select class="filter-select" id="documentTypeSelect" style="width: 100%;">
+                        <option value="exhibit">Exhibit / Attachment</option>
+                        <option value="annex">Annex</option>
+                        <option value="amendment">Amendment</option>
+                        <option value="certificate">Certificate</option>
+                        <option value="draft">Draft Version</option>
+                        <option value="supporting_doc">Supporting Document</option>
+                        <option value="technical_spec">Technical Specification</option>
+                        <option value="financial_doc">Financial Document</option>
+                        <option value="legal_opinion">Legal Opinion</option>
+                        <option value="other">Other</option>
+                    </select>
                 </div>
-            </div>
 
-            <!-- Upload New Documents -->
-            <div>
-                <h5 style="margin-bottom: 1rem;">Upload New Documents</h5>
+                <!-- Notes/Purpose Field -->
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">
+                        Notes / Purpose (Optional)
+                    </label>
+                    <textarea 
+                        id="documentNotes" 
+                        class="search-input" 
+                        placeholder="Add notes about this document..."
+                        style="width: 100%; min-height: 60px; padding: 0.5rem; resize: vertical;"
+                    ></textarea>
+                </div>
 
-                <div class="upload-area" onclick="triggerFileUpload()" ondrop="handleFileDrop(event)"
-                    ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                <!-- File Upload Zone -->
+                <div id="uploadZoneDoc" onclick="document.getElementById('fileUploadDoc').click()"
+                    style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; background: var(--secondary-bg); transition: all 0.3s;">
                     <i class="ti ti-cloud-upload"
                         style="font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem;"></i>
                     <p style="margin: 0 0 0.5rem 0; font-weight: 600;">Drop files here or click to browse</p>
-                    <p style="margin: 0; color: var(--text-muted); font-size: 0.875rem;">Supports PDF, DOC, DOCX, XLS,
-                        XLSX (Max 10MB each)</p>
-                    <input type="file" id="fileUpload" multiple accept=".pdf,.doc,.docx,.xls,.xlsx"
-                        style="display: none;" onchange="handleFileSelect(event)">
+                    <p style="margin: 0; color: var(--text-muted); font-size: 0.875rem;">
+                        Supports: PDF, DOC, DOCX, XLS, XLSX, PPT, JPG, PNG, ZIP and more (Max 50MB each)
+                    </p>
+                    <input 
+                        type="file" 
+                        id="fileUploadDoc" 
+                        multiple 
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.rtf,.odt,.jpg,.jpeg,.png,.gif,.tiff,.zip,.msg,.eml"
+                        style="display: none;" 
+                        onchange="handleDocumentFileSelect(event)"
+                    >
                 </div>
 
-                <div id="uploadedFiles" style="margin-top: 1rem; display: none;">
-                    <!-- Uploaded files will appear here -->
+                <!-- Selected Files Preview -->
+                <div id="selectedFilesPreview" style="margin-top: 1rem; display: none;">
+                    <h6 style="margin-bottom: 0.5rem; font-weight: 600;">Selected Files:</h6>
+                    <div id="selectedFilesList" style="max-height: 150px; overflow-y: auto;">
+                        <!-- Files will be listed here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Existing Documents Section -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
+                <h5 style="margin-bottom: 1rem; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="ti ti-files" style="color: var(--primary-color);"></i>
+                        Previously Attached Documents
+                    </span>
+                    <button 
+                        class="btn btn-sm btn-outline-secondary" 
+                        onclick="refreshDocumentsList()"
+                        title="Refresh list"
+                    >
+                        <i class="ti ti-refresh"></i>
+                    </button>
+                </h5>
+
+                <!-- Loading State -->
+                <div id="documentsLoading" style="text-align: center; padding: 2rem; display: none;">
+                    <i class="ti ti-loader" style="font-size: 2rem; animation: spin 1s linear infinite;"></i>
+                    <p style="margin-top: 1rem; color: var(--text-muted);">Loading documents...</p>
+                </div>
+
+                <!-- No Documents State -->
+                <div id="noDocumentsMessage" style="text-align: center; padding: 2rem; color: var(--text-muted); display: none;">
+                    <i class="ti ti-folder-open" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <p>No documents attached yet</p>
+                </div>
+
+                <!-- Documents List -->
+                <div id="attachedDocumentsList" 
+                    style="border: 1px solid var(--border-color); border-radius: 8px; max-height: 300px; overflow-y: auto;">
+                    <!-- Documents will be loaded here -->
                 </div>
             </div>
         </div>
-        <div class="modal-footer">
-            <button class="btn btn-outline-secondary" onclick="closeModal('documentsModal')">
-                Close
-            </button>
-            <button class="btn btn-primary" onclick="uploadDocuments()" id="uploadBtn" disabled>
-                <i class="ti ti-upload"></i>
-                Upload Documents
-            </button>
+        
+        <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.875rem; color: var(--text-muted);">
+                <i class="ti ti-info-circle"></i>
+                <span id="uploadStatusText">Select files to upload</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-outline-secondary" onclick="closeDocumentsModal()">
+                    <i class="ti ti-x"></i>
+                    Close
+                </button>
+                <button class="btn btn-primary" onclick="uploadContractDocuments()" id="uploadDocBtn" disabled>
+                    <i class="ti ti-upload"></i>
+                    Upload Documents
+                </button>
+            </div>
         </div>
     </div>
 </div>
+
 
 <!-- Risk Summary Modal -->
 <div class="modal" id="riskSummaryModal">
@@ -3197,6 +3487,114 @@
         </div>
     </div>
 </div>
+
+
+<!-- Regenerate Contract Modal -->
+<div id="regenerateContractModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeRegenerateModal()"></div>
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+        <div class="modal-header">
+            <h3 class="modal-title" style="color:white"><i class="ti ti-refresh"></i> Regenerate Contract</h3>
+            <button class="modal-close" onclick="closeRegenerateModal()">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+
+                <div>
+                    <p style="margin: 0.5rem 0 0 0; font-size: 0.875rem;">
+                        Modify the details below and regenerate the contract.
+                        <strong>Note:</strong> To change clauses, you'll need to create a new contract from scratch.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Type of Contract -->
+            <div class="form-group">
+                <label>
+                    Type of Contract <span style="color: var(--danger-color);">*</span>
+                </label>
+                <select id="regenContractType" class="form-control" required>
+                    <option value="">Select Contract Type</option>
+                    <option value="employment">Employment Contract</option>
+                    <option value="service">Service Agreement</option>
+                    <option value="purchase">Purchase Agreement</option>
+                    <option value="lease">Lease Agreement</option>
+                    <option value="nda">Non-Disclosure Agreement</option>
+                    <option value="consulting">Consulting Agreement</option>
+                    <option value="construction">Construction Contract</option>
+                    <option value="supply">Supply Agreement</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+
+            <!-- AI Assistant Section -->
+            <div class="ai-assistant-container"
+                style="background: #f8f9fa; border-radius: 8px; padding: 1.5rem; margin-top: 1.5rem;">
+
+
+                <p style="color: #666; font-size: 0.875rem; margin-bottom: 1.5rem;">
+                    Answer these questions to help AI generate a better contract
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <!-- Duration -->
+                    <div class="form-group">
+                        <label>Duration</label>
+                        <input type="text" id="regenDuration" class="form-control" placeholder="e.g., 6 months, 1 year">
+                    </div>
+
+                    <!-- Payment Structure -->
+                    <div class="form-group">
+                        <label>Payment Structure</label>
+                        <select id="regenPaymentStructure" class="form-control">
+                            <option value="">Select payment type</option>
+                            <option value="fixed">Fixed Price</option>
+                            <option value="hourly">Hourly Rate</option>
+                            <option value="milestone">Milestone Based</option>
+                            <option value="subscription">Subscription</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Jurisdiction -->
+                    <div class="form-group">
+                        <label>
+                            Jurisdiction <span style="color: var(--danger-color);">*</span>
+                        </label>
+                        <select id="regenJurisdiction" class="form-control" required>
+                            <option value="Qatar" selected>Qatar</option>
+                            <option value="UAE">United Arab Emirates (UAE)</option>
+                            <option value="Saudi Arabia">Saudi Arabia</option>
+                            <option value="Bahrain">Bahrain</option>
+                            <option value="Oman">Oman</option>
+                            <option value="Kuwait">Kuwait</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Special Requirements -->
+                <div class="form-group" style="margin-top: 1.5rem;">
+                    <label>Special Requirements</label>
+                    <textarea id="regenSpecialRequirements" class="form-control" rows="4"
+                        placeholder="Any specific clauses or requirements..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="closeRegenerateModal()">
+                <i class="ti ti-x"></i> Cancel
+            </button>
+            <button class="btn btn-primary" onclick="submitRegeneration()">
+                <i class="ti ti-refresh"></i> Regenerate Contract
+            </button>
+        </div>
+    </div>
+</div>
+
 
 <!-- =====================================================
      IMPROVED EXPORT MODAL
@@ -8580,11 +8978,6 @@ ${contract.content && contract.content.trim() !== '' ?
         }
     }
 
-    function viewDocument(docId) {
-        showNotification(`Opening document viewer for: ${docId}`, 'success');
-
-    }
-
     function downloadDocument(docId) {
         showNotification(`Downloading document: ${docId}`, 'success');
 
@@ -9593,12 +9986,6 @@ ${(riskAnalysisData.risk_items || []).map(item => `
     // Open Negotiation Modal
     function openNegotiationModal() {
         openModal('negotiationModal');
-    }
-
-
-    // Open Documents Modal
-    function openDocumentsModal() {
-        openModal('documentsModal');
     }
 
 
@@ -12407,25 +12794,256 @@ Generated by CALIM 360 Smart CLM
     }
 
 
-    async function regenerateContract() {
-        if (!confirm('Are you sure you want to regenerate this contract? Current content will be replaced.')) {
-            return;
+
+    // =====================================================
+    // REGENERATE CONTRACT FUNCTIONS
+    // =====================================================
+    function regenerateContract() {
+        console.log('🔄 Opening regenerate modal...');
+        console.log('📦 Full generationParams:', generationParams);
+
+        // Pre-fill modal with existing metadata
+        if (generationParams) {
+            // Log the metadata structure
+            console.log('🔍 DEBUGGING - metadata.prompt:', generationParams.metadata?.prompt);
+            console.log('🔍 DEBUGGING - metadata.additional_requirements:', generationParams.metadata?.additional_requirements);
+            console.log('🔍 DEBUGGING - metadata.payment_terms:', generationParams.metadata?.payment_terms);
+            console.log('🔍 DEBUGGING - metadata.duration:', generationParams.metadata?.duration);
+
+            // Set contract type
+            const contractType = generationParams.contract_type || '';
+            document.getElementById('regenContractType').value = contractType;
+            console.log('✅ Contract Type:', contractType);
+
+            // ✅ Extract duration with detailed logging
+            let duration = '';
+
+            if (generationParams.metadata?.duration) {
+                duration = generationParams.metadata.duration;
+                console.log('✅ Duration from metadata.duration:', duration);
+            }
+            else if (generationParams.metadata?.prompt) {
+                const prompt = generationParams.metadata.prompt;
+                console.log('🔍 Analyzing prompt for duration:', prompt);
+
+                // Try different patterns
+                let match = prompt.match(/with\s+duration:\s*([^,]+)/i);
+                if (match) {
+                    duration = match[1].trim();
+                    console.log('✅ Duration match pattern 1:', duration);
+                } else {
+                    match = prompt.match(/duration:\s*([^,]+)/i);
+                    if (match) {
+                        duration = match[1].trim();
+                        console.log('✅ Duration match pattern 2:', duration);
+                    }
+                }
+            }
+
+            // Clean up duration - remove any trailing text
+            if (duration) {
+                // Remove anything after " -" or ", " or "."
+                duration = duration.split('-')[0].trim();
+                duration = duration.split(',')[0].trim();
+                duration = duration.split('.')[0].trim();
+            }
+
+            document.getElementById('regenDuration').value = duration;
+            console.log('📅 FINAL duration value set:', duration);
+
+            // ✅ Extract payment structure with detailed logging
+            let paymentStructure = '';
+
+            if (generationParams.metadata?.payment_terms) {
+                paymentStructure = String(generationParams.metadata.payment_terms).toLowerCase().trim();
+                console.log('✅ Payment from metadata.payment_terms:', paymentStructure);
+            }
+            else if (generationParams.metadata?.prompt) {
+                const prompt = generationParams.metadata.prompt;
+                console.log('🔍 Analyzing prompt for payment:', prompt);
+
+                const match = prompt.match(/payment\s+structure:\s*([^,\.]+)/i);
+                if (match) {
+                    paymentStructure = match[1].trim().toLowerCase();
+                    console.log('✅ Payment extracted from prompt:', paymentStructure);
+                }
+            }
+
+            // Map to dropdown values
+            const paymentMapping = {
+                'fixed price': 'fixed',
+                'fixed': 'fixed',
+                'hourly rate': 'hourly',
+                'hourly': 'hourly',
+                'milestone based': 'milestone',
+                'milestone-based': 'milestone',
+                'milestone': 'milestone',
+                'subscription': 'subscription',
+                'lump sum': 'fixed',
+                'lump_sum': 'fixed',
+                'monthly': 'subscription'
+            };
+
+            const mappedPayment = paymentMapping[paymentStructure] || '';
+            console.log('💰 Mapped payment value:', mappedPayment);
+
+            document.getElementById('regenPaymentStructure').value = mappedPayment;
+            console.log('💰 FINAL payment value set:', document.getElementById('regenPaymentStructure').value);
+
+            // Set jurisdiction
+            const jurisdiction = generationParams.jurisdiction || 'Qatar';
+            document.getElementById('regenJurisdiction').value = jurisdiction;
+            console.log('🌍 Jurisdiction:', jurisdiction);
+
+            // ✅ Extract special requirements
+            let specialRequirements = '';
+
+            if (generationParams.metadata?.additional_requirements) {
+                specialRequirements = generationParams.metadata.additional_requirements;
+                console.log('✅ Special requirements from additional_requirements:', specialRequirements);
+            }
+            else if (generationParams.metadata?.prompt) {
+                const prompt = generationParams.metadata.prompt;
+                console.log('🔍 Analyzing prompt for special requirements:', prompt);
+
+                const match = prompt.match(/Special\s+requirements:\s*(.+?)$/is);
+                if (match) {
+                    specialRequirements = match[1].trim();
+                    console.log('✅ Special requirements extracted:', specialRequirements);
+                } else {
+                    // If no special requirements section, leave it empty
+                    console.log('⚠️ No special requirements found in prompt');
+                }
+            }
+
+            document.getElementById('regenSpecialRequirements').value = specialRequirements;
+            console.log('📝 FINAL special requirements set:', specialRequirements);
+        } else {
+            console.warn('⚠️ No generation params available');
         }
 
-        // ✅ SHOW BANNER - ADD THIS LINE
-        showAIBanner();
-
-        const regenerateBtn = document.getElementById('regenerateBtn');
-        if (regenerateBtn) {
-            regenerateBtn.disabled = true;
-            regenerateBtn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Regenerating...';
+        // Show modal
+        const modal = document.getElementById('regenerateContractModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
         }
+    }
 
-        await startAIStreaming();
 
-        if (regenerateBtn) {
-            regenerateBtn.disabled = false;
-            regenerateBtn.innerHTML = '<i class="ti ti-refresh"></i> Regenerate Contract';
+    function closeRegenerateModal() {
+        const modal = document.getElementById('regenerateContractModal');
+        if (modal) {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+
+
+
+    async function submitRegeneration() {
+        console.log('🚀 Starting regeneration process...');
+
+        try {
+            // Get updated values from modal
+            const contractType = document.getElementById('regenContractType').value;
+            const duration = document.getElementById('regenDuration').value;
+            const paymentStructure = document.getElementById('regenPaymentStructure').value;
+            const jurisdiction = document.getElementById('regenJurisdiction').value;
+            const specialRequirements = document.getElementById('regenSpecialRequirements').value;
+
+            // Validate required fields
+            if (!contractType) {
+                showNotification('Please select a contract type', 'error');
+                return;
+            }
+
+            if (!jurisdiction) {
+                showNotification('Please select a jurisdiction', 'error');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = document.querySelector('#regenerateContractModal .btn-primary');
+            const originalHTML = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="ti ti-loader"></i> Updating...';
+
+            // Step 1: Update metadata in database
+            console.log('📝 Step 1: Updating metadata...');
+
+            const updatedParams = {
+                ...generationParams,
+                contract_type: contractType,
+                jurisdiction: jurisdiction,
+                metadata: {
+                    ...generationParams.metadata,
+                    duration: duration,
+                    payment_terms: paymentStructure,
+                    additional_requirements: specialRequirements,
+                    prompt: specialRequirements  // Use as prompt too
+                }
+            };
+            // ✅ FIXED: Use standard fetch with auth token
+            const token = getAuthToken();
+            const updateResponse = await fetch(`/api/contracts/${contractId}/update-metadata`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    ai_generation_params: updatedParams
+                })
+            });
+
+            if (!updateResponse.ok) {
+                throw new Error('Failed to update metadata');
+            }
+
+            console.log('✅ Metadata updated successfully');
+
+            // Update local generationParams
+            generationParams = updatedParams;
+
+            // Close modal
+            closeRegenerateModal();
+
+            // Step 2: Regenerate contract content
+            console.log('🤖 Step 2: Regenerating contract with AI...');
+
+            // Show AI banner
+            showAIBanner();
+
+            // Clear editor and show loading
+            const editor = document.getElementById('contractContent');
+            if (editor) {
+                editor.innerHTML = `
+                <div style="text-align: center; padding: 4rem 2rem; color: #666;">
+                    <div style="width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1.5rem;"></div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Regenerating Your Contract</h3>
+                    <p style="font-size: 1rem; max-width: 500px; margin: 0 auto;">
+                        AI is regenerating your contract with updated parameters. This may take 30-90 seconds.
+                    </p>
+                </div>
+            `;
+            }
+
+            // Start streaming regeneration
+            await startAIStreaming();
+
+            showNotification('Contract regeneration started successfully', 'success');
+
+        } catch (error) {
+            console.error('❌ Regeneration error:', error);
+            showNotification('Failed to regenerate contract: ' + error.message, 'error');
+
+            // Reset button
+            const submitBtn = document.querySelector('#regenerateContractModal .btn-primary');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="ti ti-refresh"></i> Regenerate Contract';
+            }
         }
     }
 
@@ -12528,6 +13146,654 @@ Generated by CALIM 360 Smart CLM
 
 
 
+/**
+ * Contract Documents Upload JavaScript
+ * Add to contract-editor.js or include in SCR_016_contract_editor.html
+ */
+
+// Global variable to store selected files
+let selectedDocumentFiles = [];
+
+// =====================================================
+// FILE SELECTION AND VALIDATION
+// =====================================================
+
+function handleDocumentFileSelect(event) {
+    const files = Array.from(event.target.files);
+    
+    if (files.length === 0) {
+        return;
+    }
+    
+    console.log(`📎 Selected ${files.length} files for upload`);
+    
+    // Validate each file
+    const validFiles = [];
+    const errors = [];
+    
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+    const ALLOWED_EXTENSIONS = [
+        'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
+        'txt', 'rtf', 'odt', 'jpg', 'jpeg', 'png', 'gif',
+        'tiff', 'zip', 'msg', 'eml'
+    ];
+    
+    files.forEach(file => {
+        const fileName = file.name.toLowerCase();
+        const fileExt = fileName.split('.').pop();
+        
+        // Check file extension
+        if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+            errors.push(`${file.name}: File type not allowed`);
+            return;
+        }
+        
+        // Check file size
+        if (file.size > MAX_FILE_SIZE) {
+            errors.push(`${file.name}: File exceeds 50MB limit`);
+            return;
+        }
+        
+        validFiles.push(file);
+    });
+    
+    // Show errors if any
+    if (errors.length > 0) {
+        showNotification(
+            `Some files were rejected:\n${errors.join('\n')}`,
+            'warning'
+        );
+    }
+    
+    // Store valid files
+    selectedDocumentFiles = validFiles;
+    
+    // Update UI
+    displaySelectedFiles(validFiles);
+    
+    // Enable/disable upload button
+    const uploadBtn = document.getElementById('uploadDocBtn');
+    if (uploadBtn) {
+        uploadBtn.disabled = validFiles.length === 0;
+    }
+    
+    // Update status text
+    const statusText = document.getElementById('uploadStatusText');
+    if (statusText) {
+        statusText.textContent = validFiles.length > 0 
+            ? `${validFiles.length} file(s) ready to upload`
+            : 'Select files to upload';
+    }
+}
+
+function displaySelectedFiles(files) {
+    const previewContainer = document.getElementById('selectedFilesPreview');
+    const filesList = document.getElementById('selectedFilesList');
+    
+    if (!previewContainer || !filesList) {
+        return;
+    }
+    
+    if (files.length === 0) {
+        previewContainer.style.display = 'none';
+        return;
+    }
+    
+    previewContainer.style.display = 'block';
+    filesList.innerHTML = '';
+    
+    files.forEach((file, index) => {
+        const fileExt = file.name.split('.').pop().toLowerCase();
+        const fileSize = formatFileSize(file.size);
+        
+        const fileItem = document.createElement('div');
+        fileItem.className = 'file-item';
+        fileItem.innerHTML = `
+            <div style="display: flex; align-items: center; flex: 1;">
+                <div class="file-icon" style="background: ${getFileIconColor(fileExt)};">
+                    <i class="ti ti-${getFileIcon(fileExt)}" style="color: white;"></i>
+                </div>
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-meta">${fileSize}</div>
+                </div>
+            </div>
+            <button 
+                class="btn btn-sm btn-outline-danger" 
+                onclick="removeSelectedFile(${index})"
+                title="Remove"
+            >
+                <i class="ti ti-x"></i>
+            </button>
+        `;
+        
+        filesList.appendChild(fileItem);
+    });
+}
+
+function removeSelectedFile(index) {
+    selectedDocumentFiles.splice(index, 1);
+    displaySelectedFiles(selectedDocumentFiles);
+    
+    // Update upload button state
+    const uploadBtn = document.getElementById('uploadDocBtn');
+    if (uploadBtn) {
+        uploadBtn.disabled = selectedDocumentFiles.length === 0;
+    }
+    
+    // Update status text
+    const statusText = document.getElementById('uploadStatusText');
+    if (statusText) {
+        statusText.textContent = selectedDocumentFiles.length > 0 
+            ? `${selectedDocumentFiles.length} file(s) ready to upload`
+            : 'Select files to upload';
+    }
+}
+
+// =====================================================
+// UPLOAD DOCUMENTS TO CONTRACT
+// =====================================================
+
+async function uploadContractDocuments() {
+    if (selectedDocumentFiles.length === 0) {
+        showNotification('Please select files to upload', 'warning');
+        return;
+    }
+    
+    const uploadBtn = document.getElementById('uploadDocBtn');
+    const originalBtnContent = uploadBtn.innerHTML;
+    
+    try {
+        // Get contract ID using helper function
+        const contractId = getContractId();
+        
+        if (!contractId) {
+            showNotification('Contract ID not found. Please refresh the page.', 'error');
+            return;
+        }
+        
+        // Get document type and notes
+        const documentType = document.getElementById('documentTypeSelect')?.value || 'exhibit';
+        const notes = document.getElementById('documentNotes')?.value || '';
+        
+        // Show loading state
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i> Uploading...';
+        
+        // Create FormData
+        const formData = new FormData();
+        selectedDocumentFiles.forEach(file => {
+            formData.append('files', file);
+        });
+        formData.append('document_type', documentType);
+        formData.append('notes', notes);
+        
+        console.log(`📤 Uploading ${selectedDocumentFiles.length} documents to contract ${contractId}`);
+        
+        // Upload files
+        const response = await fetch(`/api/contracts/documents/upload/${contractId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+            },
+            credentials: 'include',
+            body: formData
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.detail || 'Upload failed');
+        }
+        
+        const result = await response.json();
+        console.log('✅ Upload result:', result);
+        
+        // Show success message
+        showNotification(
+            `Successfully uploaded ${result.successful_uploads} of ${result.total_files} files`,
+            result.successful_uploads === result.total_files ? 'success' : 'warning'
+        );
+        
+        // Show errors if any
+        if (result.errors && result.errors.length > 0) {
+            console.error('Upload errors:', result.errors);
+        }
+        
+        // Reset form
+        selectedDocumentFiles = [];
+        document.getElementById('fileUploadDoc').value = '';
+        document.getElementById('documentNotes').value = '';
+        displaySelectedFiles([]);
+        
+        // Refresh documents list
+        await loadContractDocuments();
+        
+        // Reset button
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = originalBtnContent;
+        
+        // Update status text
+        const statusText = document.getElementById('uploadStatusText');
+        if (statusText) {
+            statusText.textContent = 'Select files to upload';
+        }
+        
+    } catch (error) {
+        console.error('❌ Upload error:', error);
+        showNotification(error.message || 'Failed to upload documents', 'error');
+        
+        // Reset button
+        uploadBtn.disabled = false;
+        uploadBtn.innerHTML = originalBtnContent;
+    }
+}
+
+// =====================================================
+// LOAD AND DISPLAY EXISTING DOCUMENTS
+// =====================================================
+
+async function loadContractDocuments() {
+    // Get contract ID using helper function
+    const contractId = getContractId();
+    
+    if (!contractId) {
+        console.warn('⚠️ Contract ID not found for loading documents');
+        return;
+    }
+    
+    const listContainer = document.getElementById('attachedDocumentsList');
+    const loadingDiv = document.getElementById('documentsLoading');
+    const noDocsDiv = document.getElementById('noDocumentsMessage');
+    
+    if (!listContainer) {
+        return;
+    }
+    
+    try {
+        // Show loading state
+        if (loadingDiv) loadingDiv.style.display = 'block';
+        if (noDocsDiv) noDocsDiv.style.display = 'none';
+        listContainer.style.display = 'none';
+        
+        const response = await fetch(`/api/contracts/documents/list/${contractId}`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load documents');
+        }
+        
+        const result = await response.json();
+        console.log(`📄 Loaded ${result.total_documents} documents`);
+        
+        // Hide loading
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        
+        // Show no documents message if empty
+        if (result.total_documents === 0) {
+            if (noDocsDiv) noDocsDiv.style.display = 'block';
+            listContainer.style.display = 'none';
+            return;
+        }
+        
+        // Display documents
+        listContainer.style.display = 'block';
+        listContainer.innerHTML = '';
+        
+        result.documents.forEach(doc => {
+            const fileExt = doc.name.split('.').pop().toLowerCase();
+            const fileSize = formatFileSize(doc.size);
+            const uploadDate = new Date(doc.uploaded_at).toLocaleDateString();
+            
+            const docItem = document.createElement('div');
+            docItem.className = 'file-item';
+            docItem.innerHTML = `
+                <div style="display: flex; align-items: center; flex: 1; gap: 1rem;">
+                    <div class="file-icon" style="background: ${getFileIconColor(fileExt)};">
+                        <i class="ti ti-${getFileIcon(fileExt)}" style="color: white;"></i>
+                    </div>
+                    <div class="file-info" style="flex: 1;">
+                        <div class="file-name">${doc.name}</div>
+                        <div class="file-meta">
+                            <span class="doc-type-badge doc-type-${doc.type}">${doc.type.replace('_', ' ')}</span>
+                            <span style="margin-left: 0.5rem;">${fileSize} • ${uploadDate}</span>
+                            <span style="margin-left: 0.5rem;">by ${doc.uploaded_by}</span>
+                            ${doc.hash ? `<span style="margin-left: 0.5rem;" title="Blockchain Hash">🔒 ${doc.hash}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="file-actions">
+                    <button 
+                        class="btn btn-sm btn-outline-primary" 
+                        onclick="downloadDocument('${doc.id}', '${doc.name}')"
+                        title="Download"
+                    >
+                        <i class="ti ti-download"></i>
+                    </button>
+                    <button 
+                        class="btn btn-sm btn-outline-danger" 
+                        onclick="deleteDocument('${doc.id}', '${doc.name}')"
+                        title="Delete"
+                    >
+                        <i class="ti ti-trash"></i>
+                    </button>
+                </div>
+            `;
+            
+            listContainer.appendChild(docItem);
+        });
+        
+    } catch (error) {
+        console.error('❌ Error loading documents:', error);
+        if (loadingDiv) loadingDiv.style.display = 'none';
+        showNotification('Failed to load documents', 'error');
+    }
+}
+
+async function refreshDocumentsList() {
+    console.log('🔄 Refreshing documents list...');
+    await loadContractDocuments();
+}
+
+// =====================================================
+// DOCUMENT ACTIONS
+// =====================================================
+async function downloadDocument(documentId, fileName) {
+    try {
+        console.log(`⬇️ Downloading document: ${fileName} (ID: ${documentId})`);
+        
+        // Show loading notification
+        showNotification(`Preparing download: ${fileName}...`, 'info');
+        
+        // Create download URL with authentication
+        const token = localStorage.getItem('access_token') || '';
+        const downloadUrl = `/api/contracts/documents/download/${documentId}`;
+        
+        // Fetch the file
+        const response = await fetch(downloadUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            const error = await response.json().catch(() => ({ detail: 'Download failed' }));
+            throw new Error(error.detail || 'Failed to download document');
+        }
+        
+        // Get the blob
+        const blob = await response.blob();
+        
+        // Create a temporary URL for the blob
+        const url = window.URL.createObjectURL(blob);
+        
+        // Create a temporary anchor element to trigger download
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = fileName;
+        
+        // Append to body, click, and remove
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        console.log(`✅ Download started: ${fileName}`);
+        showNotification(`Download started: ${fileName}`, 'success');
+        
+    } catch (error) {
+        console.error('❌ Download error:', error);
+        showNotification(`Failed to download: ${error.message}`, 'error');
+    }
+}
+
+async function viewDocument(documentId, fileName) {
+    try {
+        console.log(`👁️ Viewing document: ${fileName} (ID: ${documentId})`);
+        
+        const token = localStorage.getItem('access_token') || '';
+        const viewUrl = `/api/contracts/documents/view/${documentId}?inline=true`;
+        
+        // Open in new tab with authentication
+        const response = await fetch(viewUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load document');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        
+        // Open in new tab
+        const newWindow = window.open(url, '_blank');
+        
+        if (!newWindow) {
+            // Popup blocked, fallback to download
+            showNotification('Popup blocked. Downloading instead...', 'warning');
+            await downloadDocument(documentId, fileName);
+        } else {
+            showNotification(`Opening: ${fileName}`, 'success');
+            
+            // Clean up after a delay
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+            }, 60000); // Clean up after 1 minute
+        }
+        
+    } catch (error) {
+        console.error('❌ View error:', error);
+        showNotification(`Failed to view document: ${error.message}`, 'error');
+    }
+}
+
+
+async function deleteDocument(documentId, fileName) {
+    if (!confirm(`Are you sure you want to delete "${fileName}"?`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/contracts/documents/delete/${documentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error('Failed to delete document');
+        }
+        
+        const result = await response.json();
+        console.log('✅ Document deleted:', result);
+        
+        showNotification(`Document "${fileName}" deleted successfully`, 'success');
+        
+        // Refresh documents list
+        await loadContractDocuments();
+        
+    } catch (error) {
+        console.error('❌ Delete error:', error);
+        showNotification('Failed to delete document', 'error');
+    }
+}
+
+// =====================================================
+// MODAL MANAGEMENT
+// =====================================================
+
+function closeDocumentsModal() {
+    // Reset form
+    selectedDocumentFiles = [];
+    document.getElementById('fileUploadDoc').value = '';
+    document.getElementById('documentNotes').value = '';
+    displaySelectedFiles([]);
+    
+    // Close modal
+    closeModal('documentsModal');
+}
+
+// Load documents when modal is opened
+function openDocumentsModal() {
+    openModal('documentsModal');
+    loadContractDocuments();
+}
+
+// =====================================================
+// UTILITY FUNCTIONS
+// =====================================================
+
+/**
+ * Get contract ID from multiple possible sources
+ * Supports various URL patterns and global variables
+ */
+function getContractId() {
+    let contractId = null;
+    
+    // Method 1: Check for global contractId variable (most reliable)
+    if (typeof window.contractId !== 'undefined' && window.contractId) {
+        contractId = window.contractId;
+        console.log('📋 Contract ID from global variable:', contractId);
+        return contractId;
+    }
+    
+    // Method 2: Check URL query parameter (?id=123)
+    const urlParams = new URLSearchParams(window.location.search);
+    contractId = urlParams.get('id');
+    if (contractId) {
+        console.log('📋 Contract ID from URL query:', contractId);
+        return contractId;
+    }
+    
+    // Method 3: Check URL path (/contract/edit/123 or /contract/editor/123)
+    const pathParts = window.location.pathname.split('/');
+    const editIndex = pathParts.findIndex(part => part === 'edit' || part === 'editor');
+    if (editIndex !== -1 && pathParts[editIndex + 1]) {
+        contractId = pathParts[editIndex + 1];
+        console.log('📋 Contract ID from URL path:', contractId);
+        return contractId;
+    }
+    
+    // Method 4: Check for contract ID in page data attributes
+    const editorElement = document.getElementById('contractContent');
+    if (editorElement && editorElement.dataset.contractId) {
+        contractId = editorElement.dataset.contractId;
+        console.log('📋 Contract ID from data attribute:', contractId);
+        return contractId;
+    }
+    
+    // Method 5: Check for hidden input field
+    const hiddenInput = document.getElementById('contract_id') || document.querySelector('input[name="contract_id"]');
+    if (hiddenInput && hiddenInput.value) {
+        contractId = hiddenInput.value;
+        console.log('📋 Contract ID from hidden input:', contractId);
+        return contractId;
+    }
+    
+    console.error('❌ Contract ID not found. URL:', window.location.href);
+    return null;
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+}
+
+function getFileIcon(extension) {
+    const iconMap = {
+        pdf: 'file-text',
+        doc: 'file-text',
+        docx: 'file-text',
+        xls: 'table',
+        xlsx: 'table',
+        ppt: 'presentation',
+        pptx: 'presentation',
+        txt: 'file-text',
+        rtf: 'file-text',
+        jpg: 'photo',
+        jpeg: 'photo',
+        png: 'photo',
+        gif: 'photo',
+        zip: 'file-zip',
+        msg: 'mail',
+        eml: 'mail'
+    };
+    return iconMap[extension] || 'file';
+}
+
+function getFileIconColor(extension) {
+    const colorMap = {
+        pdf: '#d32f2f',
+        doc: '#1976d2',
+        docx: '#1976d2',
+        xls: '#388e3c',
+        xlsx: '#388e3c',
+        ppt: '#f57c00',
+        pptx: '#f57c00',
+        jpg: '#7b1fa2',
+        jpeg: '#7b1fa2',
+        png: '#7b1fa2',
+        gif: '#7b1fa2',
+        zip: '#616161',
+        msg: '#0288d1',
+        eml: '#0288d1'
+    };
+    return colorMap[extension] || '#757575';
+}
+
+// =====================================================
+// DRAG AND DROP SUPPORT
+// =====================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadZone = document.getElementById('uploadZoneDoc');
+    
+    if (uploadZone) {
+        uploadZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.add('dragging');
+        });
+        
+        uploadZone.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('dragging');
+        });
+        
+        uploadZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            this.classList.remove('dragging');
+            
+            const files = e.dataTransfer.files;
+            const fileInput = document.getElementById('fileUploadDoc');
+            
+            if (fileInput && files.length > 0) {
+                fileInput.files = files;
+                handleDocumentFileSelect({ target: fileInput });
+            }
+        });
+    }
+});
 
 </script>
 
