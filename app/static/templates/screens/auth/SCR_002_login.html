@@ -813,7 +813,10 @@ resendOtpButton.addEventListener('click', async () => {
     }
 });
 
-// Main functions
+// =====================================================
+// FIXED handleLogin Function
+// =====================================================
+
 async function handleLogin() {
     const formData = new FormData(loginForm);
     const data = {
@@ -828,14 +831,11 @@ async function handleLogin() {
 
     setLoading(true);
 
-     setTimeout(() => {
-                window.location.href = result.redirect_url || '/';
-            }, 1500);
-
     try {
         const response = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', // ✅ ADD THIS for session cookies
             body: JSON.stringify(data)
         });
 
@@ -849,12 +849,24 @@ async function handleLogin() {
                 showSecurityQuestion(result.security_question);
             } else {
                 showAlert('Login successful! Redirecting...', 'success');
+                
+                // ✅ Store user data (optional, since cookies are primary)
+                if (result.user) {
+                    localStorage.setItem('user_id', result.user.id);
+                    localStorage.setItem('user_email', result.user.email);
+                }
+                if (result.access_token) {
+                    localStorage.setItem('access_token', result.access_token);
+                }
+                
                 setTimeout(() => {
-                    window.location.href = result.redirect_url || '/';
+                    window.location.href = result.redirect_url || '/hub';
                 }, 1500);
             }
         } else {
-            showAlert(result.message || 'Invalid email or password', 'error');
+            // ✅ CRITICAL FIX: Check result.detail first (FastAPI standard)
+            const errorMessage = result.detail || result.message || 'Invalid email or password';
+            showAlert(errorMessage, 'error');
         }
     } catch (error) {
         console.error('Login error:', error);
@@ -863,6 +875,7 @@ async function handleLogin() {
         setLoading(false);
     }
 }
+
 
 async function handleTwoFactor() {
     const otpCode = Array.from(otpInputs).map(input => input.value).join('');

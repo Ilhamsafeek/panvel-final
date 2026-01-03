@@ -2,7 +2,6 @@
 // File: app/static/js/auth/login.js
 // Login Page JavaScript - UPDATED
 // =====================================================
-
 document.addEventListener('DOMContentLoaded', function () {
     const loginForm = document.getElementById('loginForm');
     const loginBtn = document.getElementById('submitBtn');
@@ -11,6 +10,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const rememberMeCheckbox = document.querySelector('input[name="rememberMe"]');
     const errorDiv = document.querySelector('.alert.error');
     const successDiv = document.querySelector('.alert.success');
+
+    console.log('🎯 Login page initialized');
 
     // Login form submission
     loginForm.addEventListener('submit', async function (e) {
@@ -36,6 +37,8 @@ document.addEventListener('DOMContentLoaded', function () {
         setLoading(true);
 
         try {
+            console.log('🔐 Attempting login for:', email);
+            
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -49,8 +52,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
             });
 
-            const data = await response.json();
+            console.log('📡 Response status:', response.status);
 
+            // ✅ CRITICAL FIX: Always parse JSON response, even for errors
+            const data = await response.json();
+            console.log('📦 Response data:', data);
+
+            // ✅ FIXED: Check response.ok (status 200-299) not data.success
             if (response.ok && data.success) {
                 // Check for 2FA requirement
                 if (data.requires_2fa) {
@@ -65,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 // Login successful
+                console.log('✅ Login successful');
                 showSuccess('Login successful! Redirecting to dashboard...');
 
                 // Store user info in localStorage (optional, since we're using cookies)
@@ -81,25 +90,40 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 // Redirect after short delay
                 setTimeout(() => {
-                    const redirectUrl = data.redirect_url || '/dashboard';  // Changed from '/dashboard' to '/hub'
+                    const redirectUrl = data.redirect_url || '/hub';
                     console.log(`🔄 Redirecting to: ${redirectUrl}`);
                     window.location.href = redirectUrl;
                 }, 1000);
             } else {
-                // Login failed
-                const errorMessage = data.detail || data.message || 'Login failed';
+                // ✅ CRITICAL FIX: Show the ACTUAL error message from backend
+                let errorMessage = 'Login failed';
+                
+                // Try different error message formats
+                if (data.detail) {
+                    errorMessage = data.detail;
+                } else if (data.message) {
+                    errorMessage = data.message;
+                } else if (data.error) {
+                    errorMessage = data.error;
+                }
+                
+                console.error('❌ Login failed:', errorMessage);
+                console.error('❌ Full error data:', data);
                 showError(errorMessage);
             }
 
         } catch (error) {
-            console.error(' Login error:', error);
+            console.error('💥 Network/Parse error:', error);
             showError('Network error. Please check your connection and try again.');
         } finally {
             setLoading(false);
         }
     });
 
-    // Helper functions
+    // =====================================================
+    // HELPER FUNCTIONS
+    // =====================================================
+
     function clearMessages() {
         if (errorDiv) {
             errorDiv.style.display = 'none';
@@ -114,25 +138,37 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function showError(message) {
+        console.error('🚨 Showing error:', message);
         if (errorDiv) {
             const errorMessage = errorDiv.querySelector('#errorMessage');
             if (errorMessage) {
                 errorMessage.textContent = message;
+            } else {
+                // Fallback if no errorMessage element
+                errorDiv.innerHTML = `<span>${message}</span>`;
             }
             errorDiv.style.display = 'flex';
+            
+            // Scroll to error message
+            errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            // Fallback: show alert if no error div
+            alert(message);
         }
-        console.error('🚨 Login error:', message);
     }
 
     function showSuccess(message) {
+        console.log('✅ Showing success:', message);
         if (successDiv) {
             const successMessage = successDiv.querySelector('span');
             if (successMessage) {
                 successMessage.textContent = message;
+            } else {
+                // Fallback if no success message element
+                successDiv.innerHTML = `<span>${message}</span>`;
             }
             successDiv.style.display = 'flex';
         }
-        console.log(' Login success:', message);
     }
 
     function setLoading(loading) {
@@ -141,14 +177,18 @@ document.addEventListener('DOMContentLoaded', function () {
             const btnText = loginBtn.querySelector('.btn-text #submitBtnText');
             if (btnText) {
                 btnText.innerHTML = loading ?
-                    '<i class="ti ti-loader"></i> Signing in...' :
-                    'Sign In <i class="ti ti-login"></i>';
+                    '<i class="ti ti-loader-2 rotating"></i> Signing in...' :
+                    'Sign In';
+            } else {
+                // Fallback: update button text directly
+                loginBtn.textContent = loading ? 'Signing in...' : 'Sign In';
             }
         }
-
-        // Disable form inputs
-        if (emailInput) emailInput.disabled = loading;
-        if (passwordInput) passwordInput.disabled = loading;
+        
+        // Disable form inputs during loading
+        emailInput.disabled = loading;
+        passwordInput.disabled = loading;
+        if (rememberMeCheckbox) rememberMeCheckbox.disabled = loading;
     }
 
     function isValidEmail(email) {
@@ -156,19 +196,30 @@ document.addEventListener('DOMContentLoaded', function () {
         return emailRegex.test(email);
     }
 
+    // =====================================================
+    // 2FA FORM (if needed)
+    // =====================================================
+    
     function show2FAForm(email) {
-        // TODO: Implement 2FA form display
-        console.log('📱 Showing 2FA form for:', email);
-        showError('2FA verification required. This feature is coming soon.');
+        console.log('🔐 2FA required for:', email);
+        showError('Two-factor authentication is required. Please enter the OTP sent to your device.');
+        
+        // TODO: Show 2FA input modal or redirect to 2FA page
+        // For now, just show a message
     }
 
+    // =====================================================
+    // SECURITY QUESTION FORM (if needed)
+    // =====================================================
+    
     function showSecurityQuestionForm(email) {
-        // TODO: Implement security question form display
-        console.log('🔒 Showing security question form for:', email);
-        showError('Security question verification required. This feature is coming soon.');
+        console.log('🔒 Security question required for:', email);
+        showError('Please answer your security question to continue.');
+        
+        // TODO: Show security question modal or redirect to security question page
+        // For now, just show a message
     }
 });
-
 // =====================================================
 // Utility Functions
 // =====================================================
@@ -196,3 +247,16 @@ async function logout() {
         window.location.href = '/login';
     }
 }
+
+const style = document.createElement('style');
+style.textContent = `
+    .rotating {
+        animation: rotate 1s linear infinite;
+    }
+    
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);

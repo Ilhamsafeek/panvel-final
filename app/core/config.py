@@ -18,6 +18,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
     ENVIRONMENT: str = "development"
+    BASE_URL: str = Field(default="https://calim360.com")
     
     # CORS Settings
     CORS_ORIGINS: List[str] = ["*"]

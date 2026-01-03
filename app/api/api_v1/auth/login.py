@@ -71,7 +71,7 @@ async def login(
         if not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account is not active. Please contact administrator."
+                detail="Account is not active. Please check your email for verification or contract Administrator"
             )
         
         # Verify password
