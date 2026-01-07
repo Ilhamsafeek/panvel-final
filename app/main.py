@@ -30,6 +30,10 @@ from app.models.user import User
 from app.api.api_v1.chatbot.routes import router as chatbot_router
 from app.api.api_v1.workflow import approval_router
 from app.api.api_v1.users import license as license_router
+
+from app.api.api_v1.experts.unified_chat import router as unified_chat_router
+
+
 # Configure logging FIRST
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -358,6 +362,14 @@ app.include_router(
     prefix="/api/v1/workflow",
     tags=["workflow"]
 )
+
+
+app.include_router(
+    unified_chat_router,
+    prefix="/api/v1/experts",
+    tags=["experts-unified-chat"]
+)
+
 
 
 app.include_router(email_verification_router)
@@ -782,6 +794,25 @@ async def get_current_user_info(
 # =====================================================
 # DASHBOARD ROUTES
 # =====================================================
+
+
+@app.get("/ask-expert-unified", response_class=HTMLResponse)
+async def ask_expert_unified_page(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Unified Ask an Expert page with chat interface"""
+    user_context = get_user_context_with_subscriptions(current_user, db)
+    
+    return templates.TemplateResponse("screens/experts/ask_expert_unified.html", {
+        "request": request,
+        "current_page": "experts",
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
+    })
+
+    
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard_page(
     request: Request,

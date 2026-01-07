@@ -1553,30 +1553,30 @@
 
 
         /* Prevent ALL modals from closing on outside click */
-        .modal,
+        /* .modal,
         .project-modal,
         .modal-overlay,
         [id$="Modal"],
         [class*="modal"] {
             pointer-events: none !important;
-        }
+        } */
 
         /* Allow clicking inside modals */
-        .modal .modal-dialog,
+        /* .modal .modal-dialog,
         .modal .modal-content,
         .project-modal .modal-dialog,
         .modal-overlay .modal-dialog,
         [id$="Modal"] .modal-dialog,
         [class*="modal"] .modal-dialog {
             pointer-events: auto !important;
-        }
+        } */
 
         /* Ensure all buttons/inputs work */
-        .modal *,
+        /* .modal *,
         .project-modal *,
         .modal-overlay * {
             pointer-events: auto !important;
-        }
+        } */
     </style>
 
     {% block head %}{% endblock %}
@@ -1587,7 +1587,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="/" class="logo-container">
+                <a href="/hub" class="logo-container">
                     <div class="logo-icon" id="sidebarLogo" style="padding-left:45px">
                         <img src="/app/static/img/logo/contriq-logo.png" alt="CALIM 360 Logo" width="110px">
                     </div>
@@ -1655,29 +1655,12 @@
                 {% if 'expert' in subscriptions %}
                 <!-- Expert & Support -->
                 <div class="nav-section">
-                    <div class="nav-section-title">Expert Support</div>
-
-                    <div class="nav-item">
-                        <a href="/ask-expert" class="nav-link">
-                            <i class="ti ti-user-question nav-icon"></i>
-                            <span class="nav-text">Ask an Expert</span>
-                        </a>
-                    </div>
-
-
-                    <div class="nav-item">
-                        <a href="/expert-directory" class="nav-link">
-                            <i class="ti ti-users-group nav-icon"></i>
-                            <span class="nav-text">Expert Directory</span>
-                        </a>
-                    </div>
-                    <div class="nav-item">
-                        <a href="/consultations" class="nav-link">
-                            <i class="ti ti-calendar-event nav-icon"></i>
-                            <span class="nav-text">My Consultations</span>
-                        </a>
-                    </div>
-                </div>
+    <div class="nav-section-title">Expert Consultation</div>
+    <a href="/ask-expert-unified" class="nav-link" id="nav-experts">
+        <i class="ti ti-user-question nav-icon"></i>
+        <span class="nav-text">Ask an Expert</span>
+    </a>
+</div>
                 {% endif %}
 
                 <!-- Add this in the sidebar navigation, under Settings section -->
@@ -2738,6 +2721,25 @@
                 });
             }
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+    // Get current page
+    const currentPath = window.location.pathname;
+    
+    // Set active state for unified expert page
+    if (currentPath === '/ask-expert-unified') {
+        document.getElementById('nav-experts')?.classList.add('active');
+    }
+    
+    // Remove active from all nav links first
+    document.querySelectorAll('.nav-link').forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+        }
+    });
+});
+
+
     </script>
 
 

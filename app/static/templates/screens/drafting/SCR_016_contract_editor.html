@@ -9178,7 +9178,12 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
             <option value="">Select Role</option>
             <option value="reviewer">Reviewer</option>
-            <option value="approver">Approver</option>
+            <option value="approver">Approver</option>  
+            <option value="legal_eviewer">Legal Reviewer</option>
+            <option value="finance_approver">Finance Approver</option>
+            <option value="director">Director</option>
+            <option value="e_sign_authority">E-Sign Authority</option>
+            </select>
          
         </select>
     </td>
@@ -9462,7 +9467,11 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         <select style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.875rem;">
             <option value="">Select Role</option>
             <option value="reviewer" ${stepType === 'reviewer' ? 'selected' : ''}>Reviewer</option>
-            <option value="approver" ${stepType === 'approver' ? 'selected' : ''}>Approver</option>          
+            <option value="approver" ${stepType === 'approver' ? 'selected' : ''}>Approver</option>  
+            <option value="legal_eviewer" ${stepType === 'legal_eviewer' ? 'selected' : ''}>Legal Reviewer</option>
+            <option value="finance_approver" ${stepType === 'finance_approver' ? 'selected' : ''}>Finance Approver</option>
+            <option value="director" ${stepType === 'director' ? 'selected' : ''}>Director</option>
+            <option value="e_sign_authority" ${stepType === 'e_sign_authority' ? 'selected' : ''}>E-Sign Authority</option>        
         </select>
     </td>
     <td style="padding: 0.75rem; position: relative;">

@@ -535,10 +535,10 @@
             </div>
         </div>
         <div class="stat-value" id="activeProjects">-</div>
-        <div class="stat-change positive" id="activeProjectsChange" style="display: none;">
+        <!-- <div class="stat-change positive" id="activeProjectsChange" style="display: none;">
             <i class="ti ti-trending-up"></i>
             <span id="activeProjectsChangeText">-</span>
-        </div>
+        </div> -->
     </a>
 
     <!-- Contracts in Progress -->
@@ -736,15 +736,15 @@
                     document.getElementById('activeProjects').textContent = data.projects.active || 0;
 
                     // Show project change indicator if there are recent projects
-                    const projectChange = document.getElementById('activeProjectsChange');
-                    const projectChangeText = document.getElementById('activeProjectsChangeText');
+                    // const projectChange = document.getElementById('activeProjectsChange');
+                    // const projectChangeText = document.getElementById('activeProjectsChangeText');
 
                     if (data.projects.recent > 0) {
-                        projectChange.style.display = 'inline-flex';
-                        projectChangeText.textContent = `${data.projects.recent} new this month`;
+                        // projectChange.style.display = 'inline-flex';
+                        // projectChangeText.textContent = `${data.projects.recent} new this month`;
                     } else if (data.projects.total > 0) {
-                        projectChange.style.display = 'inline-flex';
-                        projectChangeText.textContent = `${data.projects.total} total projects`;
+                        // projectChange.style.display = 'inline-flex';
+                        // projectChangeText.textContent = `${data.projects.total} total projects`;
                     }
 
                     console.log(' Project Statistics:', data.projects);

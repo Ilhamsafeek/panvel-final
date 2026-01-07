@@ -1,0 +1,755 @@
+{% extends "base.html" %}
+
+{% block title %}Ask an Expert - CALIM 360{% endblock %}
+
+{% block content %}
+<style>
+    .expert-chat-container {
+        display: flex;
+        height: 100%;
+        background: #f8f9fa;
+        gap: 1px;
+        margin: -1rem;
+    }
+
+    /* LEFT SIDEBAR - Chat History */
+    .chat-sidebar {
+        width: 350px;
+        padding-left: 10px;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid #e9ecef;
+    }
+
+    .chat-sidebar-header {
+        padding: 30px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .chat-sidebar-header h3 {
+        margin: 0 0 15px 0;
+        font-size: 18px;
+        color: #2762cb;
+    }
+
+    .new-chat-btn {
+        width: 100%;
+        padding: 12px;
+        background: #2762cb;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+
+    .new-chat-btn:hover {
+        background: #1e4fa0;
+    }
+
+    .chat-search {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        position: relative;
+    }
+
+    .chat-search input {
+        width: 100%;
+        padding: 10px 12px 10px 40px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .chat-search-icon {
+        position: absolute;
+        left: 27px;
+        top: 25px;
+        color: #6c757d;
+    }
+
+    .chat-list {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .chat-item {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f1f3f5;
+        cursor: pointer;
+        transition: background 0.2s;
+        position: relative;
+    }
+
+    .chat-item:hover {
+        background: #f8f9fa;
+    }
+
+    .chat-item.active {
+        background: #e7f1ff;
+        border-left: 3px solid #2762cb;
+    }
+
+    .chat-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+
+    .chat-expert-name {
+        font-weight: 600;
+        color: #212529;
+        font-size: 14px;
+    }
+
+    .chat-time {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .chat-subject {
+        font-size: 13px;
+        color: #495057;
+        margin-bottom: 3px;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .chat-preview {
+        font-size: 12px;
+        color: #868e96;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .unread-badge {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #2762cb;
+        color: white;
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: #868e96;
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 15px;
+        color: #dee2e6;
+    }
+
+    /* RIGHT PANEL - Chat Area */
+    .chat-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+    }
+
+    .chat-header {
+        padding: 20px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .chat-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .expert-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: #2762cb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .expert-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .chat-header-info h4 {
+        margin: 0;
+        font-size: 16px;
+        color: #212529;
+    }
+
+    .chat-header-info p {
+        margin: 2px 0 0 0;
+        font-size: 13px;
+        color: #6c757d;
+    }
+
+    .expert-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+    }
+
+    .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #51cf66;
+    }
+
+    .status-dot.offline {
+        background: #adb5bd;
+    }
+
+    .chat-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .chat-action-btn {
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+        color: #495057;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .chat-action-btn:hover {
+        background: #f8f9fa;
+        border-color: #2762cb;
+        color: #2762cb;
+    }
+
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        background: #f8f9fa;
+    }
+
+    .message {
+        display: flex;
+        gap: 10px;
+        max-width: 70%;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.sent {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background: #2762cb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .message-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+
+    .message-content {
+        flex: 1;
+    }
+
+    .message-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 5px;
+    }
+
+    .message-sender {
+        font-weight: 600;
+        font-size: 13px;
+        color: #212529;
+    }
+
+    .message-time {
+        font-size: 11px;
+        color: #868e96;
+    }
+
+    .message-bubble {
+        background: white;
+        padding: 12px 15px;
+        border-radius: 12px;
+        font-size: 14px;
+        color: #212529;
+        line-height: 1.5;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .message.sent .message-bubble {
+        background: #2762cb;
+        color: white;
+    }
+
+    .chat-input-area {
+        padding: 20px;
+        border-top: 1px solid #e9ecef;
+        background: white;
+    }
+
+    .chat-input-wrapper {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+    }
+
+    .chat-input {
+        flex: 1;
+        min-height: 44px;
+        max-height: 120px;
+        padding: 12px 15px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        resize: none;
+        overflow-y: auto;
+    }
+
+    .chat-input:focus {
+        outline: none;
+        border-color: #2762cb;
+        box-shadow: 0 0 0 3px rgba(39, 98, 203, 0.1);
+    }
+
+    .send-btn {
+        padding: 12px 20px;
+        background: #2762cb;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.2s;
+    }
+
+    .send-btn:hover {
+        background: #1e4fa0;
+    }
+
+    .send-btn:disabled {
+        background: #adb5bd;
+        cursor: not-allowed;
+    }
+
+    /* Expert Selection Modal */
+    .expert-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 99999;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .expert-modal.show {
+        display: flex !important;
+    }
+
+    .expert-modal-content {
+        background: white;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 900px;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 100000;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+
+    .expert-modal-header {
+        padding: 20px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .expert-modal-header h3 {
+        margin: 0;
+        font-size: 20px;
+        color: #212529;
+    }
+
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #6c757d;
+        padding: 4px;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .close-modal:hover {
+        background: #f8f9fa;
+        color: #212529;
+    }
+
+    .expert-modal-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+
+    .expert-categories {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .category-btn {
+        padding: 8px 16px;
+        border: 1px solid #dee2e6;
+        background: white;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+        user-select: none;
+    }
+
+    .category-btn:hover {
+        background: #f8f9fa;
+        border-color: #2762cb;
+    }
+
+    .category-btn.active {
+        background: #2762cb;
+        color: white;
+        border-color: #2762cb;
+    }
+
+    .experts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 15px;
+    }
+
+    .expert-card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: white;
+    }
+
+    .expert-card:hover {
+        border-color: #2762cb;
+        box-shadow: 0 4px 12px rgba(39, 98, 203, 0.2);
+        transform: translateY(-2px);
+    }
+
+    .expert-card:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 6px rgba(39, 98, 203, 0.2);
+    }
+
+    .expert-card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .expert-card-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #2762cb;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 18px;
+    }
+
+    .expert-card-info h4 {
+        margin: 0;
+        font-size: 15px;
+        color: #212529;
+    }
+
+    .expert-card-info p {
+        margin: 2px 0 0 0;
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .expert-card-specialization {
+        font-size: 13px;
+        color: #495057;
+        margin-bottom: 10px;
+    }
+
+    .expert-card-stats {
+        display: flex;
+        gap: 15px;
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .expert-card-stat {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 40px;
+        color: #6c757d;
+    }
+
+    .typing-indicator {
+        display: flex;
+        gap: 4px;
+        padding: 10px 15px;
+        background: white;
+        border-radius: 12px;
+        width: fit-content;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #adb5bd;
+        animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-10px); }
+    }
+
+
+      .chatbot-button,
+    #chatbotButton {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+</style>
+
+<div class="expert-chat-container">
+    <!-- LEFT SIDEBAR - Chat History -->
+    <div class="chat-sidebar">
+        <div class="chat-sidebar-header">
+            <h3>Consultations</h3>
+            <button class="new-chat-btn" onclick="openExpertSelector()">
+                <i class="ti ti-plus"></i>
+                Start New Consultation
+            </button>
+        </div>
+
+        <div class="chat-search">
+            <i class="ti ti-search chat-search-icon"></i>
+            <input type="text" id="chatSearchInput" placeholder="Search consultations..." onkeyup="searchChats()">
+        </div>
+
+        <div class="chat-list" id="chatList">
+            <div class="loading-spinner">
+                <i class="ti ti-loader-2" style="font-size: 32px; animation: spin 1s linear infinite;"></i>
+                <p>Loading consultations...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL - Chat Area -->
+    <div class="chat-panel">
+        <div class="chat-header" id="chatHeader" style="display: none;">
+            <div class="chat-header-left">
+                <div class="expert-avatar" id="expertAvatar">
+                    <i class="ti ti-user"></i>
+                </div>
+                <div class="chat-header-info">
+                    <h4 id="expertName">Expert Name</h4>
+                    <p>
+                        <span class="expert-status">
+                            <span class="status-dot" id="statusDot"></span>
+                            <span id="expertStatus">Available</span>
+                        </span>
+                        <span style="margin: 0 8px;">•</span>
+                        <span id="expertSpecialization">Specialization</span>
+                    </p>
+                </div>
+            </div>
+            <div class="chat-actions">
+                <!-- <button class="chat-action-btn" onclick="viewSessionDetails()">
+                    <i class="ti ti-info-circle"></i>
+                    Details
+                </button> -->
+                <button class="chat-action-btn" onclick="endSession()">
+                    <i class="ti ti-circle-x"></i>
+                    End Session
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="empty-state">
+                <i class="ti ti-message-circle"></i>
+                <h4>No Consultation Selected</h4>
+                <p>Select a consultation from the list or start a new one</p>
+            </div>
+        </div>
+
+        <div class="chat-input-area" id="chatInputArea" style="display: none;">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    id="messageInput" 
+                    class="chat-input" 
+                    placeholder="Type your message..." 
+                    rows="1"
+                    onkeydown="handleEnterKey(event)"
+                ></textarea>
+                <button class="send-btn" onclick="sendMessage()">
+                    <i class="ti ti-send"></i>
+                    Send
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Expert Selection Modal -->
+<div class="expert-modal" id="expertModal">
+    <div class="expert-modal-content">
+        <div class="expert-modal-header">
+            <h3>Select an Expert</h3>
+            <button class="close-modal" id="closeModalBtn">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <div class="expert-modal-body">
+            <div class="expert-categories" id="expertCategories">
+                <button class="category-btn active" data-category="all">All Experts</button>
+                <button class="category-btn" data-category="legal">Legal</button>
+                <button class="category-btn" data-category="technical">Technical</button>
+                <button class="category-btn" data-category="compliance">Compliance</button>
+                <button class="category-btn" data-category="financial">Financial</button>
+            </div>
+            <div class="experts-grid" id="expertsGrid">
+                <div class="loading-spinner">
+                    <i class="ti ti-loader-2" style="font-size: 32px; animation: spin 1s linear infinite;"></i>
+                    <p>Loading experts...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/screens/experts/ask_expert_unified.js?v=3"></script>
+
+<script>
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        // Sidebar hover toggle
+        const sidebar = document.getElementById('sidebar');
+        const menuBtn = document.querySelector('.header-btn.mobile-menu-btn');
+
+        if (sidebar) {
+
+
+            if (!sidebar.classList.contains('collapsed')) {
+                toggleSidebar();
+
+            }
+
+        }
+
+    });
+</script>
+<style>
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}

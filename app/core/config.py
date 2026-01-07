@@ -55,11 +55,12 @@ class Settings(BaseSettings):
     REDIS_PASSWORD: Optional[str] = None
     
     # Email Configuration
-    SMTP_HOST: str = "smtp.gmail.com"
-    SMTP_PORT: int = 587
-    SMTP_USER: Optional[str] = None
-    SMTP_PASSWORD: Optional[str] = None
-    EMAILS_FROM_EMAIL: str = "noreply@smrtclm.com"
+    SMTP_HOST: str = "smtpout.secureserver.net"
+    SMTP_PORT: int = 465
+    SMTP_USER: Optional[str] = "sales@calim360.com"
+    SMTP_PASSWORD: Optional[str] = "Calim@Doha2025%%!"
+    EMAILS_FROM_EMAIL: str = "sales@calim360.com"
+    FROM_NAME: str ="Calim360"
     
     # File Storage
     UPLOAD_DIR: str = "app/uploads"
