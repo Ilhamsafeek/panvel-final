@@ -2746,9 +2746,7 @@ ${(analysis.recommendations || []).map((rec, idx) => `${idx + 1}. ${rec}`).join(
 
         if (contract.status === 'signed') {
             actions += `
-            <button class="action-btn" onclick="event.stopPropagation(); downloadContract('${contract.id}')" title="Download">
-                <i class="ti ti-download"></i>
-            </button>
+           
             <button class="action-btn" onclick="event.stopPropagation(); viewAuditTrail('${contract.id}')" title="Audit Trail">
                 <i class="ti ti-history"></i>
             </button>
@@ -2825,9 +2823,7 @@ ${(analysis.recommendations || []).map((rec, idx) => `${idx + 1}. ${rec}`).join(
                 break;
             case 'executed':
                 actions = `
-                <button class="quick-action-btn" onclick="event.stopPropagation(); downloadContract('${contract.id}')">
-                    <i class="ti ti-download"></i> Download
-                </button>
+             
                 <button class="quick-action-btn" onclick="event.stopPropagation(); viewObligations('${contract.id}')">
                     <i class="ti ti-checklist"></i> Obligations
                 </button>

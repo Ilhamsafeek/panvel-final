@@ -3040,7 +3040,7 @@
 
         </div>
         <div class="modal-footer"
-            style="padding: 1.5rem; border-top: 1px solid var(--border-color); display: flex; gap: 1rem; justify-content: flex-end;">
+            style="border-top: 1px solid var(--border-color); display: flex; gap: 1rem; justify-content: flex-end;">
             <button class="btn btn-outline-secondary" onclick="closeModal('contractWorkflowModal')">
                 Close
             </button>
@@ -4550,8 +4550,8 @@
                 <i class="ti ti-x"></i>
             </button>
         </div>
-        <div class="modal-body" style="padding: 2rem;">
-            <div style="background: var(--background-light); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <div class="modal-body">
+            <div style="background: var(--background-light); padding: 1rem; border-radius: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <div style="font-size: 0.875rem; color: var(--text-muted);">Signing as:</div>
@@ -4594,7 +4594,7 @@
                 <div class="signature-preview" id="sigPreview"></div>
             </div>
 
-            <div style="margin-top: 1.5rem; padding: 1rem; background: var(--info-bg); border-radius: 8px;">
+            <div style="margin-top: 0.5rem; padding: 1rem; background: var(--info-bg); border-radius: 8px;">
                 <label style="display: flex; align-items: start; gap: 0.5rem; cursor: pointer;">
                     <input type="checkbox" id="agreeTerms" style="margin-top: 0.25rem;" onchange="toggleSignButton()">
                     <span style="font-size: 0.875rem;">I agree to sign this document electronically</span>
@@ -7869,8 +7869,11 @@ ${contract.content && contract.content.trim() !== '' ?
         // }
 
         // Determine the party based on current user context
-        const isInitiator = contractData?.is_initiator || true;
+        const isInitiator = contractData?.contract?.is_initiator || false;
+
+        console.log('is initiator??',contractData);
         const party = isInitiator ? 'company' : 'client';
+
 
         currentSignatureField = party;
         const modal = document.getElementById('signatureModal');
@@ -7887,7 +7890,7 @@ ${contract.content && contract.content.trim() !== '' ?
         const partyIndicatorEl = document.getElementById('partyIndicator');
 
         // Get actual names from contract data
-        const clientName = contractData?.contract?.client_name || 'Client Representative';
+        const clientName = contractData?.contract?.party_b_company_name || 'Client Representative';
         const companyName = contractData?.contract?.company_name || 'Company Representative';
 
         if (party === 'client') {
