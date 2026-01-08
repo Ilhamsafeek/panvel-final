@@ -72,13 +72,30 @@ function setupModalListeners() {
 // LOAD CHAT HISTORY
 // =====================================================
 async function loadChatHistory() {
+    console.log('🔄 Loading chat history...');
     try {
         const response = await fetch('/api/v1/experts/my-consultations');
         const data = await response.json();
         
+        console.log('📦 API Response:', data);
+        
         const chatList = document.getElementById('chatList');
         
-        if (!data.sessions || data.sessions.length === 0) {
+        // ✅ FIXED: Handle any response format
+        let sessions = [];
+        if (Array.isArray(data)) {
+            sessions = data;
+        } else if (data.sessions) {
+            sessions = data.sessions;
+        } else if (data.consultations) {
+            sessions = data.consultations;
+        } else if (data.data) {
+            sessions = data.data;
+        }
+        
+        console.log(' Found', sessions.length, 'consultations');
+        
+        if (!sessions || sessions.length === 0) {
             chatList.innerHTML = `
                 <div class="empty-state">
                     <i class="ti ti-inbox"></i>
@@ -91,17 +108,18 @@ async function loadChatHistory() {
         
         chatList.innerHTML = '';
         
-        data.sessions.forEach(session => {
+        sessions.forEach(session => {
             const chatItem = createChatItem(session);
             chatList.appendChild(chatItem);
         });
         
     } catch (error) {
-        console.error('Error loading chat history:', error);
+        console.error('❌ Error loading chat history:', error);
         document.getElementById('chatList').innerHTML = `
             <div class="empty-state">
                 <i class="ti ti-alert-circle"></i>
                 <p>Failed to load consultations</p>
+                <p style="font-size: 12px;">${error.message}</p>
             </div>
         `;
     }

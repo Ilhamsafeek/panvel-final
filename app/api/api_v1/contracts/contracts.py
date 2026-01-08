@@ -6011,3 +6011,91 @@ async def view_contract_document(
         logger.error(f"Error viewing document: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# =====================================================
+# FILE: app/api/api_v1/contracts/contracts.py
+# ADD THIS ENDPOINT for contract search
+# =====================================================
+
+@router.get("/search")
+async def search_contracts(
+    q: str = Query(..., min_length=1, description="Search query"),
+    limit: int = Query(10, ge=1, le=50),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Search contracts by title, number, or counterparty
+    """
+    try:
+        logger.info(f"🔍 Searching contracts for: {q}")
+        
+        # Build search query
+        search_pattern = f"%{q}%"
+        
+        query_sql = text("""
+        SELECT 
+            c.id,
+            c.contract_number,
+            c.contract_title,
+            c.contract_type,
+            c.status,
+            c.party_b_name as counterparty_name,
+            c.contract_value,
+            c.currency,
+            c.created_at,
+            c.updated_at
+        FROM contracts c
+        WHERE c.company_id = :company_id
+        AND c.is_deleted = 0
+        AND (
+            c.contract_title LIKE :search
+            OR c.contract_number LIKE :search
+            OR c.party_b_name LIKE :search
+            OR c.contract_type LIKE :search
+        )
+        ORDER BY c.updated_at DESC
+        LIMIT :limit
+        """)
+        
+        result = db.execute(query_sql, {
+            "company_id": current_user.company_id,
+            "search": search_pattern,
+            "limit": limit
+        })
+        
+        rows = result.fetchall()
+        
+        contracts = []
+        for row in rows:
+            contracts.append({
+                "id": row[0],
+                "contract_number": row[1],
+                "contract_title": row[2],
+                "contract_type": row[3],
+                "status": row[4],
+                "counterparty_name": row[5],
+                "contract_value": float(row[6]) if row[6] else 0,
+                "currency": row[7],
+                "created_at": str(row[8]) if row[8] else None,
+                "updated_at": str(row[9]) if row[9] else None
+            })
+        
+        logger.info(f"✅ Found {len(contracts)} contracts matching '{q}'")
+        
+        return {
+            "success": True,
+            "results": contracts,
+            "total": len(contracts),
+            "query": q
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error searching contracts: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to search contracts: {str(e)}"
+        )
+
+
+

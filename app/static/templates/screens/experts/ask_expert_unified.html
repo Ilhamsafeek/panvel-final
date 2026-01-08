@@ -254,6 +254,26 @@
         color: #2762cb;
     }
 
+    /* Session Timer */
+    .session-timer {
+        padding: 8px 16px;
+        background: #fff3cd;
+        border: 1px solid #ffc107;
+        border-radius: 6px;
+        color: #856404;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+    }
+
+    .session-timer.warning {
+        background: #f8d7da;
+        border-color: #dc3545;
+        color: #721c24;
+    }
+
     .chat-messages {
         flex: 1;
         overflow-y: auto;
@@ -780,7 +800,7 @@
     /* Priority Selector */
     .priority-selector {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
         margin-top: 0.5rem;
     }
@@ -831,6 +851,195 @@
         display: block;
         font-size: 0.75rem;
         color: #6b7280;
+    }
+
+    /* Session Type Selector */
+    .session-type-selector {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .session-type-option {
+        cursor: pointer;
+    }
+
+    .session-type-option input[type="radio"] {
+        display: none;
+    }
+
+    .session-type-card {
+        padding: 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        text-align: center;
+        transition: all 0.2s;
+        background: white;
+    }
+
+    .session-type-option input[type="radio"]:checked + .session-type-card {
+        border-color: #2762cb;
+        background: rgba(39, 98, 203, 0.05);
+    }
+
+    .session-type-card:hover {
+        border-color: #2762cb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .session-type-card i {
+        font-size: 1.5rem;
+        color: #2762cb;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .session-type-card strong {
+        display: block;
+        font-size: 0.875rem;
+        color: #1f2937;
+        margin-bottom: 0.25rem;
+    }
+
+    .session-type-card small {
+        display: block;
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    /* Tone Selector */
+    .tone-selector-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .tone-option {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        text-align: center;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+        background: white;
+    }
+
+    .tone-option:hover {
+        border-color: #2762cb;
+        background: rgba(39, 98, 203, 0.05);
+    }
+
+    .tone-option.selected {
+        border-color: #2762cb;
+        background: rgba(39, 98, 203, 0.1);
+        color: #2762cb;
+        font-weight: 600;
+    }
+
+    /* Contract Link Section */
+    .contract-link-section {
+        background: #f9fafb;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+    }
+
+    .contract-search-wrapper {
+        position: relative;
+    }
+
+    .contract-search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        margin-top: 0.25rem;
+        max-height: 200px;
+        overflow-y: auto;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        display: none;
+    }
+
+    .contract-search-results.show {
+        display: block;
+    }
+
+    .contract-result-item {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-bottom: 1px solid #f3f4f6;
+        transition: background 0.2s;
+    }
+
+    .contract-result-item:hover {
+        background: #f9fafb;
+    }
+
+    .contract-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .contract-result-name {
+        font-size: 0.875rem;
+        color: #1f2937;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .contract-result-code {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .selected-contract {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem;
+        background: white;
+        border: 1px solid #2762cb;
+        border-radius: 6px;
+        margin-top: 0.5rem;
+    }
+
+    .selected-contract-info {
+        flex: 1;
+    }
+
+    .selected-contract-name {
+        font-size: 0.875rem;
+        color: #1f2937;
+        font-weight: 600;
+    }
+
+    .selected-contract-code {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .remove-contract-btn {
+        background: none;
+        border: none;
+        color: #ef4444;
+        cursor: pointer;
+        padding: 0.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+
+    .remove-contract-btn:hover {
+        background: #fee2e2;
     }
 
     /* Buttons */
@@ -977,8 +1186,13 @@
 
     /* Responsive */
     @media (max-width: 768px) {
-        .priority-selector {
+        .priority-selector,
+        .session-type-selector {
             grid-template-columns: 1fr;
+        }
+        
+        .tone-selector-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
         
         .modal-container {
@@ -1045,6 +1259,11 @@
                 </div>
             </div>
             <div class="chat-actions">
+                <!-- Session Timer (visible only during active sessions) -->
+                <div class="session-timer" id="sessionTimer" style="display: none;">
+                    <i class="ti ti-clock"></i>
+                    <span id="timerDisplay">00:00</span>
+                </div>
                 <button class="chat-action-btn" onclick="endSession()">
                     <i class="ti ti-circle-x"></i>
                     End Session
@@ -1108,7 +1327,7 @@
 <!-- Start Consultation Modal -->
 <div id="startConsultationModal" class="modal" style="display: none;">
     <div class="modal-overlay" onclick="closeStartConsultationModal()"></div>
-    <div class="modal-container" style="max-width: 600px;">
+    <div class="modal-container" style="max-width: 700px;">
         <div class="modal-header">
             <h3>
                 <i class="ti ti-message-circle-2"></i>
@@ -1121,6 +1340,60 @@
         
         <div class="modal-body">
             <form id="consultationRequestForm">
+                <!-- Contract Link (Optional) -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="ti ti-file-text"></i>
+                        Link to Contract (Optional)
+                    </label>
+                    <div class="contract-link-section">
+                        <div class="contract-search-wrapper">
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="contractSearchInput" 
+                                placeholder="Search and select a contract..."
+                                autocomplete="off"
+                                oninput="searchContracts(this.value)"
+                            >
+                            <div class="contract-search-results" id="contractSearchResults"></div>
+                        </div>
+                        <div id="selectedContractDisplay" style="display: none;"></div>
+                        <input type="hidden" id="selectedContractId" name="contract_id">
+                    </div>
+                    <small class="form-text">Link this consultation to a specific contract for context</small>
+                </div>
+
+                <!-- Session Type -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="ti ti-device-desktop"></i>
+                        Session Type <span class="required">*</span>
+                    </label>
+                    <div class="session-type-selector">
+                        <label class="session-type-option">
+                            <input type="radio" name="session_type" value="chat" checked>
+                            <div class="session-type-card">
+                                <i class="ti ti-message-circle"></i>
+                                <div>
+                                    <strong>Chat Session</strong>
+                                    <small>Text-based consultation</small>
+                                </div>
+                            </div>
+                        </label>
+                        <label class="session-type-option">
+                            <input type="radio" name="session_type" value="video">
+                            <div class="session-type-card">
+                                <i class="ti ti-video"></i>
+                                <div>
+                                    <strong>Video Call</strong>
+                                    <small>Face-to-face consultation</small>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <!-- Query Type -->
                 <div class="form-group">
                     <label class="form-label">
@@ -1195,7 +1468,7 @@
                     </select>
                 </div>
 
-                <!-- Priority Level -->
+                <!-- Priority Level (Standard/Urgent as per BPF) -->
                 <div class="form-group">
                     <label class="form-label">
                         <i class="ti ti-flag"></i>
@@ -1203,7 +1476,7 @@
                     </label>
                     <div class="priority-selector">
                         <label class="priority-option">
-                            <input type="radio" name="priority" value="normal" checked>
+                            <input type="radio" name="priority" value="standard" checked>
                             <div class="priority-card">
                                 <i class="ti ti-clock"></i>
                                 <div>
@@ -1215,24 +1488,33 @@
                         <label class="priority-option">
                             <input type="radio" name="priority" value="urgent">
                             <div class="priority-card">
-                                <i class="ti ti-alert-circle"></i>
-                                <div>
-                                    <strong>Urgent</strong>
-                                    <small>Response within 4 hours</small>
-                                </div>
-                            </div>
-                        </label>
-                        <label class="priority-option">
-                            <input type="radio" name="priority" value="emergency">
-                            <div class="priority-card">
                                 <i class="ti ti-urgent"></i>
                                 <div>
-                                    <strong>Emergency</strong>
-                                    <small>Immediate response needed</small>
+                                    <strong>Urgent</strong>
+                                    <small>Response within 5 minutes</small>
                                 </div>
                             </div>
                         </label>
                     </div>
+                    <small class="form-text">Urgent requests may incur additional charges</small>
+                </div>
+
+                <!-- Response Tone -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="ti ti-adjustments"></i>
+                        Preferred Response Tone
+                    </label>
+                    <div class="tone-selector-grid" id="toneSelector">
+                        <div class="tone-option selected" data-tone="professional">Professional</div>
+                        <div class="tone-option" data-tone="formal">Formal</div>
+                        <div class="tone-option" data-tone="friendly">Friendly</div>
+                        <div class="tone-option" data-tone="assertive">Assertive</div>
+                        <div class="tone-option" data-tone="consultative">Consultative</div>
+                        <div class="tone-option" data-tone="conciliatory">Conciliatory</div>
+                    </div>
+                    <input type="hidden" id="selectedTone" name="selected_tone" value="professional">
+                    <small class="form-text">Choose how you'd like the expert to communicate</small>
                 </div>
 
                 <!-- Language Preference -->
@@ -1262,7 +1544,7 @@
     </div>
 </div>
 
-<script src="/static/js/screens/experts/ask_expert_unified.js?v=3"></script>
+<script src="/static/js/screens/experts/ask_expert_unified.js?v=5"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -1275,7 +1557,123 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleSidebar();
         }
     }
+
+    // Tone selector
+    document.querySelectorAll('.tone-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.tone-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            document.getElementById('selectedTone').value = this.dataset.tone;
+        });
+    });
+
+    // Contract search result click outside handler
+    document.addEventListener('click', function(e) {
+        const searchWrapper = document.querySelector('.contract-search-wrapper');
+        const resultsDiv = document.getElementById('contractSearchResults');
+        
+        if (searchWrapper && !searchWrapper.contains(e.target)) {
+            resultsDiv.classList.remove('show');
+        }
+    });
 });
+
+// =====================================================
+// Contract Search Functions
+// =====================================================
+let contractSearchTimeout = null;
+let selectedContract = null;
+
+async function searchContracts(query) {
+    // Clear previous timeout
+    if (contractSearchTimeout) {
+        clearTimeout(contractSearchTimeout);
+    }
+    
+    const resultsDiv = document.getElementById('contractSearchResults');
+    
+    if (!query || query.length < 2) {
+        resultsDiv.classList.remove('show');
+        return;
+    }
+    
+    // Debounce search
+    contractSearchTimeout = setTimeout(async () => {
+        try {
+            const response = await fetch(`/api/contracts/search?q=${encodeURIComponent(query)}&limit=10`, {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            });
+            
+            if (!response.ok) throw new Error('Search failed');
+            
+            const data = await response.json();
+            displayContractResults(data.contracts || []);
+            
+        } catch (error) {
+            console.error('Contract search error:', error);
+        }
+    }, 300);
+}
+
+function displayContractResults(contracts) {
+    const resultsDiv = document.getElementById('contractSearchResults');
+    
+    if (contracts.length === 0) {
+        resultsDiv.innerHTML = '<div style="padding: 1rem; text-align: center; color: #6b7280;">No contracts found</div>';
+        resultsDiv.classList.add('show');
+        return;
+    }
+    
+    resultsDiv.innerHTML = contracts.map(contract => `
+        <div class="contract-result-item" onclick="selectContract('${contract.contract_id}', '${contract.contract_name}', '${contract.contract_code}')">
+            <div class="contract-result-name">${contract.contract_name}</div>
+            <div class="contract-result-code">${contract.contract_code}</div>
+        </div>
+    `).join('');
+    
+    resultsDiv.classList.add('show');
+}
+
+function selectContract(contractId, contractName, contractCode) {
+    selectedContract = {
+        id: contractId,
+        name: contractName,
+        code: contractCode
+    };
+    
+    // Hide results
+    document.getElementById('contractSearchResults').classList.remove('show');
+    
+    // Clear search input
+    document.getElementById('contractSearchInput').value = '';
+    
+    // Update hidden input
+    document.getElementById('selectedContractId').value = contractId;
+    
+    // Display selected contract
+    const displayDiv = document.getElementById('selectedContractDisplay');
+    displayDiv.innerHTML = `
+        <div class="selected-contract">
+            <div class="selected-contract-info">
+                <div class="selected-contract-name">${contractName}</div>
+                <div class="selected-contract-code">${contractCode}</div>
+            </div>
+            <button type="button" class="remove-contract-btn" onclick="removeSelectedContract()">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+    `;
+    displayDiv.style.display = 'block';
+}
+
+function removeSelectedContract() {
+    selectedContract = null;
+    document.getElementById('selectedContractId').value = '';
+    document.getElementById('selectedContractDisplay').style.display = 'none';
+    document.getElementById('contractSearchInput').value = '';
+}
 
 // =====================================================
 // Consultation Request Management
@@ -1295,6 +1693,10 @@ function openStartConsultationModal() {
     
     // Reset form
     document.getElementById('consultationRequestForm').reset();
+    document.getElementById('selectedTone').value = 'professional';
+    document.querySelectorAll('.tone-option').forEach(opt => opt.classList.remove('selected'));
+    document.querySelector('.tone-option[data-tone="professional"]').classList.add('selected');
+    removeSelectedContract();
 }
 
 // =====================================================
@@ -1318,11 +1720,14 @@ function proceedToExpertSelection() {
     
     // Collect form data
     consultationRequestData = {
+        contract_id: document.getElementById('selectedContractId').value || null,
+        session_type: document.querySelector('input[name="session_type"]:checked').value,
         query_type: document.getElementById('consultationQueryType').value,
         subject: document.getElementById('consultationSubject').value,
         question: document.getElementById('consultationQuestion').value,
         expertise_area: document.getElementById('consultationExpertise').value,
         priority: document.querySelector('input[name="priority"]:checked').value,
+        selected_tone: document.getElementById('selectedTone').value,
         preferred_language: document.getElementById('consultationLanguage').value
     };
     
@@ -1477,12 +1882,13 @@ async function selectExpertAndSubmit(expertId) {
         
         // Prepare request payload
         const payload = {
+            contract_id: consultationRequestData.contract_id,
             query_type: consultationRequestData.query_type,
             subject: consultationRequestData.subject,
             question: consultationRequestData.question,
             expertise_areas: [consultationRequestData.expertise_area],
             priority: consultationRequestData.priority,
-            session_type: 'chat', // Default to chat
+            session_type: consultationRequestData.session_type,
             preferred_language: consultationRequestData.preferred_language || 'en'
         };
         
@@ -1510,8 +1916,8 @@ async function selectExpertAndSubmit(expertId) {
         const sessionPayload = {
             query_id: queryData.query_id,
             expert_id: expertId,
-            session_type: 'chat', // Default to chat
-            selected_tone: 'professional'
+            session_type: consultationRequestData.session_type,
+            selected_tone: consultationRequestData.selected_tone
         };
         
         const sessionResponse = await fetch('/api/v1/experts/sessions', {

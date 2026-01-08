@@ -468,7 +468,7 @@ if clause_library_router:
 
 # Expert and consultation routers (if available)
 if experts_router:
-    app.include_router(experts_router, prefix="/api/experts", tags=["experts"])
+    app.include_router(experts_router, prefix="/api/v1/experts", tags=["experts"])
     logger.info(" Experts router registered")
 
 if experts_api_router:

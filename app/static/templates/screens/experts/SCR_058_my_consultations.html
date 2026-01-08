@@ -700,16 +700,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-// Load data from API
-// Load data from API
-async function loadConsultationsData() {
-    console.log('📡 Fetching consultations from API...');
+async function loadConsultations() {
+    console.log('🔄 Loading consultations from API...');
     
     try {
-        const token = localStorage.getItem('access_token');
+        const token = getAuthToken();
         console.log('🔑 Token exists:', !!token);
         
-        const response = await fetch('/api/v1/consultations/my-consultations?limit=50', {
+        // ✅ CORRECTED: /api/v1/experts/my-consultations
+        const response = await fetch('/api/v1/experts/my-consultations?limit=50', {
             headers: {
                 'Authorization': 'Bearer ' + token
             }
@@ -721,7 +720,7 @@ async function loadConsultationsData() {
             const data = await response.json();
             console.log('📦 Raw data received:', data);
             
-            // Check if data is an array or wrapped in an object
+            // Handle different response formats
             if (Array.isArray(data)) {
                 allConsultations = data;
             } else if (data.consultations) {
@@ -734,25 +733,21 @@ async function loadConsultationsData() {
                 allConsultations = [];
             }
             
-            console.log(' Parsed consultations:', allConsultations.length, 'items');
+            console.log('✅ Parsed consultations:', allConsultations.length, 'items');
             
             // Update UI
             updateStatistics();
             displayConsultations(allConsultations);
             
         } else {
-            console.error(' API error:', response.status, response.statusText);
+            console.error('❌ API error:', response.status, response.statusText);
             showError('Failed to load consultations. Status: ' + response.status);
         }
     } catch (error) {
-        console.error(' Error loading consultations:', error);
+        console.error('❌ Error loading consultations:', error);
         showError('An error occurred: ' + error.message);
-    } finally {
-        // Always hide loading regardless of success/error
-        console.log('🏁 API call finished, hiding loader...');
     }
 }
-
 // Update statistics
 function updateStatistics() {
     console.log('📊 Updating statistics...');
