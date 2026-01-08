@@ -96,6 +96,7 @@ async def approve_reject_workflow(
                 SELECT COUNT(DISTINCT step_number) as total
                 FROM workflow_steps
                 WHERE workflow_id = :workflow_id
+                AND step_type <> 'e_sign_authority'
             """)
             total_result = db.execute(total_steps_query, {"workflow_id": workflow.workflow_id}).first()
             total_steps = total_result.total if total_result else 0

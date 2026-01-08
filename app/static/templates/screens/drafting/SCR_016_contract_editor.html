@@ -2959,9 +2959,9 @@
             </button>
         </div>
         <div class="modal-body" style="padding: 2rem;">
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+            <!-- <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
                 Setup a custom workflow for this specific contract:
-            </p>
+            </p> -->
 
             <!-- Option 1: Use Master Workflow -->
             <!-- <div class="workflow-option-card" id="masterWorkflowOption" onclick="selectContractWorkflow('master')">
@@ -2997,7 +2997,7 @@
             </div> -->
 
             <!-- Option 2: Custom Workflow -->
-            <div class="workflow-option-card selected" id="customWorkflowOption">
+            <!-- <div class="workflow-option-card selected" id="customWorkflowOption">
                 <div style="display: flex; gap: 1rem;">
                     <div
                         style="width: 48px; height: 48px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
@@ -3010,11 +3010,11 @@
                         </p>
                     </div>
                 </div>
-            </div>
+            </div> -->
 
             <!-- Custom Workflow Configuration -->
             <div id="customWorkflowConfig"
-                style="display: block; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color);">
+                style="display: block;">
                 <h4 style="margin-bottom: 1rem;">Configure Workflow Steps</h4>
 
                 <table style="width: 100%; border-collapse: collapse;">
@@ -3238,6 +3238,90 @@
     </div>
 </div>
 
+
+<!-- MOD-029: Send for Signature Modal - Enhanced -->
+<div class="modal" id="sendForSignatureModal">
+    <div class="modal-content" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Send for Signature</h3>
+            <button class="modal-close" onclick="closeModal('sendForSignatureModal')">
+                <i class="ti ti-x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+         
+
+            <!-- Master Workflow Option -->
+            <div style="margin-bottom: 1.5rem;" id="masterWorkflowContainer">
+                <label
+                    style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.3s ease;"
+                    id="masterWorkflowLabel"
+                    onmouseover="if(!this.classList.contains('disabled')) { this.style.borderColor='var(--primary-color)'; this.style.background='var(--background-light)'; }"
+                    onmouseout="if(!this.classList.contains('disabled')) { this.style.borderColor='var(--border-color)'; this.style.background='white'; }">
+                    <input type="radio" name="signatureOption" id="masterWorkflow" value="masterWorkflow"
+                        style="margin-right: 0.75rem; width: 18px; height: 18px; cursor: pointer;">
+                    <div style="flex: 1;">
+                        <span
+                            style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); text-decoration: underline;">
+                            USE MASTER WORKFLOW
+                        </span>
+                        <!-- <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);"
+                            id="masterWorkflowDesc">
+                            Automatically send to predefined reviewers in sequence
+                        </p> -->
+                    </div>
+                    <button type="button" id="masterWorkflowSetupBtn"
+                        style="display: none; margin-left: 1rem; padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; font-size: 0.85rem; cursor: pointer;"
+                        onclick="event.preventDefault(); event.stopPropagation(); redirectToMasterWorkflowSetup();">
+                        Setup Master Workflow
+                    </button>
+                </label>
+            </div>
+
+            <!-- Custom Workflow Option -->
+            <div style="margin-bottom: 1.5rem;" id="customWorkflowContainer">
+                <label
+                    style="display: flex; align-items: center; cursor: pointer; padding: 1rem; border: 2px solid var(--border-color); border-radius: 8px; transition: all 0.3s ease;"
+                    id="customWorkflowLabel"
+                    onmouseover="if(!this.classList.contains('disabled')) { this.style.borderColor='var(--primary-color)'; this.style.background='var(--background-light)'; }"
+                    onmouseout="if(!this.classList.contains('disabled')) { this.style.borderColor='var(--border-color)'; this.style.background='white'; }">
+                    <input type="radio" name="signatureOption" id="customWorkflow" value="customWorkflow"
+                        style="margin-right: 0.75rem; width: 18px; height: 18px; cursor: pointer;">
+                    <div style="flex: 1;">
+                        <span
+                            style="font-weight: 600; font-size: 0.95rem; color: var(--text-color); text-decoration: underline;">
+                            USE CUSTOM WORKFLOW
+                        </span>
+                        <!-- <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-muted);"
+                            id="customWorkflowDesc">
+                            Use workflow specific to this contract
+                        </p> -->
+                    </div>
+                    <!-- <button type="button" id="customWorkflowSetupBtn"
+                        style="display: none; margin-left: 1rem; padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; font-size: 0.85rem; cursor: pointer;"
+                        onclick="event.preventDefault(); event.stopPropagation(); openCustomWorkflowSetup();">
+                        Setup Custom Workflow
+                    </button> -->
+                </label>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+                <label style="font-weight: 600; font-size: 0.9rem; display: block; margin-bottom: 0.5rem;">Additional
+                    Notes (Optional):</label>
+                <textarea id="signaturewNotes" placeholder="Add any notes for the reviewers..."
+                    style="width: 100%; min-height: 80px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.875rem; resize: vertical;"></textarea>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline-secondary" onclick="closeModal('sendForSignatureModal')">
+                Close
+            </button>
+            <button class="btn btn-primary" onclick="submitSignatureWorkflow()">
+                Submit
+            </button>
+        </div>
+    </div>
+</div>
 
 
 
@@ -5409,7 +5493,7 @@
                 // if ((workflow && workflow.status === 'completed')) {
                 // Approved stage
                 actionButtons = `
-            <button class="btn btn-primary" onclick="sendForSignature()">
+            <button class="btn btn-primary" onclick="initiateSignatureWorkflow()">
                 <i class="ti ti-writing-sign"></i> Send for Signature
             </button>`;
                 // } 
@@ -7675,6 +7759,47 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
 
+    async function submitSignatureWorkflow() {
+        const signatureType = document.querySelector('input[name="signatureOption"]:checked')?.value || 'specific';
+        // const personnelEmails = null;
+        const notes = document.getElementById('signaturewNotes')?.value || '';
+
+        showLoader();
+        try {
+            const response = await fetch('/api/contracts/submit-approval', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contract_id: contractId,
+                    review_type: signatureType,
+                    // personnel_emails: personnelEmails,
+                    notes: notes,
+                    request_type: 'signature',
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                showNotification('Contract sent for signature successfully!', 'success');
+
+                closeModal('sendForSignatureModal');
+                // Reload page after delay to show updated status
+                setTimeout(async () => await refreshContractData(), 1000);
+            } else {
+                showNotification(data.message || 'Failed to send for signature', 'error');
+            }
+        } catch (error) {
+            console.error('Error sending for signature:', error);
+            showNotification('Failed to send for signature', 'error');
+        } finally {
+            hideLoader();
+        }
+    }
+
+
+
+
     async function initiateApprovalWorkflow() {
         openModal('internalApprovalModal');
     }
@@ -7718,6 +7843,12 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
 
+
+    async function initiateSignatureWorkflow() {
+        openModal('sendForSignatureModal');
+    }
+
+
     // =================================================================
     // SIGNATURE FUNCTIONALITY - FIXED VERSION
     // =================================================================
@@ -7732,10 +7863,10 @@ ${contract.content && contract.content.trim() !== '' ?
         }
 
         // Check if user has e-signature authority in workflow
-        if (!hasSignatureAuthority()) {
-            showNotification('You are not authorized to sign this contract. Only users designated as E-Signature Authority in the workflow can sign.', 'error');
-            return;
-        }
+        // if (!hasSignatureAuthority()) {
+        //     showNotification('You are not authorized to sign this contract. Only users designated as E-Signature Authority in the workflow can sign.', 'error');
+        //     return;
+        // }
 
         // Determine the party based on current user context
         const isInitiator = contractData?.is_initiator || true;
@@ -7893,7 +8024,7 @@ ${contract.content && contract.content.trim() !== '' ?
             if (currentStep.includes('e-sign') ||
                 currentStep.includes('esign') ||
                 currentStep.includes('signature') ||
-                currentStep === 'e-sign authority') {
+                currentStep === 'e_sign authority') {
                 return true;
             }
         }
@@ -9491,7 +9622,7 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         console.log('🔄 Resetting workflow modal to default state');
 
         // Custom workflow is always selected (only option)
-        document.getElementById('customWorkflowOption').classList.add('selected');
+        // document.getElementById('customWorkflowOption').classList.add('selected');
         document.getElementById('customWorkflowConfig').style.display = 'block';
 
         // Clear the table
