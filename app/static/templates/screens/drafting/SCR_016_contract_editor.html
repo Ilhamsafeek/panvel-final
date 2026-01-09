@@ -5305,13 +5305,23 @@ async function loadContractData() {
         if (data.success) {
             contractData = data;
             
-            // ✅ CRITICAL FIX: Ensure currentContractId is set from loaded data
+            // Set currentContractId
             if (data.contract && data.contract.id) {
                 currentContractId = data.contract.id;
                 console.log('✅ currentContractId set to:', currentContractId);
             }
             
+            // Render the editor
             renderContractEditor(data);
+
+            // ⭐ NEW: Update signature fields with actual signature data
+            if (data.certificate) {
+                console.log('🖊️ Certificate data found, updating signature displays...');
+                // Wait a moment for DOM to be ready
+                setTimeout(() => {
+                    updateSignatureFields(data.certificate);
+                }, 500);
+            }
 
             document.getElementById('contractEditor').classList.add('loaded');
             document.getElementById('contractEditor').style.display = 'block';
@@ -5331,7 +5341,6 @@ async function loadContractData() {
         showError('Failed to load contract data: ' + error.message);
     }
 }
-
 
     // =====================================================
     // RENDERING FUNCTIONS
@@ -5382,24 +5391,30 @@ if (certificate && certificate.signatories) {
         s.signer_type === 'company' || s.signer_type === 'party_b' || s.signer_type === 'provider'
     );
 
-    if (clientSig && clientSig.has_signed) {
-        clientSignatory.has_signed = true;
-        clientSignatory.signed_at = clientSig.signed_at;
-        clientSignatory.signature_data = clientSig.signature_data;  // ✅ ACTUAL DATA
-        clientSignatory.signature_method = clientSig.signature_method || 'draw';  // ✅ METHOD
-        clientSignatory.name = clientSig.name || '[Name]';
-        clientSignatory.email = clientSig.email || '';
-        clientSignatory.signer_type = clientSig.role || 'Client Signatory';
+ if (clientSig && clientSig.has_signed) {
+        // Update client name and title fields in the DOM
+        const clientNameSpan = document.querySelector('.signature-block-client .editable-field[contenteditable]');
+        if (clientNameSpan && clientNameSpan.textContent === '[Name]') {
+            clientNameSpan.textContent = clientSig.name;
+        }
+        
+        const clientTitleSpan = document.querySelectorAll('.signature-block-client .editable-field')[1];
+        if (clientTitleSpan && clientTitleSpan.textContent === '[Title]') {
+            clientTitleSpan.textContent = 'Client Representative';
+        }
     }
 
-    if (companySig && companySig.has_signed) {
-        companySignatory.has_signed = true;
-        companySignatory.signed_at = companySig.signed_at;
-        companySignatory.signature_data = companySig.signature_data;  // ✅ ACTUAL DATA
-        companySignatory.signature_method = companySig.signature_method || 'draw';  // ✅ METHOD
-        companySignatory.name = companySig.name || '[Name]';
-        companySignatory.email = companySig.email || '';
-        companySignatory.signer_type = companySig.role || 'Company Signatory';
+   if (companySig && companySig.has_signed) {
+        // Update company name and title fields in the DOM
+        const companyNameSpan = document.querySelector('.signature-block-company .editable-field[contenteditable]');
+        if (companyNameSpan && companyNameSpan.textContent === '[Name]') {
+            companyNameSpan.textContent = companySig.name;
+        }
+        
+        const companyTitleSpan = document.querySelectorAll('.signature-block-company .editable-field')[1];
+        if (companyTitleSpan && companyTitleSpan.textContent === '[Title]') {
+            companyTitleSpan.textContent = 'Company Representative';
+        }
     }
 }
 
@@ -5431,7 +5446,7 @@ const clientSignatureHTML = clientSignatory.has_signed
                ${renderSignature(clientSignatory)}
            </div>
            <div style="font-size: 0.875rem; color: #28a745; font-weight: 600; text-align: center;">
-               <strong>✓ Signed</strong><br>
+               <strong>&#10003; Signed</strong><br>
                <span style="font-size: 0.75rem;">
                    ${clientSignatory.signed_at ? new Date(clientSignatory.signed_at).toLocaleString() : 'N/A'}
                </span>
@@ -5453,7 +5468,7 @@ const companySignatureHTML = companySignatory.has_signed
                ${renderSignature(companySignatory)}
            </div>
            <div style="font-size: 0.875rem; color: #28a745; font-weight: 600; text-align: center;">
-               <strong>✓ Signed</strong><br>
+               <strong>&#10003; Signed</strong><br>
                <span style="font-size: 0.75rem;">
                    ${companySignatory.signed_at ? new Date(companySignatory.signed_at).toLocaleString() : 'N/A'}
                </span>
@@ -5816,6 +5831,87 @@ ${contract.content && contract.content.trim() !== '' ?
     `;
 
     }
+
+
+
+
+    function renderSignature(signatory) {
+        if (!signatory.signature_data) {
+            return '<div style="font-family: \'Brush Script MT\', cursive; font-size: 1.5rem; color: #000;">Digitally Signed</div>';
+        }
+        if (signatory.signature_data.startsWith('data:image')) {
+            return `<img src="${signatory.signature_data}" alt="Signature" style="max-width: 200px; max-height: 80px; object-fit: contain;">`;
+        }
+        return `<div style="font-family: 'Brush Script MT', cursive; font-size: 2rem; color: #000; padding: 0.5rem;">${signatory.signature_data}</div>`;
+    }
+
+
+
+    
+
+ function updateSignatureFields(certificate) {
+    console.log('🖊️ Updating signature fields with certificate data:', certificate);
+    
+    if (!certificate || !certificate.signatories || certificate.signatories.length === 0) {
+        console.log('⚠️ No certificate data to display');
+        return;
+    }
+
+    const clientSig = certificate.signatories.find(s => s.signer_type === 'client' || s.signer_type === 'party_a');
+    const companySig = certificate.signatories.find(s => s.signer_type === 'company' || s.signer_type === 'party_b' || s.signer_type === 'provider');
+
+    // Update CLIENT signature
+    if (clientSig && clientSig.has_signed) {
+        const clientField = document.getElementById('clientSignature');
+        if (clientField) {
+            clientField.innerHTML = `
+                <div style="margin-bottom: 0.75rem;">${renderSignature(clientSig)}</div>
+                <div style="font-size: 0.875rem; color: #28a745; font-weight: 600; text-align: center;">
+                    <strong>&#10003; Signed</strong><br>
+                    <span style="font-size: 0.75rem;">${clientSig.signed_at ? new Date(clientSig.signed_at).toLocaleString() : 'N/A'}</span>
+                </div>
+            `;
+            clientField.style.border = '2px solid #28a745';
+            clientField.style.background = '#f0fff4';
+            clientField.onclick = null;
+        }
+        
+        // ⭐ Update Name/Title fields for CLIENT
+        const clientContainer = clientField?.parentElement;
+        if (clientContainer) {
+            const nameFields = clientContainer.querySelectorAll('.editable-field');
+            if (nameFields[0]) nameFields[0].textContent = clientSig.name;
+            if (nameFields[1]) nameFields[1].textContent = 'Client Representative';
+        }
+    }
+
+    // Update COMPANY signature
+    if (companySig && companySig.has_signed) {
+        const companyField = document.getElementById('companySignature');
+        if (companyField) {
+            companyField.innerHTML = `
+                <div style="margin-bottom: 0.75rem;">${renderSignature(companySig)}</div>
+                <div style="font-size: 0.875rem; color: #28a745; font-weight: 600; text-align: center;">
+                    <strong>&#10003; Signed</strong><br>
+                    <span style="font-size: 0.75rem;">${companySig.signed_at ? new Date(companySig.signed_at).toLocaleString() : 'N/A'}</span>
+                </div>
+            `;
+            companyField.style.border = '2px solid #28a745';
+            companyField.style.background = '#f0fff4';
+            companyField.onclick = null;
+        }
+        
+        // ⭐ Update Name/Title fields for COMPANY
+        const companyContainer = companyField?.parentElement;
+        if (companyContainer) {
+            const nameFields = companyContainer.querySelectorAll('.editable-field');
+            if (nameFields[0]) nameFields[0].textContent = companySig.name;
+            if (nameFields[1]) nameFields[1].textContent = 'Company Representative';
+        }
+    }
+
+    console.log('✅ Signature fields and names updated');
+}
 
 
     function renderWorkflowStepper(status) {
@@ -13690,27 +13786,46 @@ async function submitRegeneration() {
 
 
     // Add this RIGHT AFTER the contractId declaration
-    async function refreshContractData() {
-        try {
-            showLoader('Refreshing...');
-            const response = await fetch(`/api/contracts/edit/${contractId}`);
-            const data = await response.json();
-            if (data.success) {
-                contractData = data;
-                renderContractEditor(data);
-                await checkWorkflowAvailability();
-                await checkIfAIGenerated();
-                if (typeof loadExistingComments === 'function') {
-                    await loadExistingComments();
-                }
-                hideLoader();
-            }
-        } catch (error) {
-            console.error('Error refreshing:', error);
-            hideLoader();
-        }
-    }
+  async function refreshContractData() {
+    try {
+        console.log('🔄 Refreshing contract data...');
+        
+        const token = localStorage.getItem('access_token');
+        const response = await fetch(`/api/contracts/edit/${contractId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
 
+        if (data.success) {
+            contractData = data;
+            
+            // Update certificate data and signature fields
+            if (data.certificate) {
+                console.log('🖊️ Refreshing signature displays...');
+                updateSignatureFields(data.certificate);
+            }
+            
+            // Update status badge if needed
+            if (data.contract && data.contract.status) {
+                const statusBadge = document.querySelector('.status-badge');
+                if (statusBadge) {
+                    statusBadge.textContent = data.contract.status.charAt(0).toUpperCase() + data.contract.status.slice(1);
+                    statusBadge.className = `status-badge status-${data.contract.status.toLowerCase()}`;
+                }
+            }
+            
+            console.log('✅ Contract data refreshed successfully');
+        }
+    } catch (error) {
+        console.error('Error refreshing contract:', error);
+    }
+}
 
 
     function updateWorkflowStepper(workflow) {

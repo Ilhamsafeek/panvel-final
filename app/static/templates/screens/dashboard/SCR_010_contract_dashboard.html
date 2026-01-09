@@ -2854,7 +2854,7 @@ ${(analysis.recommendations || []).map((rec, idx) => `${idx + 1}. ${rec}`).join(
     function getContractActions(contract) {
         let actions = '';
 
-        if (contract.status === 'draft' || contract.status === 'review') {
+        // if (contract.status === 'draft' || contract.status === 'review') {
             actions += `
             <button class="action-btn" onclick="event.stopPropagation(); editContract('${contract.id}')" title="Edit">
                 <i class="ti ti-edit"></i>
@@ -2863,16 +2863,16 @@ ${(analysis.recommendations || []).map((rec, idx) => `${idx + 1}. ${rec}`).join(
                 <i class="ti ti-trash"></i>
             </button>
         `;
-        }
+        // }
 
-        if (contract.status === 'signed') {
-            actions += `
+        // if (contract.status === 'signed') {
+        //     actions += `
            
-            <button class="action-btn" onclick="event.stopPropagation(); viewAuditTrail('${contract.id}')" title="Audit Trail">
-                <i class="ti ti-history"></i>
-            </button>
-        `;
-        }
+        //     <button class="action-btn" onclick="event.stopPropagation(); viewAuditTrail('${contract.id}')" title="Audit Trail">
+        //         <i class="ti ti-history"></i>
+        //     </button>
+        // `;
+        // }
 
         if (contract.status === 'negotiation' || contract.status === 'pending') {
             actions += `
@@ -3405,7 +3405,7 @@ function clearAllFilters() {
                 </button>
             </div>
             
-            <div class="modal-body" style="padding: 2rem; max-height: 500px; overflow-y: auto;">
+            <div class="modal-body" style="padding: 2rem; max-height: 500px; overflow-y: auto; background-color:white">
                 <div class="audit-timeline">
                     
                     <div class="audit-event">
@@ -3492,7 +3492,7 @@ function clearAllFilters() {
                 </div>
             </div>
             
-            <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end;">
+            <div class="modal-footer" style="padding: 1.5rem; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; background-color:var(--border-color)">
                 <button class="btn btn-primary" onclick="closeAuditTrailPopup()" style="padding: 0.5rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer;">
                     Close
                 </button>
