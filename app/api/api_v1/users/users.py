@@ -154,7 +154,8 @@ async def get_company_users(
         company_id = current_user.company_id
         
         # Build base query
-        query = db.query(User).filter(User.company_id == company_id)
+        # query = db.query(User).filter(User.company_id == company_id)
+        query = db.query(User)
         
         # Apply search filter
         if search:

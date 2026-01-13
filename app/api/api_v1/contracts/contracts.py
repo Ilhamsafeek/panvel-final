@@ -6155,4 +6155,38 @@ async def search_contracts(
         )
 
 
+@router.put("/{contract_id}/esignature")
+async def update_contract_esignature_authorities(
+    contract_id: int,
+    party_authority_id: int,
+    counterparty_authority_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update contract with e-signature authority IDs"""
+    try:
+        print(f"💾 Updating contract {contract_id}")
+        
+        contract = db.query(Contract).filter(
+            Contract.id == contract_id,
+            Contract.company_id == current_user.company_id
+        ).first()
+        
+        if not contract:
+            return {"success": False, "error": "Contract not found"}
+        
+        contract.party_esignature_authority_id = party_authority_id
+        contract.counterparty_esignature_authority_id = counterparty_authority_id
+        
+        db.commit()
+        
+        print(f"✅ Updated successfully")
+        return {"success": True}
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        db.rollback()
+        return {"success": False, "error": str(e)}
+
+
 
