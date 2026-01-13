@@ -3820,15 +3820,10 @@ function clearAllFilters() {
     document.head.appendChild(style);
 
 
-// ========================================
-// ALTERNATIVE APPROACH - Use Different API
-// Try the blockchain activity endpoint which might filter properly
-// ========================================
-
 async function viewAuditTrail(contractId) {
     console.log(`🔍 Opening audit trail for contract: ${contractId}`);
     
-    // Create modal
+    // Create and show loading modal first
     const modal = document.createElement('div');
     modal.className = 'modal';
     modal.id = 'auditTrailModalPopup';
@@ -3846,7 +3841,7 @@ async function viewAuditTrail(contractId) {
                 </button>
             </div>
             
-            <div class="modal-body" style="padding: 2rem; max-height: 65vh; overflow-y: auto;">
+            <div class="modal-body" style="padding: 2rem; max-height: 60vh; overflow-y: auto; background-color:white;">
                 <div style="text-align: center; padding: 3rem;">
                     <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid var(--primary-color); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                     <p style="margin-top: 1rem; color: var(--text-muted);">Loading activity logs...</p>
@@ -3858,249 +3853,186 @@ async function viewAuditTrail(contractId) {
     document.body.appendChild(modal);
     document.body.style.overflow = 'hidden';
     
+    // Add CSS for spinner animation
     if (!document.getElementById('audit-spinner-style')) {
         const style = document.createElement('style');
         style.id = 'audit-spinner-style';
-        style.textContent = `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`;
+        style.textContent = `
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
         document.head.appendChild(style);
     }
     
     try {
-        // METHOD 1: Try to fetch from database directly via audit logs API
-        console.log('📡 Method 1: Fetching from audit logs API...');
-        let response = await fetch(`/api/reports/audit-trail/logs?entity_id=${contractId}&entity_type=contract&limit=100`, {
+        // Fetch real audit logs from API
+        const response = await fetch(`/api/blockchain/activity/${contractId}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
         
-        // METHOD 2: If that doesn't work, try the workflow endpoint
         if (!response.ok) {
-            console.log('📡 Method 2: Trying workflow history endpoint...');
-            response = await fetch(`/api/workflow/history/${contractId}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-        
-        // METHOD 3: Direct database query via a custom endpoint
-        if (!response.ok) {
-            console.log('📡 Method 3: Trying direct audit logs query...');
-            response = await fetch(`/api/contracts/${contractId}/audit-logs`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-        
-        if (!response.ok) {
-            throw new Error('All API methods failed - backend API issue');
+            throw new Error('Failed to fetch audit logs');
         }
         
         const data = await response.json();
-        console.log('✅ Data received:', data);
+        console.log('✅ Audit trail data received:', data);
         
-        // Parse the response based on which endpoint worked
-        let activities = [];
-        
-        if (data.success && data.data) {
-            activities = Array.isArray(data.data) ? data.data : [];
-        } else if (data.history) {
-            activities = Array.isArray(data.history) ? data.history : [];
-        } else if (Array.isArray(data)) {
-            activities = data;
-        }
-        
-        // Filter to business activities only (no blockchain)
-        const businessActivities = activities.filter(activity => {
-            const actionType = (activity.action_type || '').toLowerCase();
-            return actionType !== 'blockchain_storage' &&
-                   actionType !== 'blockchain_verification' &&
-                   actionType !== 'document_hashed';
-        });
-        
-        console.log(`✅ Found ${businessActivities.length} business activities`);
-        
-        // Render activities
+        // Update modal with real data
         const modalBody = modal.querySelector('.modal-body');
         
-        if (businessActivities.length > 0) {
+        if (data.success && data.activities && data.activities.length > 0) {
             modalBody.innerHTML = `
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 2rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Contract Activities</div>
-                            <div style="font-size: 2.5rem; font-weight: 700;">${businessActivities.length}</div>
-                        </div>
-                        <div style="font-size: 3rem; opacity: 0.2;"><i class="ti ti-timeline"></i></div>
+                <!-- Statistics Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Total Activities</div>
+                        <div style="font-size: 2rem; font-weight: 700;">${data.statistics.total_activities || 0}</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Blockchain Txns</div>
+                        <div style="font-size: 2rem; font-weight: 700;">${data.statistics.total_transactions || 0}</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Last Activity</div>
+                        <div style="font-size: 1rem; font-weight: 600;">${data.statistics.last_activity_time || 'N/A'}</div>
                     </div>
                 </div>
                 
-                <div>
-                    <h4 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; color: #111827;">
+                <!-- Activity Timeline -->
+                <div style="margin-top: 2rem;">
+                    <h4 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="ti ti-timeline" style="color: var(--primary-color);"></i>
                         Activity Timeline
                     </h4>
                     
                     <div style="position: relative;">
-                        ${businessActivities.map((activity, index) => {
-                            return renderBusinessActivity(activity, index === businessActivities.length - 1);
+                        ${data.activities.map((activity, index) => {
+                            const actionType = activity.action || 'unknown';
+                            const timestamp = activity.timestamp ? new Date(activity.timestamp).toLocaleString() : 'N/A';
+                            const details = activity.details || {};
+                            
+                            // Determine icon and color based on action type
+                            let icon = 'file-text';
+                            let color = '#6b7280';
+                            
+                            if (actionType.includes('blockchain_storage')) {
+                                icon = 'database';
+                                color = '#3b82f6';
+                            } else if (actionType.includes('contract_created')) {
+                                icon = 'file-plus';
+                                color = '#10b981';
+                            } else if (actionType.includes('contract_updated')) {
+                                icon = 'edit';
+                                color = '#f59e0b';
+                            } else if (actionType.includes('contract_signed')) {
+                                icon = 'writing-sign';
+                                color = '#8b5cf6';
+                            } else if (actionType.includes('verification')) {
+                                icon = 'shield-check';
+                                color = '#06b6d4';
+                            }
+                            
+                            const isLast = index === data.activities.length - 1;
+                            
+                            return `
+                                <div style="display: flex; gap: 1rem; margin-bottom: ${isLast ? '0' : '1.5rem'}; position: relative;">
+                                    ${!isLast ? `<div style="position: absolute; left: 19px; top: 40px; bottom: -24px; width: 2px; background: #e5e7eb;"></div>` : ''}
+                                    
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: ${color}; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; font-size: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1;">
+                                        <i class="ti ti-${icon}"></i>
+                                    </div>
+                                    
+                                    <div style="flex: 1; background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                            <strong style="color: #111827; text-transform: capitalize;">${actionType.replace(/_/g, ' ')}</strong>
+                                            <span style="font-size: 0.875rem; color: #6b7280;">${timestamp}</span>
+                                        </div>
+                                        
+                                        ${details.transaction_hash ? `
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Transaction Hash:</div>
+                                                <div style="font-family: 'Courier New', monospace; font-size: 0.875rem; color: #3b82f6; word-break: break-all;">${details.transaction_hash}</div>
+                                            </div>
+                                        ` : ''}
+                                        
+                                        ${details.document_hash ? `
+                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Document Hash:</div>
+                                                <div style="font-family: 'Courier New', monospace; font-size: 0.875rem; color: #10b981; word-break: break-all;">${details.document_hash}</div>
+                                            </div>
+                                        ` : ''}
+                                        
+                                        ${details.network ? `
+                                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
+                                                <i class="ti ti-network"></i> Network: ${details.network}
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `;
                         }).join('')}
                     </div>
                 </div>
             `;
         } else {
+            // No activities found
             modalBody.innerHTML = `
                 <div style="text-align: center; padding: 3rem; color: #6b7280;">
-                    <i class="ti ti-clipboard-off" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-                    <p style="margin: 0 0 0.5rem 0; font-size: 0.875rem;">No activity logs found.</p>
-                    <p style="margin: 0; font-size: 0.75rem; opacity: 0.7;">This may be a backend API issue.</p>
+                    <i class="ti ti-clipboard-off" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <h3 style="margin: 0 0 0.5rem 0; color: #374151;">No Activity Logs Found</h3>
+                    <p style="margin: 0; font-size: 0.875rem;">This contract doesn't have any recorded activities yet.</p>
                 </div>
             `;
         }
         
         // Add footer
-        const footer = document.createElement('div');
-        footer.className = 'modal-footer';
-        footer.style.cssText = 'padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; background-color: #f9fafb; border-radius: 0 0 12px 12px;';
-        footer.innerHTML = `
-            <button class="btn btn-primary" onclick="closeAuditTrailPopup()" style="padding: 0.625rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
-                Close
-            </button>
-        `;
-        modal.querySelector('.modal-content').appendChild(footer);
+        const existingFooter = modal.querySelector('.modal-footer');
+        if (!existingFooter) {
+            const footer = document.createElement('div');
+            footer.className = 'modal-footer';
+            footer.style.cssText = 'padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; background-color: #f9fafb; border-radius: 0 0 12px 12px;';
+            footer.innerHTML = `
+                <button class="btn btn-primary" onclick="closeAuditTrailPopup()" style="padding: 0.625rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
+                    Close
+                </button>
+            `;
+            modal.querySelector('.modal-content').appendChild(footer);
+        }
         
     } catch (error) {
-        console.error('❌ Error:', error);
+        console.error('❌ Error loading audit trail:', error);
         
         const modalBody = modal.querySelector('.modal-body');
         modalBody.innerHTML = `
             <div style="text-align: center; padding: 3rem; color: #ef4444;">
                 <i class="ti ti-alert-circle" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-                <h3 style="margin: 0 0 0.5rem 0;">Backend API Issue</h3>
+                <h3 style="margin: 0 0 0.5rem 0;">Failed to Load Activity Logs</h3>
                 <p style="margin: 0 0 1rem 0; font-size: 0.875rem; color: #6b7280;">
-                    The audit trail API is not filtering by contract ID properly.<br>
-                    Please check the backend API endpoint.
+                    ${error.message || 'An unexpected error occurred'}
                 </p>
-                <button onclick="closeAuditTrailPopup()" style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer;">
-                    Close
+                <button onclick="viewAuditTrail(${contractId})" style="padding: 0.5rem 1rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <i class="ti ti-refresh"></i> Retry
                 </button>
             </div>
         `;
     }
 }
 
-// Rendering functions (same as before)
-function renderBusinessActivity(activity, isLast) {
-    const actionType = activity.action_type || 'unknown';
-    const timestamp = activity.timestamp || activity.created_at;
-    const formattedTime = timestamp ? new Date(timestamp).toLocaleString() : 'N/A';
-    const userName = activity.user_name || 'System';
-    
-    let details = {};
-    try {
-        if (typeof activity.action_details === 'string') {
-            details = JSON.parse(activity.action_details);
-        } else if (typeof activity.action_details === 'object') {
-            details = activity.action_details || {};
-        }
-    } catch (e) {
-        details = {};
-    }
-    
-    const activityInfo = getBusinessActivityInfo(actionType, details);
-    
-    return `
-        <div style="display: flex; gap: 1rem; margin-bottom: ${isLast ? '0' : '1.5rem'}; position: relative;">
-            ${!isLast ? `<div style="position: absolute; left: 19px; top: 40px; bottom: -24px; width: 2px; background: #e5e7eb;"></div>` : ''}
-            
-            <div style="width: 40px; height: 40px; border-radius: 50%; background: ${activityInfo.color}; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; font-size: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1;">
-                <i class="ti ti-${activityInfo.icon}"></i>
-            </div>
-            
-            <div style="flex: 1; background: #f9fafb; padding: 1.25rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                    <div>
-                        <strong style="color: #111827; font-size: 1rem; display: block; margin-bottom: 0.25rem;">${activityInfo.label}</strong>
-                        <span style="color: #6b7280; font-size: 0.875rem;">
-                            <i class="ti ti-user" style="font-size: 0.875rem;"></i> ${userName}
-                        </span>
-                    </div>
-                    <span style="font-size: 0.875rem; color: #6b7280; white-space: nowrap; margin-left: 1rem;">
-                        <i class="ti ti-clock"></i> ${formattedTime}
-                    </span>
-                </div>
-                
-                ${activityInfo.description ? `
-                    <p style="margin: 0.5rem 0 0 0; color: #374151; font-size: 0.875rem;">
-                        ${activityInfo.description}
-                    </p>
-                ` : ''}
-                
-                ${details.comment || details.comments ? `
-                    <div style="margin-top: 0.75rem; padding: 0.75rem; background: white; border-left: 3px solid ${activityInfo.color}; border-radius: 4px;">
-                        <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem; text-transform: uppercase; font-weight: 600;">Comment:</div>
-                        <div style="color: #111827; font-size: 0.875rem;">${details.comment || details.comments}</div>
-                    </div>
-                ` : ''}
-                
-                ${details.workflow_step ? `
-                    <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
-                        <i class="ti ti-git-branch"></i> Workflow Step: ${details.workflow_step}
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
-
-function getBusinessActivityInfo(actionType, details) {
-    const action = actionType.toLowerCase();
-    
-    if (action === 'create' || action === 'created') {
-        return { icon: 'file-plus', color: '#10b981', label: '📝 Contract Created', description: 'New contract was created' };
-    }
-    if (action.includes('approve')) {
-        return { icon: 'check-circle', color: '#10b981', label: '✅ Approved', description: details.comment || 'Contract approved' };
-    }
-    if (action.includes('reject')) {
-        return { icon: 'x-circle', color: '#ef4444', label: '❌ Rejected', description: details.comment || 'Contract rejected' };
-    }
-    if (action.includes('negotiation')) {
-        return { icon: 'message-circle-2', color: '#f59e0b', label: '💬 Negotiation', description: 'Negotiation initiated' };
-    }
-    if (action.includes('signature')) {
-        return { icon: 'writing-sign', color: '#8b5cf6', label: '✍️ Signature', description: 'Contract signed' };
-    }
-    if (action.includes('review')) {
-        return { icon: 'eye-check', color: '#06b6d4', label: '👁️ Review', description: 'Review completed' };
-    }
-    if (action.includes('workflow')) {
-        return { icon: 'git-branch', color: '#6366f1', label: '🔄 Workflow', description: 'Workflow action' };
-    }
-    
-    return {
-        icon: 'file-text',
-        color: '#6b7280',
-        label: actionType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        description: 'Contract action'
-    };
-}
-
+// Close function (keep existing)
 function closeAuditTrailPopup() {
     const modal = document.getElementById('auditTrailModalPopup');
-    if (modal) modal.remove();
+    if (modal) {
+        modal.remove();
+    }
     document.body.style.overflow = 'auto';
 }
-
-// ========================================
-// This tries 3 different API endpoints:
-// 1. /api/reports/audit-trail/logs with entity_id
-// 2. /api/workflow/history/{id}
-// 3. /api/contracts/{id}/audit-logs
-//
-// One of them might work properly!
-// ========================================
-
-
 </script>
 <!-- <script src="/app/static/js/contract-actions.js"></script> -->
 {% endblock %}
