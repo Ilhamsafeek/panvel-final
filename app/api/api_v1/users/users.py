@@ -223,20 +223,20 @@ async def get_company_users(
             }
             
             # Add expert profile if user is a consultant
-            if user.user_type == "consultant":
-                expert_profile = db.query(ExpertProfile).filter(
-                    ExpertProfile.user_id == user.id
-                ).first()
+            # if user.user_type == "consultant":
+            #     expert_profile = db.query(ExpertProfile).filter(
+            #         ExpertProfile.user_id == user.id
+            #     ).first()
                 
-                if expert_profile:
-                    user_data["expert_profile"] = {
-                        "specialization": expert_profile.specialization,
-                        "experience_years": expert_profile.experience_years,
-                        "hourly_rate": float(expert_profile.hourly_rate) if expert_profile.hourly_rate else None,
-                        "availability_status": expert_profile.availability_status,
-                        "certifications": expert_profile.certifications,
-                        "languages": expert_profile.languages
-                    }
+            #     if expert_profile:
+            #         user_data["expert_profile"] = {
+            #             "specialization": expert_profile.specialization,
+            #             "experience_years": expert_profile.experience_years,
+            #             "hourly_rate": float(expert_profile.hourly_rate) if expert_profile.hourly_rate else None,
+            #             "availability_status": expert_profile.availability_status,
+            #             "certifications": expert_profile.certifications,
+            #             "languages": expert_profile.languages
+            #         }
             
             user_list.append(user_data)
         

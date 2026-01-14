@@ -81,6 +81,7 @@ class UpdateMetadataRequest(BaseModel):
     ai_generation_params: Dict[str, Any]
 
 
+
 # =====================================================
 # EXISTING ENDPOINT: GET MY CONTRACTS
 # =====================================================
@@ -1053,6 +1054,8 @@ async def get_contract_editor_data(
                 c.party_b_id,
                 c.party_b_lead_id,
                 c.signed_date,
+                c.party_esignature_authority_id,
+                c.counterparty_esignature_authority_id,
                 c.effective_date,
                 comp.company_name,
                 party_b_comp.company_name as party_b_company_name,
@@ -1171,6 +1174,11 @@ async def get_contract_editor_data(
         is_party_b_lead = False
         if current_user.id==result.party_b_lead_id:
             is_party_b_lead = True
+        
+
+        is_esignee = False
+        if (current_user.id==result.party_esignature_authority_id or current_user.id==result.counterparty_esignature_authority_id):
+            is_esignee = True
         
         
         # Get version history
@@ -1315,7 +1323,8 @@ async def get_contract_editor_data(
                 "is_initiator": is_initiator,
                 "is_counterparty": is_counterparty,
                 "is_ai_generated": result.is_ai_generated,
-                "ai_generation_params": result.ai_generation_params
+                "ai_generation_params": result.ai_generation_params,
+                "is_esignee": is_esignee
             },
             "workflow": {
                 "status": workflow.workflow_status if workflow else "not_configured",
@@ -1808,35 +1817,35 @@ async def apply_signature(
             }
         
         # STEP 2: Check workflow current_step is at E-SIGN step
-        workflow_step_query = text("""
-            SELECT 
-                wi.current_step,
-                wi.status as workflow_status,
-                ws.step_number,
-                ws.step_name,
-                ws.step_type,
-                ws.assignee_user_id,
-                w.workflow_name,
-                w.is_master
-            FROM workflow_instances wi
-            INNER JOIN workflows w ON wi.workflow_id = w.id
-            INNER JOIN workflow_steps ws ON w.id = ws.workflow_id
-            WHERE wi.contract_id = :contract_id
-            AND ws.step_type = 'e_sign_authority'
-            LIMIT 1
-        """)
+        # workflow_step_query = text("""
+        #     SELECT 
+        #         wi.current_step,
+        #         wi.status as workflow_status,
+        #         ws.step_number,
+        #         ws.step_name,
+        #         ws.step_type,
+        #         ws.assignee_user_id,
+        #         w.workflow_name,
+        #         w.is_master
+        #     FROM workflow_instances wi
+        #     INNER JOIN workflows w ON wi.workflow_id = w.id
+        #     INNER JOIN workflow_steps ws ON w.id = ws.workflow_id
+        #     WHERE wi.contract_id = :contract_id
+        #     AND ws.step_type = 'e_sign_authority'
+        #     LIMIT 1
+        # """)
         
-        workflow_step = db.execute(workflow_step_query, {
-            "contract_id": contract_id
-        }).fetchone()
+        # workflow_step = db.execute(workflow_step_query, {
+        #     "contract_id": contract_id
+        # }).fetchone()
         
-        if not workflow_step:
-            logger.warning(f"❌ No E-SIGN workflow step found for contract {contract_id}")
-            return {
-                "success": False,
-                "detail": "No E-SIGN workflow configured for this contract",
-                "not_authorized": True
-            }
+        # if not workflow_step:
+        #     logger.warning(f"❌ No E-SIGN workflow step found for contract {contract_id}")
+        #     return {
+        #         "success": False,
+        #         "detail": "No E-SIGN workflow configured for this contract",
+        #         "not_authorized": True
+        #     }
         
         # Check if workflow is at the E-SIGN step
         # if workflow_step.current_step != workflow_step.step_number:
@@ -1856,7 +1865,7 @@ async def apply_signature(
         #         "not_authorized": True
         #     }
         
-        logger.info(f"✅ User {current_user.id} authorized as E-SIGN authority at workflow step {workflow_step.current_step}")
+        # logger.info(f"✅ User {current_user.id} authorized as E-SIGN authority at workflow step {workflow_step.current_step}")
         
         # STEP 3: Check if already signed
         check_existing = text("""
@@ -1987,8 +1996,7 @@ async def apply_signature(
                 "signer_name": user_full_name,
                 "signer_type": signer_type,
                 "signature_method": signature_method,
-                "all_signed": all_signed,
-                "workflow": workflow_step.workflow_name
+                "all_signed": all_signed
             }),
             "ip_address": client_ip
         })
@@ -2003,11 +2011,6 @@ async def apply_signature(
             "signed_at": datetime.now().isoformat(),
             "all_signed": all_signed,
             "contract_status": new_contract_status,
-            "workflow_info": {
-                "workflow_name": workflow_step.workflow_name,
-                "is_master": bool(workflow_step.is_master),
-                "step_name": workflow_step.step_name
-            }
         }
         
     except HTTPException:
@@ -6154,39 +6157,43 @@ async def search_contracts(
             detail=f"Failed to search contracts: {str(e)}"
         )
 
+# In your contracts router file: app/api/api_v1/contracts/contracts.py
 
 @router.put("/{contract_id}/esignature")
-async def update_contract_esignature_authorities(
+async def send_for_esignature(
+    request: Request,
     contract_id: int,
-    party_authority_id: int,
-    counterparty_authority_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Update contract with e-signature authority IDs"""
+    """Send contract for e-signature - Simple version"""
     try:
-        print(f"💾 Updating contract {contract_id}")
-        
+        data = await request.json()
+        party_esignature_authority_id = data.get('party_esignature_authority_id')
+        counterparty_esignature_authority_id = data.get('counterparty_esignature_authority_id')
+        # 1. Check contract exists
         contract = db.query(Contract).filter(
-            Contract.id == contract_id,
-            Contract.company_id == current_user.company_id
+            Contract.id == contract_id
         ).first()
         
         if not contract:
-            return {"success": False, "error": "Contract not found"}
+            raise HTTPException(status_code=404, detail="Contract not found")
         
-        contract.party_esignature_authority_id = party_authority_id
-        contract.counterparty_esignature_authority_id = counterparty_authority_id
+        # 2. Update contract status
+        contract.party_esignature_authority_id=party_esignature_authority_id
+        contract.counterparty_esignature_authority_id=counterparty_esignature_authority_id
+        contract.status = 'signature'
+        contract.updated_at = datetime.now()
         
         db.commit()
         
-        print(f"✅ Updated successfully")
-        return {"success": True}
+        return {
+            "success": True,
+            "message": "Contract sent for e-signature",
+            "status": "pending_signature"
+        }
         
     except Exception as e:
-        print(f"❌ Error: {e}")
         db.rollback()
-        return {"success": False, "error": str(e)}
-
-
-
+        logger.error(f"Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))

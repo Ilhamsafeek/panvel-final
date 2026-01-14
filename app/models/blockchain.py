@@ -1,6 +1,5 @@
 # =====================================================
 # FILE: app/models/blockchain.py
-# Blockchain Database Models - FIXED (No Foreign Keys)
 # =====================================================
 
 from sqlalchemy import Column, Integer, String, Text, DateTime, Index

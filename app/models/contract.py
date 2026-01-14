@@ -80,6 +80,8 @@ class Contract(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     deleted_at = Column(DateTime)
     is_deleted = Column(Boolean, default=False)
+    party_esignature_authority_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    counterparty_esignature_authority_id = Column(Integer, ForeignKey("users.id"), nullable=True)
 
 
 class ContractVersion(Base):

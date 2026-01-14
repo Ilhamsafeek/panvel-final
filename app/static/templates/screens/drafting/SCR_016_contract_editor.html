@@ -3338,15 +3338,15 @@
                     Counter-Party e-Signee Email: <span style="color: var(--danger-color);">*</span>
                 </label>
                 <div style="position: relative;">
-                    <input type="email" id="counterPartyEmail" placeholder="Search or enter counter-party email address"
+                    <input type="email" id="counterPartySignatureEmail" placeholder="Search or enter counter-party email address"
                         style="width: 100%; padding: 0.75rem; padding-right: 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem;"
-                        autocomplete="off" oninput="searchCounterPartyUsers(this.value)"
-                        onfocus="searchCounterPartyUsers(this.value)" required>
+                        autocomplete="off" oninput="searchCounterPartySignatureUsers(this.value)"
+                        onfocus="searchCounterPartySignatureUsers(this.value)" required>
                     <i class="ti ti-search"
                         style="position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none;"></i>
 
                     <!-- Email Suggestions Dropdown -->
-                    <div id="counterPartyEmailSuggestions"
+                    <div id="counterPartyEmailSignatureSuggestions"
                         style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid var(--border-color); border-top: none; border-radius: 0 0 8px 8px; max-height: 250px; overflow-y: auto; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
                         <!-- Suggestions will be populated here -->
                     </div>
@@ -5789,13 +5789,15 @@
 
         } else if (contract.status === 'signature') {
 
-            const isInitiator = contract.is_initiator || true;
-            const party = isInitiator ? 'company' : 'client';
+            const party = contract.is_counterparty ? 'client' : 'company';
+            
+            if(contract.is_esignee){
             // Signature stage
             actionButtons = `
-            <button class="btn btn-success" onclick="openSignatureModal()">
+            <button class="btn btn-success" onclick="openSignatureModal('${party}')">
                 <i class="ti ti-writing-sign"></i> Sign Contract
             </button>`;
+        }
         } else if (contract.status === 'signed') {
             // 🆕 SIGNED STAGE - READY FOR EXECUTION
             actionButtons = `
@@ -8126,47 +8128,57 @@ ${contract.content && contract.content.trim() !== '' ?
         }
     }
 
-
     async function submitSignatureWorkflow() {
-        const partyId = document.getElementById('companyEmail').value;
-        const counterpartyId = document.getElementById('counterPartyEmail').value;
-
-        if (!partyId || !counterpartyId) {
-            alert('Please select both e-signature authorities');
-            return;
-        }
-
         try {
+            // Show loader
+            showLoader();
+
+            // Validate inputs
+            console.log('📧 Sending for e-signature:', {
+                company_user_id: selectedCompanyEmail ? selectedCompanyEmail.userId : null,
+                counterparty_user_id: selectedCounterPartyEmail ? selectedCounterPartyEmail.userId : null,
+
+                contractId: contractId
+            });
+    
+            // Send request (NO BODY - fixes 422 error)
             const response = await fetch(`/api/contracts/${contractId}/esignature`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
                 body: JSON.stringify({
-                    party_authority_id: parseInt(partyId),
-                    counterparty_authority_id: parseInt(counterpartyId)
+                    party_esignature_authority_id: selectedCompanyEmail ? selectedCompanyEmail.userId : null,
+                    counterparty_esignature_authority_id: selectedCounterPartyEmail ? selectedCounterPartyEmail.userId : null,
                 })
             });
 
             const data = await response.json();
+            console.log('Response:', data);
 
-            if (data.success) {
+            if (response.ok && data.success) {
                 showNotification('Contract sent for signature successfully!', 'success');
 
+                // Close modal
                 closeModal('sendForSignatureModal');
-                // Reload page after delay to show updated status
-                setTimeout(async () => await refreshContractData(), 1000);
+
+                // Reload contract data
+                setTimeout(async () => {
+                    await refreshContractData();
+                }, 1000);
+
             } else {
-                showNotification(data.message || 'Failed to send for signature', 'error');
+                throw new Error(data.detail || data.message || 'Failed to send for signature');
             }
+
         } catch (error) {
-            console.error('Error sending for signature:', error);
-            showNotification('Failed to send for signature', 'error');
+            console.error('❌ Error sending for signature:', error);
+            showNotification(error.message || 'Failed to send for signature', 'error');
         } finally {
             hideLoader();
         }
     }
-
-
-
 
     async function initiateApprovalWorkflow() {
         openModal('internalApprovalModal');
@@ -8222,7 +8234,8 @@ ${contract.content && contract.content.trim() !== '' ?
     // =================================================================
 
     // Open Signature Modal - Enhanced version with authority check
-    function openSignatureModal() {
+    function openSignatureModal(party) {
+        console.log('partyyyy',party);
         // PREVENT MODAL IF NOT IN SIGNATURE STATUS
         if (contractData?.contract?.status !== 'signature') {
             showNotification('Contract must be in Signature stage before signing. Current status: ' +
@@ -8235,15 +8248,10 @@ ${contract.content && contract.content.trim() !== '' ?
         //     showNotification('You are not authorized to sign this contract. Only users designated as E-Signature Authority in the workflow can sign.', 'error');
         //     return;
         // }
-
-        // Determine the party based on current user context
-        const isInitiator = contractData?.contract?.is_initiator || false;
-
-        console.log('is initiator??', contractData);
-        const party = isInitiator ? 'company' : 'client';
-
+        
 
         currentSignatureField = party;
+
         const modal = document.getElementById('signatureModal');
 
         if (!modal) {
@@ -8412,6 +8420,7 @@ ${contract.content && contract.content.trim() !== '' ?
         showLoader();
         try {
             console.log('📝 Sending signature request...');
+            console.log('signature type',currentSignatureField);
 
             const response = await fetch('/api/contracts/signature/apply', {
                 method: 'POST',
@@ -12471,6 +12480,7 @@ Generated by CALIM 360 Smart CLM
      * Search users from database for counter-party email
      */
     async function searchCounterPartyUsers(query) {
+       
         const suggestionsDiv = document.getElementById('counterPartyEmailSuggestions');
 
         // Clear previous timeout
@@ -12504,6 +12514,7 @@ Generated by CALIM 360 Smart CLM
                     }
                 });
 
+                 
                 if (!response.ok) {
                     throw new Error('Failed to search users');
                 }
@@ -12511,6 +12522,7 @@ Generated by CALIM 360 Smart CLM
                 const data = await response.json();
                 const users = data.users || [];
 
+                console.log(users);
                 // Display results
                 if (users.length === 0) {
                     suggestionsDiv.innerHTML = `
@@ -12597,6 +12609,152 @@ Generated by CALIM 360 Smart CLM
     document.addEventListener('click', function (event) {
         const emailInput = document.getElementById('counterPartyEmail');
         const suggestionsDiv = document.getElementById('counterPartyEmailSuggestions');
+
+        if (emailInput && suggestionsDiv &&
+            !emailInput.contains(event.target) &&
+            !suggestionsDiv.contains(event.target)) {
+            suggestionsDiv.style.display = 'none';
+        }
+    });
+
+
+
+   let searchSignatureTimeout;
+    let selectedCounterPartySignatureEmail = null;
+
+    /**
+     * Search users from database for counter-party email
+     */
+    async function searchCounterPartySignatureUsers(query) {
+       
+        const suggestionsDiv = document.getElementById('counterPartyEmailSignatureSuggestions');
+
+        // Clear previous timeout
+        if (searchSignatureTimeout) {
+            clearTimeout(searchSignatureTimeout);
+        }
+
+        // Hide suggestions if query is empty
+        if (!query || query.trim().length === 0) {
+            suggestionsDiv.style.display = 'none';
+            return;
+        }
+
+        // Debounce search - wait 300ms after user stops typing
+        searchSignatureTimeout = setTimeout(async () => {
+            try {
+                // Show loading state
+                suggestionsDiv.innerHTML = `
+                    <div style="padding: 1rem; text-align: center; color: var(--text-muted);">
+                        <i class="ti ti-loader" style="animation: spin 1s linear infinite;"></i>
+                        Searching users...
+                    </div>
+                `;
+                suggestionsDiv.style.display = 'block';
+
+                // Call API to search users
+                const response = await fetch(`/api/users/company?search=${encodeURIComponent(query)}&limit=10&type=counterparty`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                 
+                if (!response.ok) {
+                    throw new Error('Failed to search users');
+                }
+
+                const data = await response.json();
+                const users = data.users || [];
+
+                console.log(users);
+                // Display results
+                if (users.length === 0) {
+                    suggestionsDiv.innerHTML = `
+                        <div style="padding: 1rem; text-align: center; color: var(--text-muted);">
+                            <i class="ti ti-user-x" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                            <div>No users found matching "${query}"</div>
+                            <small style="display: block; margin-top: 0.25rem;">You can still enter the email manually</small>
+                        </div>
+                    `;
+                } else {
+                    suggestionsDiv.innerHTML = users.map(user => {
+                        const fullName = `${user.first_name} ${user.last_name}`.trim();
+                        const userType = user.user_type ? ` (${user.user_type})` : '';
+                        const department = user.department ? ` - ${user.department}` : '';
+                        const companyName = (user.company_name || 'Unknown Company').replace(/'/g, "\\'");
+
+
+                        return `
+                            <div onclick="selectCounterPartySignatureEmail('${user.email}', '${companyName}', ${user.id}, ${user.company_id || 'null'})" 
+                                style="padding: 0.75rem 1rem; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background 0.2s;"
+                                onmouseover="this.style.background='var(--background-light)'" 
+                                onmouseout="this.style.background='transparent'">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 0.875rem;">
+                                        ${user.first_name.charAt(0)}${user.last_name.charAt(0)}
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: var(--text-color); margin-bottom: 0.125rem;">
+                                            ${fullName}${userType}
+                                        </div>
+                                        <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                            <i class="ti ti-mail" style="font-size: 0.875rem;"></i> ${user.email}${department}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                suggestionsDiv.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error searching users:', error);
+                suggestionsDiv.innerHTML = `
+                    <div style="padding: 1rem; text-align: center; color: var(--danger-color);">
+                        <i class="ti ti-alert-circle" style="font-size: 1.5rem; margin-bottom: 0.5rem;"></i>
+                        <div>Error searching users</div>
+                        <small style="display: block; margin-top: 0.25rem;">You can still enter the email manually</small>
+                    </div>
+                `;
+                suggestionsDiv.style.display = 'block';
+            }
+        }, 300); // 300ms debounce
+    }
+
+    /**
+     * Select an email from the suggestions
+     */
+    function selectCounterPartySignatureEmail(email, companyName, userId, companyId) {
+        const emailInput = document.getElementById('counterPartySignatureEmail');
+        const suggestionsDiv = document.getElementById('counterPartyEmailSignatureSuggestions');
+
+        // Set the email value
+        emailInput.value = email;
+
+        // Store all the data
+        selectedCounterPartySignatureEmail = {
+            email: email,
+            companyName: companyName,
+            userId: userId,
+            companyId: companyId
+        };
+
+        // Hide suggestions
+        suggestionsDiv.style.display = 'none';
+
+        // Show notification with company name
+        showNotification(`Selected: ${companyName} (${email})`, 'success');
+    }
+    /**
+     * Close suggestions when clicking outside
+     */
+    document.addEventListener('click', function (event) {
+        const emailInput = document.getElementById('counterPartySignatureEmail');
+        const suggestionsDiv = document.getElementById('counterPartyEmailSignatureSuggestions');
 
         if (emailInput && suggestionsDiv &&
             !emailInput.contains(event.target) &&
@@ -12721,7 +12879,7 @@ Generated by CALIM 360 Smart CLM
         emailInput.value = email;
 
         // Store all the data
-        selectedCounterPartyEmail = {
+        selectedCompanyEmail = {
             email: email,
             companyName: companyName,
             userId: userId,

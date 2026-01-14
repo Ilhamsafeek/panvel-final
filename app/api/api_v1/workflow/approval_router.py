@@ -138,7 +138,7 @@ async def approve_reject_workflow(
                     """)
                     db.execute(update_contract, {"contract_id": request.contract_id})
                     logger.info(" Contract status updated: review_completed")
-                    
+                    message = "Internal review fully Completed!"
                 elif request.request_type == "counterparty_review":
                     logger.info("🔄 Counterparty Review completed - updating contract status...")
                     update_contract = text("""
@@ -149,7 +149,7 @@ async def approve_reject_workflow(
                     """)
                     db.execute(update_contract, {"contract_id": request.contract_id})
                     logger.info(" Contract status updated: counterparty_review_completed")
-                
+                    message = "Counter-Party review fully Completed!"
                 elif request.request_type == "approval":
                     logger.info("🔄 Final Approval completed - updating contract status...")
                     update_contract = text("""
@@ -160,10 +160,11 @@ async def approve_reject_workflow(
                     """)
                     db.execute(update_contract, {"contract_id": request.contract_id})
                     logger.info(" Contract status updated: approved")
+                    message = "Approval fully Completed!"
                 else:
                     logger.warning(f"⚠️ Unknown request type: {request.request_type}")
                 
-                message = "Contract fully approved!"
+                
                 logger.info(f"🎉 {message}")
                 
                 # Create notification for contract owner

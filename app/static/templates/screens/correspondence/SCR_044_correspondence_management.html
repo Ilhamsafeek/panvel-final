@@ -1683,7 +1683,7 @@
                     <i class="ti ti-download"></i>
                 </button> -->
                 <button class="icon-btn" onclick="clearChat()" title="New Chat">
-                    <i class="ti ti-refresh"></i>
+                    <i class="ti ti-refresh"></i> 
                 </button>
                 <button class="icon-btn" onclick="showHelp()" title="Help">
                     <i class="ti ti-help"></i>
@@ -2111,6 +2111,7 @@
 
             renderDocs();
             updateSelectionUI();
+            clearChat();
 
             console.log(` ${mode} mode active. Documents: ${state.allDocuments.length}`);
         };

@@ -289,7 +289,6 @@ const ProjectManager = {
                             <div class="project-code">${project.project_code || project.code || ''}</div>
                             <h3 class="project-title">${project.project_name || project.title || 'Untitled Project'}</h3>
                         </div>
-                        <span class="status-badge ${project.status || 'planning'}">${(project.status || 'planning').replace('-', ' ').toUpperCase()}</span>
                     </div>
                     <div class="project-meta">
                         <div class="meta-item">
@@ -594,15 +593,7 @@ const ProjectManager = {
                             </div>
                         </div>
                     </div>
-                    <div>
-                        <h3 style="margin: 0 0 0.75rem 0; color: var(--text-color); font-size: 1.125rem;">Progress Overview</h3>
-                        <div class="progress-bar" style="height: 24px; border-radius: 12px;">
-                            <div class="progress-fill" style="width: ${project.progress || 0}%; border-radius: 12px;"></div>
-                        </div>
-                        <div style="margin-top: 0.5rem; text-align: right; color: var(--text-muted); font-size: 0.875rem;">
-                            ${project.progress || 0}% Complete
-                        </div>
-                    </div>
+                  
                     <div style="padding-top: 1rem; border-top: 1px solid var(--border-color);">
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; font-size: 0.875rem;">
                             <div>
