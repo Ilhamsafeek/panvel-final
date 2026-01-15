@@ -1104,3 +1104,169 @@ def generate_contract_with_ai(
     return new_contract
 
 
+
+
+class CommentCreate(BaseModel):
+    contract_id: int
+    comment_text: str
+    selected_text: Optional[str] = None
+
+# GET ALL COMMENTS
+@router.get("/comments/{contract_id}")
+async def get_comments(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        query = text("""
+            SELECT 
+                cc.id, cc.contract_id, cc.user_id,
+                CONCAT(u.first_name, ' ', u.last_name) as author,
+                cc.comment_text, cc.selected_text,
+                cc.created_at, cc.updated_at
+            FROM contract_comments cc
+            INNER JOIN users u ON cc.user_id = u.id
+            WHERE cc.contract_id = :contract_id
+            ORDER BY cc.created_at DESC
+        """)
+        
+        result = db.execute(query, {"contract_id": contract_id})
+        rows = result.fetchall()
+        
+        comments = []
+        for row in rows:
+            comments.append({
+                "id": row[0],
+                "contract_id": row[1],
+                "user_id": row[2],
+                "author": row[3] or "Unknown",
+                "comment_text": row[4],
+                "selected_text": row[5],
+                "created_at": row[6].isoformat() if row[6] else None,
+                "updated_at": row[7].isoformat() if row[7] else None
+            })
+        
+        return {"success": True, "comments": comments}
+        
+    except Exception as e:
+        logger.error(f"Error fetching comments: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ADD COMMENT
+@router.post("/comments/add")
+async def add_comment(
+    req: CommentCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        # Verify contract access
+        check = text("SELECT id FROM contracts WHERE id = :cid AND company_id = :company")
+        result = db.execute(check, {"cid": req.contract_id, "company": current_user.company_id})
+        if not result.fetchone():
+            raise HTTPException(status_code=404, detail="Contract not found")
+        
+        # Insert comment
+        insert = text("""
+            INSERT INTO contract_comments 
+            (contract_id, user_id, comment_text, selected_text, created_at, updated_at)
+            VALUES (:cid, :uid, :text, :selected, NOW(), NOW())
+        """)
+        
+        db.execute(insert, {
+            "cid": req.contract_id,
+            "uid": current_user.id,
+            "text": req.comment_text,
+            "selected": req.selected_text
+        })
+        db.commit()
+        
+        # Get inserted ID
+        comment_id = db.execute(text("SELECT LAST_INSERT_ID()")).fetchone()[0]
+        
+        # Get full comment
+        get_comment = text("""
+            SELECT 
+                cc.id, cc.contract_id, cc.user_id,
+                CONCAT(u.first_name, ' ', u.last_name) as author,
+                cc.comment_text, cc.selected_text,
+                cc.created_at, cc.updated_at
+            FROM contract_comments cc
+            INNER JOIN users u ON cc.user_id = u.id
+            WHERE cc.id = :id
+        """)
+        
+        row = db.execute(get_comment, {"id": comment_id}).fetchone()
+        
+        return {
+            "success": True,
+            "comment_id": comment_id,
+            "comment": {
+                "id": row[0],
+                "contract_id": row[1],
+                "user_id": row[2],
+                "author": row[3],
+                "comment_text": row[4],
+                "selected_text": row[5],
+                "created_at": row[6].isoformat() if row[6] else None,
+                "updated_at": row[7].isoformat() if row[7] else None
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error adding comment: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# DELETE COMMENT - WITH OWNERSHIP CHECK
+@router.delete("/comments/{comment_id}")
+async def delete_comment(
+    comment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        # Check ownership
+        check = text("""
+            SELECT cc.user_id, c.company_id
+            FROM contract_comments cc
+            INNER JOIN contracts c ON cc.contract_id = c.id
+            WHERE cc.id = :id
+        """)
+        
+        result = db.execute(check, {"id": comment_id})
+        row = result.fetchone()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Comment not found")
+        
+        comment_user_id = row[0]
+        company_id = row[1]
+        
+        # Verify company access
+        if company_id != current_user.company_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+        
+        # CRITICAL: Verify ownership
+        if comment_user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You can only delete your own comments")
+        
+        # Delete
+        delete = text("DELETE FROM contract_comments WHERE id = :id")
+        db.execute(delete, {"id": comment_id})
+        db.commit()
+        
+        return {"success": True, "message": "Comment deleted"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error deleting comment: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+        

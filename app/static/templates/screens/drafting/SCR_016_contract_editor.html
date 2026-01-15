@@ -2908,6 +2908,43 @@
 </style>
 
 
+
+
+<style>
+    .track-change-delete {
+        text-decoration: line-through !important;
+        text-decoration-color: #dc3545 !important;
+        text-decoration-thickness: 2px !important;
+        background: rgba(220, 53, 69, 0.15) !important;
+        color: #dc3545 !important;
+        padding: 2px 4px !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+    }
+
+    .track-change-insert {
+        background: rgba(40, 167, 69, 0.15) !important;
+        border-bottom: 2px solid #28a745 !important;
+        color: #155724 !important;
+        padding: 2px 4px !important;
+        border-radius: 3px !important;
+        cursor: pointer !important;
+    }
+
+    .track-change-delete:hover,
+    .track-change-insert:hover {
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+    }
+
+    #trackChangesBtn.active {
+        background: var(--primary-color) !important;
+        color: white !important;
+    }
+</style>
+
+
+
 {% endblock %}
 
 {% block content %}
@@ -3338,7 +3375,8 @@
                     Counter-Party e-Signee Email: <span style="color: var(--danger-color);">*</span>
                 </label>
                 <div style="position: relative;">
-                    <input type="email" id="counterPartySignatureEmail" placeholder="Search or enter counter-party email address"
+                    <input type="email" id="counterPartySignatureEmail"
+                        placeholder="Search or enter counter-party email address"
                         style="width: 100%; padding: 0.75rem; padding-right: 2.5rem; border: 2px solid var(--border-color); border-radius: 8px; font-size: 0.95rem;"
                         autocomplete="off" oninput="searchCounterPartySignatureUsers(this.value)"
                         onfocus="searchCounterPartySignatureUsers(this.value)" required>
@@ -4660,6 +4698,381 @@
     }
 </style>
 
+
+<style>
+    /* Floating Comments Sidebar - Right Side */
+    .comments-sidebar {
+        position: fixed;
+        right: -420px;
+        top: 60px;
+        width: 400px;
+        height: calc(100vh - 60px);
+        background: white;
+        border-left: 3px solid #ffc107;
+        box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        transition: right 0.3s ease;
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .comments-sidebar.active {
+        right: 0;
+    }
+
+    .comments-sidebar-header {
+        padding: 20px;
+        background: linear-gradient(135deg, #ffc107, #ff9800);
+        color: white;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .comments-sidebar-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .close-sidebar-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        color: white;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .close-sidebar-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+
+    .comments-sidebar-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        background: #f8f9fa;
+    }
+
+    /* Comment Card */
+    .comment-card {
+        background: white;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 12px;
+        border-left: 4px solid #ffc107;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        cursor: pointer;
+    }
+
+    .comment-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .comment-author {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+    }
+
+    .comment-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2762cb, #73b4e0);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .comment-info {
+        flex: 1;
+    }
+
+    .comment-name {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .comment-time {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .comment-text {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 8px;
+        line-height: 1.5;
+    }
+
+    .comment-selected {
+        background: rgba(255, 193, 7, 0.1);
+        border-left: 3px solid #ffc107;
+        padding: 8px;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #666;
+        font-style: italic;
+        margin-bottom: 8px;
+    }
+
+    .comment-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .comment-btn {
+        background: #f0f0f0;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .comment-btn:hover {
+        background: #e0e0e0;
+    }
+
+    .comment-btn.delete {
+        background: #fee;
+        color: #dc3545;
+    }
+
+    .comment-btn.delete:hover {
+        background: #fdd;
+    }
+
+    /* Toggle Button */
+    .comments-toggle {
+        position: fixed;
+        right: 20px;
+        bottom: 20px;
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, #ffc107, #ff9800);
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 4px 16px rgba(255, 193, 7, 0.4);
+        z-index: 998;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .comments-toggle:hover {
+        transform: scale(1.1);
+    }
+
+    .comments-toggle i {
+        font-size: 24px;
+        color: white;
+    }
+
+    .comments-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        border: 2px solid white;
+    }
+
+    /* Comment Highlight in Document */
+    .track-change-comment {
+        background: rgba(255, 193, 7, 0.25);
+        border-bottom: 2px solid #ffc107;
+        cursor: pointer;
+        padding: 2px 0;
+    }
+
+    .track-change-comment:hover {
+        background: rgba(255, 193, 7, 0.4);
+    }
+
+    /* Strikethrough for Changes */
+    .track-change-delete {
+        text-decoration: line-through;
+        text-decoration-color: #dc3545;
+        text-decoration-thickness: 2px;
+        background: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+        padding: 2px 4px;
+        border-radius: 3px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .track-change-insert {
+        background: rgba(40, 167, 69, 0.15);
+        border-bottom: 2px solid #28a745;
+        color: #155724;
+        padding: 2px 4px;
+        border-radius: 3px;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .track-change-delete:hover,
+    .track-change-insert:hover {
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Track Changes Toolbar */
+    .track-changes-toolbar {
+        position: fixed;
+        top: 60px;
+        right: 20px;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 12px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        z-index: 997;
+        display: none;
+    }
+
+    .track-changes-toolbar.active {
+        display: block;
+    }
+
+    .track-changes-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .track-changes-toggle label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .track-changes-toggle input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+
+    .track-changes-actions {
+        display: flex;
+        gap: 6px;
+        flex-direction: column;
+    }
+
+    .track-btn {
+        background: #f0f0f0;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+
+    .track-btn:hover {
+        background: #e0e0e0;
+    }
+
+    .track-btn.accept {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .track-btn.accept:hover {
+        background: #c3e6cb;
+    }
+
+    .track-btn.reject {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .track-btn.reject:hover {
+        background: #f5c6cb;
+    }
+
+    /* Track Changes Badge */
+    .track-changes-badge {
+        position: fixed;
+        top: 70px;
+        right: 430px;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+        display: none;
+        align-items: center;
+        gap: 6px;
+        z-index: 996;
+    }
+
+    .track-changes-badge.active {
+        display: flex;
+    }
+
+    .comments-empty {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+    }
+
+    .comments-empty i {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+
+    /* Hide chatbot button on this page */
+    .chatbot-button,
+    #chatbotButton {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+</style>
+
+
+
+
+
+
 <!-- MOD-021: Risk Assessment Modal -->
 <div class="modal" id="riskAnalysisModal">
     <div class="modal-content modal-xl risk-modal">
@@ -5204,6 +5617,610 @@
         </div>
     </div>
 </div>
+
+
+<!-- Comments Toggle Button -->
+<button class="comments-toggle" onclick="toggleCommentsSidebar()">
+    <i class="ti ti-message-circle"></i>
+    <span class="comments-badge" style="display:none">0</span>
+</button>
+
+<!-- Track Changes Toolbar -->
+<div class="track-changes-toolbar" id="trackChangesToolbar">
+    <div class="track-changes-toggle">
+        <label>
+            <input type="checkbox" id="trackChangesEnabled" onchange="toggleTrackChanges(this.checked)">
+            <i class="ti ti-edit"></i>
+            <span>Track Changes</span>
+        </label>
+    </div>
+    <div class="track-changes-actions" id="trackChangesActions" style="display:none;">
+        <button class="track-btn accept" onclick="acceptAllChanges()">
+            <i class="ti ti-check-circle"></i> Accept All
+        </button>
+        <button class="track-btn reject" onclick="rejectAllChanges()">
+            <i class="ti ti-circle-x"></i> Reject All
+        </button>
+    </div>
+</div>
+
+<!-- Track Changes Badge -->
+<div class="track-changes-badge" id="trackChangesBadge">
+    <i class="ti ti-edit"></i>
+    <span>Track Changes ON</span>
+</div>
+
+<!-- Comments Sidebar -->
+<div class="comments-sidebar">
+    <div class="comments-sidebar-header">
+        <div class="comments-sidebar-title">
+            <i class="ti ti-message-circle"></i>
+            <span>Comments</span>
+            <span class="comments-count">0</span>
+        </div>
+        <button class="close-sidebar-btn" onclick="closeCommentsSidebar()">
+            <i class="ti ti-x"></i>
+        </button>
+    </div>
+    <div class="comments-sidebar-body">
+        <div class="comments-empty">
+            <i class="ti ti-message-circle-off"></i>
+            <p>No comments yet</p>
+        </div>
+    </div>
+</div>
+
+
+
+
+<script>
+    let currentUserId = null;
+    let currentUserName = null;
+    let allComments = [];
+    let changeCounter = 0;
+
+    // Load current user
+    async function loadCurrentUser() {
+        try {
+            const res = await fetch('/api/users/debug/current-user');
+            const data = await res.json();
+            if (data.status === 'authenticated' && data.user) {
+                currentUserId = data.user.id;
+                currentUserName = `${data.user.first_name} ${data.user.last_name}`;
+            }
+        } catch (e) {
+            console.error('Error loading user:', e);
+        }
+    }
+
+    // Load all comments
+    async function loadComments() {
+        try {
+            const res = await fetch(`/api/contracts/comments/${contractId}`);
+            const data = await res.json();
+            if (data.success) {
+                allComments = data.comments || [];
+                renderCommentsSidebar();
+                updateCommentsCount();
+                highlightCommentsInDoc();
+            }
+        } catch (e) {
+            console.error('Error loading comments:', e);
+        }
+    }
+
+    // Render comments sidebar
+    function renderCommentsSidebar() {
+        const body = document.querySelector('.comments-sidebar-body');
+        if (!body) return;
+
+        if (allComments.length === 0) {
+            body.innerHTML = `
+            <div class="comments-empty">
+                <i class="ti ti-message-circle-off"></i>
+                <p>No comments yet</p>
+            </div>`;
+            return;
+        }
+
+        let html = '';
+        allComments.forEach(c => {
+            const isOwn = c.user_id === currentUserId;
+            const initials = (c.author || 'U').split(' ').map(n => n[0]).join('').toUpperCase();
+            const time = formatTime(c.created_at);
+            const isResolved = c.resolved || document.querySelector(`[data-comment-id="${c.id}"][data-resolved="true"]`);
+
+            html += `
+        <div class="comment-card" onclick="scrollToComment(${c.id})">
+            <div class="comment-author">
+                <div class="comment-avatar">${initials}</div>
+                <div class="comment-info">
+                    <div class="comment-name">${c.author || 'Unknown'}</div>
+                    <div class="comment-time">${time}</div>
+                </div>
+            </div>
+            <div class="comment-text">${escapeHtml(c.comment_text)}</div>
+            ${c.selected_text ? `<div class="comment-selected">"${escapeHtml(c.selected_text.substring(0, 80))}..."</div>` : ''}
+            ${isResolved ? `<div style="color: #28a745; font-size: 12px; font-weight: 600; margin-top: 8px;">
+                <i class="ti ti-check-circle"></i> Resolved
+            </div>` : ''}
+            <div class="comment-actions">
+                ${isOwn ? `<button class="comment-btn delete" onclick="event.stopPropagation(); deleteComment(${c.id})">
+                    <i class="ti ti-trash"></i> Delete
+                </button>` : ''}
+                ${!isResolved ? `<button class="comment-btn" onclick="event.stopPropagation(); resolveComment(${c.id})">
+                    <i class="ti ti-check"></i> Resolve
+                </button>` : ''}
+            </div>
+        </div>`;
+        });
+
+        body.innerHTML = html;
+    }
+
+    // Update count
+    function updateCommentsCount() {
+        const badge = document.querySelector('.comments-badge');
+        const count = document.querySelector('.comments-count');
+        if (badge) {
+            badge.textContent = allComments.length;
+            badge.style.display = allComments.length > 0 ? 'flex' : 'none';
+        }
+        if (count) count.textContent = allComments.length;
+    }
+
+    // Highlight in document
+    function highlightCommentsInDoc() {
+        allComments.forEach(c => {
+            if (c.selected_text) {
+                const marker = document.querySelector(`[data-comment-id="${c.id}"]`);
+                if (!marker) {
+                    createCommentMarker(c);
+                } else {
+                    // Check if already resolved (has strikethrough class)
+                    if (marker.classList.contains('track-change-delete')) {
+                        c.resolved = true;
+                    }
+                }
+            }
+        });
+    }
+
+    // Create marker
+    function createCommentMarker(comment) {
+        const content = document.getElementById('contractContent');
+        if (!content || !comment.selected_text) return;
+
+        const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT);
+        let node;
+        while (node = walker.nextNode()) {
+            const idx = node.textContent.indexOf(comment.selected_text.trim());
+            if (idx !== -1) {
+                try {
+                    const range = document.createRange();
+                    range.setStart(node, idx);
+                    range.setEnd(node, idx + comment.selected_text.trim().length);
+                    const span = document.createElement('span');
+                    span.className = 'track-change-comment';
+                    span.setAttribute('data-comment-id', comment.id);
+                    span.onclick = () => scrollToComment(comment.id);
+                    range.surroundContents(span);
+                    return;
+                } catch (e) { }
+            }
+        }
+    }
+
+    // Scroll to comment
+    function scrollToComment(commentId) {
+        const marker = document.querySelector(`[data-comment-id="${commentId}"]`);
+        if (marker) {
+            marker.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            marker.style.background = 'rgba(255,193,7,0.6)';
+            setTimeout(() => marker.style.background = 'rgba(255,193,7,0.25)', 600);
+        }
+    }
+
+    // Delete comment - WITH OWNERSHIP CHECK
+    async function deleteComment(commentId) {
+        const comment = allComments.find(c => c.id === commentId);
+        if (!comment) return;
+
+        // CHECK OWNERSHIP
+        if (comment.user_id !== currentUserId) {
+            showNotification('You can only delete your own comments', 'warning');
+            return;
+        }
+
+        if (!confirm('Delete this comment?')) return;
+
+        try {
+            const res = await fetch(`/api/contracts/comments/${commentId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                // Remove from array
+                allComments = allComments.filter(c => c.id !== commentId);
+
+                // Remove marker
+                const marker = document.querySelector(`[data-comment-id="${commentId}"]`);
+                if (marker) {
+                    const text = marker.textContent;
+                    marker.replaceWith(document.createTextNode(text));
+                }
+
+                renderCommentsSidebar();
+                updateCommentsCount();
+                await saveAsDraft();
+                showNotification('Comment deleted', 'success');
+            }
+        } catch (e) {
+            showNotification('Failed to delete comment', 'error');
+        }
+    }
+
+    // Resolve comment (apply strikethrough)
+    async function resolveComment(commentId) {
+        if (!confirm('Mark as resolved? Text will be struck through.')) return;
+
+        const marker = document.querySelector(`[data-comment-id="${commentId}"]`);
+        if (marker) {
+            marker.className = 'track-change-delete';
+            marker.setAttribute('data-resolved', 'true');
+
+            // Mark comment as resolved in array
+            const comment = allComments.find(c => c.id === commentId);
+            if (comment) comment.resolved = true;
+
+            // Re-render to hide resolve button
+            renderCommentsSidebar();
+
+            await saveAsDraft();
+            showNotification('Comment resolved', 'success');
+        }
+    }
+
+    // Toggle sidebar
+    function toggleCommentsSidebar() {
+        const sidebar = document.querySelector('.comments-sidebar');
+        if (sidebar) {
+            sidebar.classList.toggle('active');
+            if (sidebar.classList.contains('active')) loadComments();
+        }
+    }
+
+    function closeCommentsSidebar() {
+        document.querySelector('.comments-sidebar')?.classList.remove('active');
+    }
+
+    // Enhanced add comment
+    async function insertComment() {
+        const text = document.getElementById('commentText').value.trim();
+        if (!text || !commentSelection) {
+            showNotification('Please enter a comment', 'warning');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/contracts/comments/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contract_id: parseInt(contractId),
+                    comment_text: text,
+                    selected_text: commentSelection.text
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                allComments.push(data.comment);
+
+                // Create marker
+                const range = commentSelection.range;
+                const span = document.createElement('span');
+                span.className = 'track-change-comment';
+                span.setAttribute('data-comment-id', data.comment_id);
+                span.onclick = () => scrollToComment(data.comment_id);
+                try { range.surroundContents(span); } catch (e) { }
+
+                renderCommentsSidebar();
+                updateCommentsCount();
+                await saveAsDraft();
+                closeModal('commentModal');
+                document.getElementById('commentText').value = '';
+
+                // Open sidebar
+                document.querySelector('.comments-sidebar')?.classList.add('active');
+                showNotification('Comment added', 'success');
+            }
+        } catch (e) {
+            showNotification('Failed to add comment', 'error');
+        }
+    }
+
+    // Utility functions
+    function formatTime(date) {
+        if (!date) return '';
+        const d = new Date(date);
+        const now = new Date();
+        const diff = (now - d) / 60000;
+        if (diff < 1) return 'Just now';
+        if (diff < 60) return `${Math.floor(diff)}m ago`;
+        if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
+        return d.toLocaleDateString();
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', async () => {
+        await loadCurrentUser();
+        if (contractId) await loadComments();
+
+        // Load track changes preference
+        const trackEnabled = localStorage.getItem('trackChangesEnabled') === 'true';
+        const checkbox = document.getElementById('trackChangesEnabled');
+        if (checkbox) checkbox.checked = trackEnabled;
+        if (trackEnabled) toggleTrackChanges(true);
+
+        // Setup content editing listener for track changes
+        const content = document.getElementById('contractContent');
+        if (content) {
+            content.addEventListener('input', handleContentChange);
+            content.addEventListener('keydown', handleKeyDown);
+        }
+    });
+
+    // =====================================================
+    // TRACK CHANGES FUNCTIONALITY
+    // =====================================================
+
+    function toggleTrackChanges(enabled) {
+        trackChangesEnabled = enabled;
+        localStorage.setItem('trackChangesEnabled', enabled);
+
+        const toolbar = document.getElementById('trackChangesToolbar');
+        const badge = document.getElementById('trackChangesBadge');
+        const actions = document.getElementById('trackChangesActions');
+
+        if (enabled) {
+            if (toolbar) toolbar.classList.add('active');
+            if (badge) badge.classList.add('active');
+            if (actions) actions.style.display = 'flex';
+            showNotification('Track changes enabled', 'success');
+        } else {
+            if (toolbar) toolbar.classList.remove('active');
+            if (badge) badge.classList.remove('active');
+            if (actions) actions.style.display = 'none';
+            showNotification('Track changes disabled', 'info');
+        }
+    }
+
+    let lastContent = '';
+    let isProcessingChange = false;
+
+    function handleContentChange(e) {
+        if (!trackChangesEnabled || isProcessingChange) return;
+
+        const content = document.getElementById('contractContent');
+        if (!content) return;
+
+        const currentContent = content.innerHTML;
+        if (lastContent && lastContent !== currentContent) {
+            // Content changed - this is simplified
+            // In production, use proper diff algorithm
+            console.log('Content changed - tracking');
+        }
+        lastContent = currentContent;
+    }
+
+    function handleKeyDown(e) {
+        if (!trackChangesEnabled) return;
+
+        const content = document.getElementById('contractContent');
+        if (!content) return;
+
+        // Track deletions (Backspace or Delete key)
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0 && selection.toString()) {
+                e.preventDefault();
+                markTextAsDeleted(selection);
+            }
+        }
+    }
+
+    function markTextAsDeleted(selection) {
+        try {
+            isProcessingChange = true;
+
+            const range = selection.getRangeAt(0);
+            const selectedText = selection.toString();
+
+            // Create deletion marker
+            const span = document.createElement('span');
+            span.className = 'track-change-delete';
+            span.setAttribute('data-change-id', 'change_' + (++changeCounter));
+            span.setAttribute('data-change-type', 'delete');
+            span.setAttribute('data-change-author', currentUserName);
+            span.setAttribute('data-change-date', new Date().toISOString());
+            span.textContent = selectedText;
+            span.title = `Deleted by ${currentUserName}`;
+
+            // Add click handler for accept/reject
+            span.onclick = (e) => {
+                e.stopPropagation();
+                showChangeOptions(span);
+            };
+
+            // Replace selected text with deletion marker
+            range.deleteContents();
+            range.insertNode(span);
+
+            // Track the change
+            trackedChanges.push({
+                id: span.getAttribute('data-change-id'),
+                type: 'delete',
+                text: selectedText,
+                author: currentUserName,
+                date: new Date().toISOString()
+            });
+
+            // Clear selection
+            selection.removeAllRanges();
+
+            isProcessingChange = false;
+
+        } catch (e) {
+            console.error('Error marking deletion:', e);
+            isProcessingChange = false;
+        }
+    }
+
+    function showChangeOptions(changeElement) {
+        const changeId = changeElement.getAttribute('data-change-id');
+        const changeType = changeElement.getAttribute('data-change-type');
+        const author = changeElement.getAttribute('data-change-author');
+
+        const options = confirm(
+            `${changeType.toUpperCase()} by ${author}\n\n` +
+            `Accept this change?`
+        );
+
+        if (options) {
+            acceptChange(changeElement);
+        } else {
+            if (confirm('Reject this change?')) {
+                rejectChange(changeElement);
+            }
+        }
+    }
+
+    function acceptChange(changeElement) {
+        const changeType = changeElement.getAttribute('data-change-type');
+
+        if (changeType === 'delete') {
+            // Accept deletion - remove the text completely
+            changeElement.remove();
+        } else if (changeType === 'insert') {
+            // Accept insertion - remove markup, keep text
+            const text = changeElement.textContent;
+            changeElement.replaceWith(document.createTextNode(text));
+        }
+
+        // Remove from tracked changes
+        const changeId = changeElement.getAttribute('data-change-id');
+        trackedChanges = trackedChanges.filter(c => c.id !== changeId);
+
+        showNotification('Change accepted', 'success');
+        saveAsDraft();
+    }
+
+    function rejectChange(changeElement) {
+        const changeType = changeElement.getAttribute('data-change-type');
+
+        if (changeType === 'delete') {
+            // Reject deletion - restore text without markup
+            const text = changeElement.textContent;
+            changeElement.replaceWith(document.createTextNode(text));
+        } else if (changeType === 'insert') {
+            // Reject insertion - remove completely
+            changeElement.remove();
+        }
+
+        // Remove from tracked changes
+        const changeId = changeElement.getAttribute('data-change-id');
+        trackedChanges = trackedChanges.filter(c => c.id !== changeId);
+
+        showNotification('Change rejected', 'success');
+        saveAsDraft();
+    }
+
+    function acceptAllChanges() {
+        if (!confirm('Accept all tracked changes?')) return;
+
+        const content = document.getElementById('contractContent');
+        if (!content) return;
+
+        // Accept all deletions - remove them
+        content.querySelectorAll('.track-change-delete').forEach(el => {
+            if (el.getAttribute('data-change-type') === 'delete') {
+                el.remove();
+            }
+        });
+
+        // Accept all insertions - remove markup
+        content.querySelectorAll('.track-change-insert').forEach(el => {
+            const text = el.textContent;
+            el.replaceWith(document.createTextNode(text));
+        });
+
+        trackedChanges = [];
+        showNotification('All changes accepted', 'success');
+        saveAsDraft();
+    }
+
+    function rejectAllChanges() {
+        if (!confirm('Reject all tracked changes?')) return;
+
+        const content = document.getElementById('contractContent');
+        if (!content) return;
+
+        // Reject all deletions - restore text
+        content.querySelectorAll('.track-change-delete').forEach(el => {
+            if (el.getAttribute('data-change-type') === 'delete') {
+                const text = el.textContent;
+                el.replaceWith(document.createTextNode(text));
+            }
+        });
+
+        // Reject all insertions - remove them
+        content.querySelectorAll('.track-change-insert').forEach(el => {
+            el.remove();
+        });
+
+        trackedChanges = [];
+        showNotification('All changes rejected', 'success');
+        saveAsDraft();
+    }
+
+    // Mark new text as insertion
+    function markTextAsInserted(text, range) {
+        const span = document.createElement('span');
+        span.className = 'track-change-insert';
+        span.setAttribute('data-change-id', 'change_' + (++changeCounter));
+        span.setAttribute('data-change-type', 'insert');
+        span.setAttribute('data-change-author', currentUserName);
+        span.setAttribute('data-change-date', new Date().toISOString());
+        span.textContent = text;
+        span.title = `Inserted by ${currentUserName}`;
+
+        span.onclick = (e) => {
+            e.stopPropagation();
+            showChangeOptions(span);
+        };
+
+        range.insertNode(span);
+
+        trackedChanges.push({
+            id: span.getAttribute('data-change-id'),
+            type: 'insert',
+            text: text,
+            author: currentUserName,
+            date: new Date().toISOString()
+        });
+    }
+
+</script>
+
 
 
 <script>
@@ -5791,14 +6808,14 @@
         } else if (contract.status === 'signature') {
 
             const party = contract.is_counterparty ? 'client' : 'company';
-            
-            if(contract.is_esignee){
-            // Signature stage
-            actionButtons = `
+
+            if (contract.is_esignee) {
+                // Signature stage
+                actionButtons = `
             <button class="btn btn-success" onclick="openSignatureModal('${party}')">
                 <i class="ti ti-writing-sign"></i> Sign Contract
             </button>`;
-        }
+            }
         } else if (contract.status === 'signed') {
             // 🆕 SIGNED STAGE - READY FOR EXECUTION
             actionButtons = `
@@ -8141,7 +9158,7 @@ ${contract.content && contract.content.trim() !== '' ?
 
                 contractId: contractId
             });
-    
+
             // Send request (NO BODY - fixes 422 error)
             const response = await fetch(`/api/contracts/${contractId}/esignature`, {
                 method: 'PUT',
@@ -8236,7 +9253,7 @@ ${contract.content && contract.content.trim() !== '' ?
 
     // Open Signature Modal - Enhanced version with authority check
     function openSignatureModal(party) {
-        console.log('partyyyy',party);
+        console.log('partyyyy', party);
         // PREVENT MODAL IF NOT IN SIGNATURE STATUS
         if (contractData?.contract?.status !== 'signature') {
             showNotification('Contract must be in Signature stage before signing. Current status: ' +
@@ -8249,7 +9266,7 @@ ${contract.content && contract.content.trim() !== '' ?
         //     showNotification('You are not authorized to sign this contract. Only users designated as E-Signature Authority in the workflow can sign.', 'error');
         //     return;
         // }
-        
+
 
         currentSignatureField = party;
 
@@ -8421,7 +9438,7 @@ ${contract.content && contract.content.trim() !== '' ?
         showLoader();
         try {
             console.log('📝 Sending signature request...');
-            console.log('signature type',currentSignatureField);
+            console.log('signature type', currentSignatureField);
 
             const response = await fetch('/api/contracts/signature/apply', {
                 method: 'POST',
@@ -8650,6 +9667,7 @@ ${contract.content && contract.content.trim() !== '' ?
         }
     }
     // Track Changes - FULL FUNCTIONALITY
+
     async function toggleTrackChanges() {
         trackChangesEnabled = !trackChangesEnabled;
         const btn = document.getElementById('trackChangesBtn');
@@ -8662,18 +9680,31 @@ ${contract.content && contract.content.trim() !== '' ?
             // Store current content as baseline
             originalContent = document.getElementById('contractContent').innerHTML;
 
-            // Enable track changes on backend
-            await updateTrackChangesStatus('enable');
+            // Show track changes panel
+            showTrackChangesPanel();
 
-            showNotification('Track changes enabled', 'info');
+            // Enable track changes on backend
+            try {
+                const response = await fetch(`/api/contracts/track-changes/${contractId}?action=enable`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                if (data.success) {
+                    showNotification('Track changes enabled', 'success');
+                }
+            } catch (error) {
+                console.error('Error enabling track changes:', error);
+            }
         } else {
             btn.classList.remove('active');
             btn.style.background = '';
             btn.style.color = '';
 
+            // Hide track changes panel
+            hideTrackChangesPanel();
+
             // Ask user what to do with tracked changes
             const action = confirm('Accept all tracked changes?') ? 'accept_all' : 'reject_all';
-            await updateTrackChangesStatus(action);
 
             if (action === 'accept_all') {
                 acceptAllChanges();
@@ -8681,9 +9712,69 @@ ${contract.content && contract.content.trim() !== '' ?
                 rejectAllChanges();
             }
 
+            try {
+                const response = await fetch(`/api/contracts/track-changes/${contractId}?action=${action}`, {
+                    method: 'POST'
+                });
+                await response.json();
+            } catch (error) {
+                console.error('Error disabling track changes:', error);
+            }
+
             showNotification('Track changes disabled', 'info');
         }
     }
+
+
+
+    function showTrackChangesPanel() {
+        let panel = document.getElementById('trackChangesPanel');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.id = 'trackChangesPanel';
+            panel.style.cssText = `
+            position: fixed;
+            top: 70px;
+            right: 430px;
+            background: white;
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            z-index: 998;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        `;
+
+            panel.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px; color: #28a745; font-weight: 600; font-size: 14px;">
+                <i class="ti ti-edit"></i>
+                <span>Track Changes ON</span>
+            </div>
+            <button onclick="acceptAllChanges()" style="background: #28a745; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                <i class="ti ti-check-circle"></i> Accept All
+            </button>
+            <button onclick="rejectAllChanges()" style="background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+                <i class="ti ti-circle-x"></i> Reject All
+            </button>
+        `;
+
+            document.body.appendChild(panel);
+        }
+        panel.style.display = 'flex';
+    }
+
+
+
+    function hideTrackChangesPanel() {
+        const panel = document.getElementById('trackChangesPanel');
+        if (panel) panel.style.display = 'none';
+    }
+
+
+
+
 
     async function updateTrackChangesStatus(action) {
         // Since metadata column doesn't exist, we'll handle track changes client-side only
@@ -8713,20 +9804,131 @@ ${contract.content && contract.content.trim() !== '' ?
 
     function handleContentChange(e) {
         if (!trackChangesEnabled) {
-            // Just update save status
             updateSaveStatus('editing');
             return;
         }
 
-        // Track the change
-        const currentContent = document.getElementById('contractContent').innerHTML;
-        const changeType = currentContent.length > originalContent.length ? 'insert' : 'delete';
+        // Don't track if user is just navigating
+        if (!e || !e.inputType) return;
 
-        // Simple change tracking - in production, use a proper diff algorithm
-        trackChange(changeType, originalContent, currentContent);
+        const inputType = e.inputType;
+
+        // Track deletions
+        if (inputType.includes('delete')) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                // Mark deleted content (already handled by beforeinput)
+            }
+        }
+
+        // Track insertions
+        if (inputType.includes('insert')) {
+            markRecentInsertions();
+        }
 
         updateSaveStatus('editing');
     }
+
+
+
+    document.getElementById('contractContent')?.addEventListener('beforeinput', function (e) {
+        if (!trackChangesEnabled) return;
+
+        const inputType = e.inputType;
+
+        // Handle deletions
+        if (inputType === 'deleteContentBackward' || inputType === 'deleteContentForward' || inputType === 'deleteByCut') {
+            const selection = window.getSelection();
+
+            if (selection.rangeCount > 0 && selection.toString().trim()) {
+                e.preventDefault(); // Prevent actual deletion
+
+                // Mark text as deleted instead
+                const range = selection.getRangeAt(0);
+                const deletedText = selection.toString();
+
+                // Create deletion marker
+                const span = document.createElement('span');
+                span.className = 'track-change-delete';
+                span.style.cssText = `
+                text-decoration: line-through;
+                text-decoration-color: #dc3545;
+                text-decoration-thickness: 2px;
+                background: rgba(220,53,69,0.15);
+                color: #dc3545;
+                padding: 2px 4px;
+                border-radius: 3px;
+                cursor: pointer;
+            `;
+                span.textContent = deletedText;
+                span.title = `Deleted by ${currentUserName || 'User'}`;
+                span.onclick = function () {
+                    if (confirm('Accept this deletion?')) {
+                        this.remove();
+                        saveAsDraft();
+                    } else if (confirm('Reject this deletion? (Restore text)')) {
+                        this.replaceWith(document.createTextNode(deletedText));
+                        saveAsDraft();
+                    }
+                };
+
+                // Replace selection with deletion marker
+                range.deleteContents();
+                range.insertNode(span);
+
+                // Clear selection
+                selection.removeAllRanges();
+            }
+        }
+    });
+
+
+
+
+
+    function markRecentInsertions() {
+        // This is a simplified version - in production use proper diff algorithm
+        const content = document.getElementById('contractContent');
+        const selection = window.getSelection();
+
+        if (selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            const container = range.commonAncestorContainer;
+
+            // Find recently inserted text nodes
+            if (container.nodeType === Node.TEXT_NODE && container.textContent.trim()) {
+                // Only mark if not already marked
+                if (!container.parentElement.classList.contains('track-change-insert')) {
+                    const span = document.createElement('span');
+                    span.className = 'track-change-insert';
+                    span.style.cssText = `
+                    background: rgba(40,167,69,0.15);
+                    border-bottom: 2px solid #28a745;
+                    color: #155724;
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    cursor: pointer;
+                `;
+                    span.textContent = container.textContent;
+                    span.title = `Inserted by ${currentUserName || 'User'}`;
+                    span.onclick = function () {
+                        if (confirm('Accept this insertion?')) {
+                            this.replaceWith(document.createTextNode(this.textContent));
+                            saveAsDraft();
+                        } else if (confirm('Reject this insertion? (Remove text)')) {
+                            this.remove();
+                            saveAsDraft();
+                        }
+                    };
+
+                    container.parentNode.replaceChild(span, container);
+                }
+            }
+        }
+    }
+
+
+
 
     function trackChange(type, oldText, newText) {
         const change = {
@@ -8754,25 +9956,48 @@ ${contract.content && contract.content.trim() !== '' ?
     }
 
     function acceptAllChanges() {
-        // Remove all track change markup
         const content = document.getElementById('contractContent');
-        const cleanContent = content.innerHTML
-            .replace(/<span class="track-change-insert[^>]*>(.*?)<\/span>/g, '$1')
-            .replace(/<span class="track-change-delete[^>]*>.*?<\/span>/g, '');
 
-        content.innerHTML = cleanContent;
+        // Accept all deletions - remove them completely
+        content.querySelectorAll('.track-change-delete').forEach(el => {
+            el.remove();
+        });
+
+        // Accept all insertions - remove markup, keep text
+        content.querySelectorAll('.track-change-insert').forEach(el => {
+            const text = el.textContent;
+            el.replaceWith(document.createTextNode(text));
+        });
+
         trackedChanges = [];
-        originalContent = cleanContent;
+        originalContent = content.innerHTML;
 
-        // Save the accepted changes
+        showNotification('All changes accepted', 'success');
         saveAsDraft();
     }
 
+
     function rejectAllChanges() {
-        // Restore original content
-        document.getElementById('contractContent').innerHTML = originalContent;
+        const content = document.getElementById('contractContent');
+
+        // Reject all deletions - restore text without markup
+        content.querySelectorAll('.track-change-delete').forEach(el => {
+            const text = el.textContent;
+            el.replaceWith(document.createTextNode(text));
+        });
+
+        // Reject all insertions - remove them completely
+        content.querySelectorAll('.track-change-insert').forEach(el => {
+            el.remove();
+        });
+
         trackedChanges = [];
+
+        showNotification('All changes rejected', 'success');
+        saveAsDraft();
     }
+
+
 
     // Find & Replace - FULL FUNCTIONALITY
     function findReplace() {
@@ -12481,7 +13706,7 @@ Generated by CALIM 360 Smart CLM
      * Search users from database for counter-party email
      */
     async function searchCounterPartyUsers(query) {
-       
+
         const suggestionsDiv = document.getElementById('counterPartyEmailSuggestions');
 
         // Clear previous timeout
@@ -12515,7 +13740,7 @@ Generated by CALIM 360 Smart CLM
                     }
                 });
 
-                 
+
                 if (!response.ok) {
                     throw new Error('Failed to search users');
                 }
@@ -12620,14 +13845,14 @@ Generated by CALIM 360 Smart CLM
 
 
 
-   let searchSignatureTimeout;
+    let searchSignatureTimeout;
     let selectedCounterPartySignatureEmail = null;
 
     /**
      * Search users from database for counter-party email
      */
     async function searchCounterPartySignatureUsers(query) {
-       
+
         const suggestionsDiv = document.getElementById('counterPartyEmailSignatureSuggestions');
 
         // Clear previous timeout
@@ -12661,7 +13886,7 @@ Generated by CALIM 360 Smart CLM
                     }
                 });
 
-                 
+
                 if (!response.ok) {
                     throw new Error('Failed to search users');
                 }
@@ -15377,6 +16602,15 @@ Generated by CALIM 360 Smart CLM
             console.error('Save error:', error);
             alert('Error saving e-signature authorities');
         }
+    }
+
+
+
+    if (!document.getElementById('trackChangesStyles')) {
+        const style = document.createElement('div');
+        style.id = 'trackChangesStyles';
+        style.innerHTML = trackChangesCSS;
+        document.head.appendChild(style);
     }
 
 
