@@ -22,7 +22,7 @@ import hashlib
 import uuid
 import traceback
 from app.utils.datetime_helpers import format_datetime_to_iso
-
+from app.services.audit_service import log_contract_action
 
 
 # Add these 4 lines
@@ -372,6 +372,21 @@ async def create_contract_from_template(
         db.commit()
         
         logger.info(f" Contract version created with content length: {len(template_content)}")
+
+        log_contract_action(
+            db=db,
+            action_type="contract_created",
+            contract_id=contract_id,
+            user_id=current_user.id,
+            details={
+                "contract_number": contract_number,
+                "contract_title": contract_data["contract_title"],
+                "template_id": template_id,
+                "template_name": template_name,
+                "creation_method": "template"
+            },
+            ip_address=None  # request.client.host not available in this context
+        )
         
         # Return complete contract data
         return {
@@ -579,6 +594,18 @@ async def generate_contract_with_ai(
         # Use lastrowid for MySQL compatibility
         contract_id = result.lastrowid
         db.commit()
+
+        log_contract_action(
+            db=db,
+            action_type="contract_created",
+            contract_id=contract_id,
+            user_id=current_user.id,
+            details={
+                "contract_number": contract_number,
+                "contract_title": contract_title,
+            },
+            ip_address=None
+        )
         
         logger.info(f" Contract created: {contract_number} (ID: {contract_id})")
         
@@ -956,11 +983,11 @@ async def delete_contract(
     if not contract:
         raise HTTPException(status_code=404, detail="Contract not found")
     
-    if contract.status not in ['draft', 'pending_review']:
-        raise HTTPException(
-            status_code=403,
-            detail="Cannot delete contract in current status"
-        )
+    # if contract.status not in ['draft', 'pending_review']:
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="Cannot delete contract in current status"
+    #     )
     
     if hasattr(Contract, 'is_deleted'):
         contract.is_deleted = True
@@ -973,6 +1000,18 @@ async def delete_contract(
     
     try:
         db.commit()
+        log_contract_action(
+            db=db,
+            action_type="contract_deleted",
+            contract_id=contract_id,
+            user_id=current_user.id,
+            details={
+                "contract_number": contract.contract_number,
+                "contract_title": contract.contract_title
+            },
+            ip_address=None
+        )
+
         return {
             "success": True,
             "message": "Contract deleted successfully",
@@ -1440,6 +1479,18 @@ async def save_contract_draft(
             "blockchain_success": blockchain_success,
             "blockchain_activities": blockchain_activities  # ← This is what frontend needs!
         }
+
+        log_contract_action(
+            db=db,
+            action_type="contract_updated",
+            contract_id=contract_id,
+            user_id=current_user.id,
+            details={
+                "update_type": "content_saved",
+                "has_blockchain": len(blockchain_activities) > 0
+            },
+            ip_address=None
+        )
         
         logger.info(f" Returning response with {len(blockchain_activities)} blockchain activities")
         return response
@@ -1677,6 +1728,21 @@ async def send_contract_for_signature(
         
         logger.info(f"✅ Contract {contract_id} sent for signature with {signatories_created} signatories")
         
+
+        log_contract_action(
+            db=db,
+            action_type="signature_requested",
+            contract_id=contract_id,
+            user_id=current_user.id,
+            details={
+                "signatories_count": signatories_created,
+                "new_status": "signature"
+            },
+            ip_address=None
+        )
+
+
+
         return {
             "success": True,
             "message": f"Contract sent for signature successfully. {signatories_created} signatories notified.",
@@ -1757,6 +1823,19 @@ async def initiate_approval_workflow(
             logger.warning(f"Could not create activity log: {str(activity_err)}")
         
         db.commit()
+
+
+        log_contract_action(
+            db=db,
+            action_type="workflow_started",
+            contract_id=contract_id,
+            user_id=current_user.id,
+            details={
+                "workflow_type": "approval",
+                "new_status": "approval"
+            },
+            ip_address=None
+        )
         
         return {
             "success": True,
@@ -1934,6 +2013,19 @@ async def apply_signature(
                 "ip_address": client_ip,
                 "email": current_user.email
             })
+        
+        log_contract_action(
+            db=db,
+            action_type="contract_signed",
+            contract_id=contract_id,
+            user_id=current_user.id,
+            details={
+                "signer_type": signer_type,
+                "signature_method": signature_method,
+                "all_signed": all_signed
+            },
+            ip_address=client_ip
+        )
         
         logger.info(f"✅ Signature applied for user {current_user.id}")
         
@@ -2883,7 +2975,6 @@ async def get_contract_workflow(
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-
 @router.post("/submit-approval")
 async def submit_for_internal_review(
     review_data: dict,
@@ -2922,28 +3013,66 @@ async def submit_for_internal_review(
         
         # Only update contract status if user is NOT Party B (counterparty)
         if not is_counterparty:
-            # Update contract status to 'review'
-            update_query = text("""
-                UPDATE contracts 
-                SET status = 'review',
-                    updated_at = NOW()
-                WHERE id = :contract_id
-            """)
-            db.execute(update_query, {"contract_id": contract_id})
-            logger.info(f"Contract {contract_id} status updated to 'review' by user {current_user.id}")
 
-            if request_type=='approval':
-                # Update contract status to 'approval'
-                contract.status = 'approval'
-                contract.updated_at = datetime.now()
+            
+            # =====================================================
+            # HANDLE INTERNAL REVIEW
+            # =====================================================
+            if request_type == 'internal_review':
+                logger.info(f"🔍 Processing INTERNAL REVIEW for contract {contract_id}")
+
+                # Update contract status to 'review'
+                update_query = text("""
+                    UPDATE contracts 
+                    SET status = 'review',
+                        updated_at = NOW()
+                    WHERE id = :contract_id
+                """)
+                db.execute(update_query, {"contract_id": contract_id})
+                logger.info(f"Contract {contract_id} status updated to 'review' by user {current_user.id}")
                 
-                logger.info(f" Contract {contract_id} status updated to 'approval'")
+                # Get first reviewer in the workflow for action_person_id
+                logger.info(f"🔍 Finding first reviewer in internal review workflow...")
+                first_reviewer_query = text("""
+                    SELECT u.id
+                    FROM workflow_instances wi
+                    INNER JOIN workflows w ON wi.workflow_id = w.id
+                    INNER JOIN workflow_steps ws ON w.id = ws.workflow_id
+                    INNER JOIN users u ON ws.assignee_user_id = u.id
+                    WHERE wi.contract_id = :contract_id
+                    AND w.company_id = :company_id
+                    AND ws.step_number = 1
+                    AND ws.step_type <> 'e_sign_authority'
+                    LIMIT 1
+                """)
+                first_reviewer = db.execute(first_reviewer_query, {
+                    "contract_id": contract_id,
+                    "company_id": current_user.company_id
+                }).first()
                 
-                # Update workflow instance status from 'active' to 'in_progress'
+                first_reviewer_id = first_reviewer.id if first_reviewer else None
+                logger.info(f"✅ First reviewer ID: {first_reviewer_id}")
+                
+                # Update contract with action_person_id
+                update_contract_query = text("""
+                    UPDATE contracts
+                    SET action_person_id = :action_person_id,
+                        updated_at = NOW()
+                    WHERE id = :contract_id
+                """)
+                db.execute(update_contract_query, {
+                    "action_person_id": first_reviewer_id,
+                    "contract_id": contract_id
+                })
+                
+                logger.info(f"✅ Contract {contract_id} action_person_id set to: {first_reviewer_id}")
+                
+                # Update workflow instance status to 'in_progress'
                 activate_workflow_query = text("""
                     UPDATE workflow_instances wi
                     INNER JOIN workflows w ON wi.workflow_id = w.id
-                    SET wi.status = 'in_progress', wi.current_step=1,
+                    SET wi.status = 'in_progress', 
+                        wi.current_step = 1,
                         wi.started_at = NOW()
                     WHERE wi.contract_id = :contract_id
                     AND w.company_id = :company_id
@@ -2953,11 +3082,68 @@ async def submit_for_internal_review(
                     "company_id": current_user.company_id
                 })
 
-                logger.info(f" worflow status updated to 'in_progress'")
-                
-            if request_type=='signature':
+                logger.info(f"✅ Internal review workflow status updated to 'in_progress'")
 
-                # STEP 2: Find the E-SIGN step in the workflow
+            # =====================================================
+            # HANDLE APPROVAL
+            # =====================================================
+            elif request_type == 'approval':
+                logger.info(f"🔍 Processing APPROVAL for contract {contract_id}")
+                
+                # Get first approver in the workflow for action_person_id
+                logger.info(f"🔍 Finding first approver in approval workflow...")
+                first_approver_query = text("""
+                    SELECT u.id
+                    FROM workflow_instances wi
+                    INNER JOIN workflows w ON wi.workflow_id = w.id
+                    INNER JOIN workflow_steps ws ON w.id = ws.workflow_id
+                    INNER JOIN users u ON ws.assignee_user_id = u.id
+                    WHERE wi.contract_id = :contract_id
+                    AND w.company_id = :company_id
+                    AND ws.step_number = 1
+                    AND ws.step_type <> 'e_sign_authority'
+                    LIMIT 1
+                """)
+                first_approver = db.execute(first_approver_query, {
+                    "contract_id": contract_id,
+                    "company_id": current_user.company_id
+                }).first()
+                
+                first_approver_id = first_approver.id if first_approver else None
+                logger.info(f"✅ First approver ID: {first_approver_id}")
+                
+                # Update contract status to 'approval'
+                contract.status = 'approval'
+                contract.action_person_id = first_approver_id
+                contract.updated_at = datetime.now()
+                
+                logger.info(f"✅ Contract {contract_id} status updated to 'approval'")
+                logger.info(f"✅ action_person_id set to: {first_approver_id}")
+                
+                # Update workflow instance status from 'active' to 'in_progress'
+                activate_workflow_query = text("""
+                    UPDATE workflow_instances wi
+                    INNER JOIN workflows w ON wi.workflow_id = w.id
+                    SET wi.status = 'in_progress', 
+                        wi.current_step = 1,
+                        wi.started_at = NOW()
+                    WHERE wi.contract_id = :contract_id
+                    AND w.company_id = :company_id
+                """)
+                db.execute(activate_workflow_query, {
+                    "contract_id": contract_id,
+                    "company_id": current_user.company_id
+                })
+
+                logger.info(f"✅ Approval workflow status updated to 'in_progress'")
+
+            # =====================================================
+            # HANDLE SIGNATURE
+            # =====================================================
+            elif request_type == 'signature':
+                logger.info(f"🔍 Processing SIGNATURE for contract {contract_id}")
+
+                # Find the E-SIGN step in the workflow
                 esign_step_query = text("""
                     SELECT 
                         ws.step_number,
@@ -2993,17 +3179,20 @@ async def submit_for_internal_review(
                 logger.info(f"   Workflow: {esign_step.workflow_name} (Master: {esign_step.is_master})")
             
 
-                # Update contract status to 'signature'
+                # Update contract status to 'signature' and set action person
                 contract.status = 'signature'
+                contract.action_person_id = esign_step.assignee_user_id
                 contract.updated_at = datetime.now()
                 
-                logger.info(f" Contract {contract_id} status updated to 'approval'")
+                logger.info(f"✅ Contract {contract_id} status updated to 'signature'")
+                logger.info(f"✅ action_person_id set to e-sign authority: {esign_step.assignee_user_id}")
                 
                 # Update workflow instance status from 'active' to 'in_progress'
                 activate_workflow_query = text("""
                     UPDATE workflow_instances wi
                     INNER JOIN workflows w ON wi.workflow_id = w.id
-                    SET wi.status = 'in_progress', wi.current_step= :esign_step_number,
+                    SET wi.status = 'in_progress', 
+                        wi.current_step = :esign_step_number,
                         wi.started_at = NOW()
                     WHERE wi.contract_id = :contract_id
                     AND w.company_id = :company_id
@@ -3014,7 +3203,8 @@ async def submit_for_internal_review(
                     "company_id": current_user.company_id
                 })
 
-                logger.info(f" worflow status updated to 'in_progress'")
+                logger.info(f"✅ Signature workflow status updated to 'in_progress'")
+                
         else:
             # Log that counterparty submitted review (status not updated)
             logger.info(f"Counterparty (Party B) user {current_user.id} submitted review for contract {contract_id} (contract status not updated)")
@@ -3077,7 +3267,7 @@ async def submit_for_internal_review(
                     insert_instance = text("""
                         INSERT INTO workflow_instances 
                         (contract_id, workflow_id, status, current_step)
-                        VALUES (:contract_id, :workflow_id, 'pending',1)
+                        VALUES (:contract_id, :workflow_id, 'pending', 1)
                     """)
                     db.execute(insert_instance, {
                         "contract_id": contract_id,
@@ -3318,7 +3508,7 @@ async def analyze_contract_risks(
         Use professional legal Arabic terminology appropriate for Qatar jurisdiction.
         """        
         # Prepare comprehensive prompt for Claude
-        prompt = f"""{language_instruction}You are a legal contract risk analyst. 
+        prompt = f"""{language_instruction} You are a legal contract risk analyst. 
 Analyze the following contract and provide a comprehensive risk assessment.
 
 CONTRACT INFORMATION:
@@ -4509,23 +4699,23 @@ async def manage_track_changes(
 # ADDITIONAL HELPER FUNCTIONS
 # =====================================================
 
-def log_contract_action(db: Session, user_id: int, contract_id: int, action: str, details: dict = None):
-    """Log contract actions for audit trail"""
-    try:
-        audit_query = text("""
-            INSERT INTO audit_logs 
-            (user_id, action, entity_type, entity_id, details, created_at)
-            VALUES (:user_id, :action, 'contract', :entity_id, :details, NOW())
-        """)
+# def log_contract_action(db: Session, user_id: int, contract_id: int, action: str, details: dict = None):
+#     """Log contract actions for audit trail"""
+#     try:
+#         audit_query = text("""
+#             INSERT INTO audit_logs 
+#             (user_id, action, entity_type, entity_id, details, created_at)
+#             VALUES (:user_id, :action, 'contract', :entity_id, :details, NOW())
+#         """)
         
-        db.execute(audit_query, {
-            "user_id": user_id,
-            "action": action,
-            "entity_id": contract_id,
-            "details": json.dumps(details) if details else None
-        })
-    except:
-        pass  # Don't fail main operation if audit fails
+#         db.execute(audit_query, {
+#             "user_id": user_id,
+#             "action": action,
+#             "entity_id": contract_id,
+#             "details": json.dumps(details) if details else None
+#         })
+#     except:
+#         pass  # Don't fail main operation if audit fails
 
 def send_notification(db: Session, user_id: int, title: str, message: str, type: str = "info"):
     """Send notification to user"""
@@ -5366,6 +5556,7 @@ async def stream_ai_contract_generation(
         language = request_data.get("language", "en")
 
 
+
         #  EXTRACT METADATA WITH SPECIAL REQUIREMENTS
         metadata = request_data.get("metadata", {})
         additional_requirements = metadata.get("additional_requirements", "")
@@ -5376,6 +5567,7 @@ async def stream_ai_contract_generation(
         
         party_a_name = party_a.get("name", "Party A")
         party_b_name = party_b.get("name", "Party B")
+
         
         # Build prompt
         prompt_text = f"""Generate a complete, production-ready {contract_type} contract:
@@ -5390,7 +5582,7 @@ Selected Clauses: {', '.join(selected_clause_descriptions) if selected_clause_de
 2. Professional legal language with contractually & legally binding for {jurisdiction}
 3. complete Contract should be written in {language} language
 4. Every clause fully developed with procedures and consequences
-5. {additional_requirements}
+5. {additional_requirements} 
 6. {payment_terms}
 7. {user_prompt}
 8. Dont include signature section 
@@ -5569,6 +5761,19 @@ async def update_contract_metadata(
         db.commit()
 
         logger.info(f" Metadata updated for contract {contract_check.contract_number}")
+
+
+        log_contract_action(
+            db=db,
+            action_type="contract_updated",
+            contract_id=contract_id,
+            user_id=current_user.id,
+            details={
+                "update_type": "metadata_updated",
+                "contract_number": contract_check.contract_number
+            },
+            ip_address=None
+        )
 
         return {
             "success": True,
@@ -6197,3 +6402,136 @@ async def send_for_esignature(
         db.rollback()
         logger.error(f"Error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/activity/{contract_id}")
+async def get_contract_activity_logs(
+    contract_id: int,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get simple activity logs for a contract - who did what and when
+    """
+    try:
+        logger.info(f"📊 Fetching activity logs for contract {contract_id}")
+        
+        # Get activity logs with user details
+        query = text("""
+            SELECT 
+                al.id,
+                al.action_type,
+                al.action_details,
+                al.created_at,
+                al.ip_address,
+                u.id as user_id,
+                CONCAT(u.first_name, ' ', u.last_name) as user_name,
+                u.email as user_email
+            FROM audit_logs al
+            LEFT JOIN users u ON al.user_id = u.id
+            WHERE al.contract_id = :contract_id
+            ORDER BY al.created_at DESC
+            LIMIT :limit
+        """)
+        
+        result = db.execute(query, {
+            "contract_id": contract_id,
+            "limit": limit
+        })
+        
+        activities = []
+        for row in result:
+            # Parse action_details if it's a JSON string
+            action_details = {}
+            if row.action_details:
+                try:
+                    if isinstance(row.action_details, str):
+                        action_details = json.loads(row.action_details)
+                    else:
+                        action_details = row.action_details
+                except:
+                    action_details = {"raw": str(row.action_details)}
+            
+            # Format action description
+            action_desc = get_action_description(row.action_type, action_details)
+            
+            activities.append({
+                "id": row.id,
+                "action_type": row.action_type,
+                "action_description": action_desc,
+                "user_name": row.user_name or "System",
+                "user_email": row.user_email or "system@calim360.com",
+                "timestamp": row.created_at.isoformat() + 'Z' if row.created_at else None,
+                "ip_address": row.ip_address,
+                "details": action_details
+            })
+        
+        # Get statistics
+        stats_query = text("""
+            SELECT 
+                COUNT(*) as total_activities,
+                MAX(created_at) as last_activity
+            FROM audit_logs
+            WHERE contract_id = :contract_id
+        """)
+        
+        stats_result = db.execute(stats_query, {"contract_id": contract_id}).fetchone()
+        
+        return {
+            "success": True,
+            "contract_id": contract_id,
+            "activities": activities,
+            "statistics": {
+                "total_activities": stats_result.total_activities or 0,
+                "last_activity_time": stats_result.last_activity.isoformat() + 'Z' if stats_result.last_activity else None  # 🔥 ADD 'Z'
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error fetching activity logs: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching activity logs: {str(e)}"
+        )
+
+
+def get_action_description(action_type: str, details: dict) -> str:
+    """
+    Convert action type to human-readable description
+    """
+    descriptions = {
+        "contract_created": "Created the contract",
+        "contract_updated": "Updated contract details",
+        "contract_deleted": "Deleted the contract",
+        "contract_signed": "Signed the contract",
+        "contract_submitted": "Submitted for review",
+        "contract_approved": "Approved the contract",
+        "contract_rejected": "Rejected the contract",
+        "obligation_created": "Created new obligation",
+        "obligation_updated": "Updated obligation",
+        "obligation_completed": "Completed obligation",
+        "document_uploaded": "Uploaded document",
+        "document_downloaded": "Downloaded document",
+        "comment_added": "Added comment",
+        "workflow_started": "Started workflow",
+        "workflow_completed": "Completed workflow step",
+        "clause_added": "Added contract clause",
+        "clause_updated": "Updated contract clause",
+        "version_created": "Created new version",
+        "signature_requested": "Requested signature",
+        "negotiation_started": "Started negotiation",
+        "ai_generation": "Generated content using AI",
+        "blockchain_storage": "Stored on blockchain"
+    }
+    
+    # Get description or default
+    description = descriptions.get(action_type, action_type.replace('_', ' ').title())
+    
+    # Add specific details if available
+    if details.get("entity_type"):
+        description += f" ({details['entity_type']})"
+    
+    return description

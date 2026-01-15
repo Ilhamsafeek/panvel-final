@@ -289,6 +289,11 @@
             <span>All Actions</span>
             <span class="tab-badge" id="allCount">0</span>
         </button>
+        <button class="tab-btn" onclick="switchTab('drafting')" data-tab="drafting">
+            <i class="ti ti-circle-check"></i>
+            <span>Drafting</span>
+            <span class="tab-badge" id="draftingCount">0</span>
+        </button>
         <button class="tab-btn" onclick="switchTab('approvals')" data-tab="approvals">
             <i class="ti ti-circle-check"></i>
             <span>Approvals</span>
@@ -341,7 +346,7 @@
     // Load pending actions from API
     async function loadPendingActions() {
         try {
-            const response = await fetch('/api/v1/pending-actions', {
+            const response = await fetch('/api/dashboard/pending-actions', {
                 credentials: 'include'
             });
 
@@ -369,6 +374,7 @@
         if (tab === 'all') return allActions;
 
         return allActions.filter(action => {
+            if (tab === 'drafting') return action.action_type === 'draft';
             if (tab === 'approvals') return action.action_type === 'approval';
             if (tab === 'reviews') return action.action_type === 'review';
             if (tab === 'signatures') return action.action_type === 'signature';
@@ -379,6 +385,8 @@
     // Update tab counts
     function updateCounts() {
         document.getElementById('allCount').textContent = allActions.length;
+        document.getElementById('draftingCount').textContent =
+            allActions.filter(a => a.action_type === 'draft').length;
         document.getElementById('approvalsCount').textContent =
             allActions.filter(a => a.action_type === 'approval').length;
         document.getElementById('reviewsCount').textContent =

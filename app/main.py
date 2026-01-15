@@ -21,6 +21,7 @@ from app.routers import subscription_router
 from app.core.subscription_guard import require_module_subscription, ModuleCodes
 from app.core.dependencies import get_user_context_with_subscriptions
 from app.api.routes import search
+from app.api.api_v1.contracts import activity_logs
 
 # Core imports
 from app.core.dependencies import get_current_user
@@ -364,6 +365,13 @@ app.include_router(
     tags=["workflow"]
 )
 app.include_router(search.router, prefix="/api/search", tags=["search"])
+
+# Activity Logs
+app.include_router(
+    activity_logs.router,
+    prefix="/activity-logs",
+    tags=["activity-logs"]
+)
 
 app.include_router(approvals_router)
 

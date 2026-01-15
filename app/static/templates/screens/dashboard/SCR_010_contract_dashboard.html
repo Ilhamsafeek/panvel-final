@@ -2826,7 +2826,7 @@ ${(analysis.recommendations || []).map((rec, idx) => `${idx + 1}. ${rec}`).join(
             </div>
 
             <div>
-               <span class="contract-date">Last Updated: ${timeAgo(contract.updated_at)}</span>
+               <span class="contract-date">Last Updated: ${getTimeAgo(contract.updated_at)}</span>
             </div>
             
             <div class="quick-actions">
@@ -3171,31 +3171,51 @@ function clearAllFilters() {
         return date.toLocaleDateString('en-US', options);
     }
 
-
-    function timeAgo(dateString) {
-        const now = new Date();
-        const date = new Date(dateString);
-        const seconds = Math.floor((now - date) / 1000);
-
-        const intervals = [
-            { label: 'year', seconds: 31536000 },
-            { label: 'month', seconds: 2592000 },
-            { label: 'week', seconds: 604800 },
-            { label: 'day', seconds: 86400 },
-            { label: 'hour', seconds: 3600 },
-            { label: 'minute', seconds: 60 },
-            { label: 'second', seconds: 1 }
-        ];
-
-        for (const interval of intervals) {
-            const count = Math.floor(seconds / interval.seconds);
-            if (count >= 1) {
-                return `${count} ${interval.label}${count > 1 ? 's' : ''} ago`;
-            }
-        }
-
-        return 'just now';
+// Helper function to get relative time - FIXED VERSION
+function getTimeAgo(date) {
+    // Handle different date input types
+    let dateObj;
+    
+    if (typeof date === 'string') {
+        // Database format: "2025-01-15 15:41:15"
+        // Treat it as LOCAL time (server time), not UTC
+        dateObj = new Date(date.replace(' ', 'T'));
+    } else if (date instanceof Date) {
+        dateObj = date;
+    } else {
+        return 'Just now';
     }
+    
+    // Get current time
+    const now = new Date();
+    
+    // Calculate difference in seconds
+    const seconds = Math.floor((now - dateObj) / 1000);
+    
+    // If the date is in the future or very recent (within 5 seconds), show "Just now"
+    if (seconds < 5 || seconds < 0) {
+        return 'Just now';
+    }
+    
+    const intervals = {
+        year: 31536000,
+        month: 2592000,
+        week: 604800,
+        day: 86400,
+        hour: 3600,
+        minute: 60
+    };
+    
+    for (const [name, value] of Object.entries(intervals)) {
+        const interval = Math.floor(seconds / value);
+        if (interval >= 1) {
+            return `${interval} ${name}${interval > 1 ? 's' : ''} ago`;
+        }
+    }
+    
+    return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
+}
+
 
     function getStatusLabel(status) {
         const labels = {
@@ -3820,8 +3840,8 @@ function clearAllFilters() {
     document.head.appendChild(style);
 
 
-async function viewAuditTrail(contractId) {
-    console.log(`🔍 Opening audit trail for contract: ${contractId}`);
+    async function viewAuditTrail(contractId) {
+    console.log(`🔍 Opening activity logs for contract: ${contractId}`);
     
     // Create and show loading modal first
     const modal = document.createElement('div');
@@ -3853,7 +3873,7 @@ async function viewAuditTrail(contractId) {
     document.body.appendChild(modal);
     document.body.style.overflow = 'hidden';
     
-    // Add CSS for spinner animation
+    // Add CSS for spinner animation if not exists
     if (!document.getElementById('audit-spinner-style')) {
         const style = document.createElement('style');
         style.id = 'audit-spinner-style';
@@ -3867,8 +3887,8 @@ async function viewAuditTrail(contractId) {
     }
     
     try {
-        // Fetch real audit logs from API
-        const response = await fetch(`/api/blockchain/activity/${contractId}`, {
+        // Fetch activity logs from API - SIMPLE ENDPOINT
+        const response = await fetch(`/api/contracts/activity/${contractId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -3876,11 +3896,11 @@ async function viewAuditTrail(contractId) {
         });
         
         if (!response.ok) {
-            throw new Error('Failed to fetch audit logs');
+            throw new Error('Failed to fetch activity logs');
         }
         
         const data = await response.json();
-        console.log('✅ Audit trail data received:', data);
+        console.log('✅ Activity logs received:', data);
         
         // Update modal with real data
         const modalBody = modal.querySelector('.modal-body');
@@ -3888,20 +3908,15 @@ async function viewAuditTrail(contractId) {
         if (data.success && data.activities && data.activities.length > 0) {
             modalBody.innerHTML = `
                 <!-- Statistics Cards -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                         <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Total Activities</div>
                         <div style="font-size: 2rem; font-weight: 700;">${data.statistics.total_activities || 0}</div>
                     </div>
                     
-                    <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Blockchain Txns</div>
-                        <div style="font-size: 2rem; font-weight: 700;">${data.statistics.total_transactions || 0}</div>
-                    </div>
-                    
                     <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                         <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem;">Last Activity</div>
-                        <div style="font-size: 1rem; font-weight: 600;">${data.statistics.last_activity_time || 'N/A'}</div>
+                        <div style="font-size: 1rem; font-weight: 600;">${formatTimestamp(data.statistics.last_activity_time) || 'N/A'}</div>
                     </div>
                 </div>
                 
@@ -3914,64 +3929,45 @@ async function viewAuditTrail(contractId) {
                     
                     <div style="position: relative;">
                         ${data.activities.map((activity, index) => {
-                            const actionType = activity.action || 'unknown';
-                            const timestamp = activity.timestamp ? new Date(activity.timestamp).toLocaleString() : 'N/A';
-                            const details = activity.details || {};
-                            
-                            // Determine icon and color based on action type
-                            let icon = 'file-text';
-                            let color = '#6b7280';
-                            
-                            if (actionType.includes('blockchain_storage')) {
-                                icon = 'database';
-                                color = '#3b82f6';
-                            } else if (actionType.includes('contract_created')) {
-                                icon = 'file-plus';
-                                color = '#10b981';
-                            } else if (actionType.includes('contract_updated')) {
-                                icon = 'edit';
-                                color = '#f59e0b';
-                            } else if (actionType.includes('contract_signed')) {
-                                icon = 'writing-sign';
-                                color = '#8b5cf6';
-                            } else if (actionType.includes('verification')) {
-                                icon = 'shield-check';
-                                color = '#06b6d4';
-                            }
-                            
-                            const isLast = index === data.activities.length - 1;
+                            const timestamp = activity.timestamp ? new Date(activity.timestamp) : new Date();
+                            const timeAgo = getTimeAgo(timestamp);
+                            const actionIcon = getActionIcon(activity.action_type);
+                            const actionColor = getActionColor(activity.action_type);
                             
                             return `
-                                <div style="display: flex; gap: 1rem; margin-bottom: ${isLast ? '0' : '1.5rem'}; position: relative;">
-                                    ${!isLast ? `<div style="position: absolute; left: 19px; top: 40px; bottom: -24px; width: 2px; background: #e5e7eb;"></div>` : ''}
+                                <div style="position: relative; padding-left: 2.5rem; padding-bottom: 2rem; ${index === data.activities.length - 1 ? 'padding-bottom: 0;' : ''}">
+                                    <!-- Timeline Line -->
+                                    ${index < data.activities.length - 1 ? `
+                                        <div style="position: absolute; left: 1rem; top: 2.5rem; bottom: 0; width: 2px; background: #e5e7eb;"></div>
+                                    ` : ''}
                                     
-                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: ${color}; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; font-size: 1.25rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); z-index: 1;">
-                                        <i class="ti ti-${icon}"></i>
+                                    <!-- Activity Icon -->
+                                    <div style="position: absolute; left: 0; top: 0; width: 2rem; height: 2rem; background: ${actionColor}; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                        <i class="ti ${actionIcon}" style="font-size: 1rem; color: white;"></i>
                                     </div>
                                     
-                                    <div style="flex: 1; background: #f9fafb; padding: 1rem; border-radius: 8px; border: 1px solid #e5e7eb;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                                            <strong style="color: #111827; text-transform: capitalize;">${actionType.replace(/_/g, ' ')}</strong>
-                                            <span style="font-size: 0.875rem; color: #6b7280;">${timestamp}</span>
+                                    <!-- Activity Content -->
+                                    <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                            <div style="flex: 1;">
+                                                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.25rem;">
+                                                    ${activity.action_description}
+                                                </div>
+                                                <div style="font-size: 0.875rem; color: #6b7280;">
+                                                    <i class="ti ti-user" style="font-size: 0.875rem;"></i>
+                                                    ${activity.user_name}
+                                                </div>
+                                            </div>
+                                            <div style="font-size: 0.75rem; color: #9ca3af; text-align: right;">
+                                                <div>${timeAgo}</div>
+                                                <div style="margin-top: 0.25rem;">${timestamp.toLocaleString()}</div>
+                                            </div>
                                         </div>
                                         
-                                        ${details.transaction_hash ? `
-                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Transaction Hash:</div>
-                                                <div style="font-family: 'Courier New', monospace; font-size: 0.875rem; color: #3b82f6; word-break: break-all;">${details.transaction_hash}</div>
-                                            </div>
-                                        ` : ''}
-                                        
-                                        ${details.document_hash ? `
-                                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: white; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                                <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 0.25rem;">Document Hash:</div>
-                                                <div style="font-family: 'Courier New', monospace; font-size: 0.875rem; color: #10b981; word-break: break-all;">${details.document_hash}</div>
-                                            </div>
-                                        ` : ''}
-                                        
-                                        ${details.network ? `
-                                            <div style="margin-top: 0.5rem; font-size: 0.875rem; color: #6b7280;">
-                                                <i class="ti ti-network"></i> Network: ${details.network}
+                                        ${activity.ip_address ? `
+                                            <div style="font-size: 0.75rem; color: #9ca3af; margin-top: 0.5rem;">
+                                                <i class="ti ti-map-pin" style="font-size: 0.75rem;"></i>
+                                                IP: ${activity.ip_address}
                                             </div>
                                         ` : ''}
                                     </div>
@@ -3985,9 +3981,11 @@ async function viewAuditTrail(contractId) {
             // No activities found
             modalBody.innerHTML = `
                 <div style="text-align: center; padding: 3rem; color: #6b7280;">
-                    <i class="ti ti-clipboard-off" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
-                    <h3 style="margin: 0 0 0.5rem 0; color: #374151;">No Activity Logs Found</h3>
-                    <p style="margin: 0; font-size: 0.875rem;">This contract doesn't have any recorded activities yet.</p>
+                    <i class="ti ti-file-search" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                    <h3 style="margin: 0 0 0.5rem 0;">No Activity Logs Found</h3>
+                    <p style="margin: 0; font-size: 0.875rem;">
+                        No activities have been recorded for this contract yet.
+                    </p>
                 </div>
             `;
         }
@@ -4007,7 +4005,7 @@ async function viewAuditTrail(contractId) {
         }
         
     } catch (error) {
-        console.error('❌ Error loading audit trail:', error);
+        console.error('❌ Error loading activity logs:', error);
         
         const modalBody = modal.querySelector('.modal-body');
         modalBody.innerHTML = `
@@ -4025,14 +4023,98 @@ async function viewAuditTrail(contractId) {
     }
 }
 
-// Close function (keep existing)
-function closeAuditTrailPopup() {
-    const modal = document.getElementById('auditTrailModalPopup');
-    if (modal) {
-        modal.remove();
-    }
-    document.body.style.overflow = 'auto';
+// Helper function to get action icon
+function getActionIcon(actionType) {
+    const icons = {
+        'contract_created': 'ti-file-plus',
+        'contract_updated': 'ti-edit',
+        'contract_deleted': 'ti-trash',
+        'contract_signed': 'ti-signature',
+        'contract_approved': 'ti-check',
+        'contract_rejected': 'ti-x',
+        'obligation_created': 'ti-checklist',
+        'obligation_updated': 'ti-edit',
+        'document_uploaded': 'ti-upload',
+        'document_downloaded': 'ti-download',
+        'comment_added': 'ti-message',
+        'workflow_started': 'ti-git-branch',
+        'ai_generation': 'ti-sparkles',
+        'blockchain_storage': 'ti-lock'
+    };
+    return icons[actionType] || 'ti-point-filled';
 }
+
+// Helper function to get action color
+function getActionColor(actionType) {
+    const colors = {
+        'contract_created': '#10b981',
+        'contract_updated': '#3b82f6',
+        'contract_deleted': '#ef4444',
+        'contract_signed': '#8b5cf6',
+        'contract_approved': '#22c55e',
+        'contract_rejected': '#f59e0b',
+        'obligation_created': '#14b8a6',
+        'document_uploaded': '#6366f1',
+        'ai_generation': '#ec4899',
+        'blockchain_storage': '#f97316'
+    };
+    return colors[actionType] || '#6b7280';
+}
+
+// Helper function to format timestamp
+// Helper function to format timestamp - FIXED VERSION
+function formatTimestamp(timestamp) {
+    if (!timestamp) return 'N/A';
+    
+    // Handle database format: "2025-01-15 15:41:15"
+    let date;
+    if (typeof timestamp === 'string') {
+        date = new Date(timestamp.replace(' ', 'T'));
+    } else {
+        date = new Date(timestamp);
+    }
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+        return 'Invalid Date';
+    }
+    
+    // Format: Jan 15, 2025, 3:41 PM
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+    });
+}
+// Helper function to get relative time
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    
+    const intervals = {
+        year: 31536000,
+        month: 2592000,
+        week: 604800,
+        day: 86400,
+        hour: 3600,
+        minute: 60,
+        second: 1
+    };
+    
+    for (const [name, value] of Object.entries(intervals)) {
+        const interval = Math.floor(seconds / value);
+        if (interval >= 1) {
+            return `${interval} ${name}${interval > 1 ? 's' : ''} ago`;
+        }
+    }
+    
+    return 'Just now';
+}
+
+
+
 </script>
 <!-- <script src="/app/static/js/contract-actions.js"></script> -->
 {% endblock %}

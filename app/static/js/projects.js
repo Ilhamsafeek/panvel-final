@@ -555,14 +555,7 @@ const ProjectManager = {
                                 <strong style="color: var(--text-muted); font-size: 0.875rem;">Project Code:</strong>
                                 <div style="margin-top: 0.25rem;">${project.project_code || project.code || 'N/A'}</div>
                             </div>
-                            <div>
-                                <strong style="color: var(--text-muted); font-size: 0.875rem;">Status:</strong>
-                                <div style="margin-top: 0.25rem;">
-                                    <span class="status-badge ${project.status || 'planning'}">
-                                        ${(project.status || 'planning').replace('-', ' ').toUpperCase()}
-                                    </span>
-                                </div>
-                            </div>
+                           
                             <div>
                                 <strong style="color: var(--text-muted); font-size: 0.875rem;">Project Manager:</strong>
                                 <div style="margin-top: 0.25rem;">${this.getManagerName(project.project_manager_id)}</div>
@@ -587,10 +580,7 @@ const ProjectManager = {
                                     ${this.formatCurrency(project.project_value || project.value || 0)}
                                 </div>
                             </div>
-                            <div>
-                                <strong style="color: var(--text-muted); font-size: 0.875rem;">Progress:</strong>
-                                <div style="margin-top: 0.25rem;">${project.progress || 0}%</div>
-                            </div>
+                           
                         </div>
                     </div>
                   

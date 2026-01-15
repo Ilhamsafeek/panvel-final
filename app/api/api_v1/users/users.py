@@ -154,8 +154,7 @@ async def get_company_users(
         company_id = current_user.company_id
         
         # Build base query
-        # query = db.query(User).filter(User.company_id == company_id)
-        query = db.query(User)
+        query = db.query(User).filter(User.company_id == company_id)
         
         # Apply search filter
         if search:
@@ -602,6 +601,137 @@ async def get_users(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to fetch users: {str(e)}"
         )
+
+
+# =====================================================
+# GET ALL USERS ENDPOINT (for your frontend)
+# =====================================================
+@router.get("/all")
+async def get_company_users(
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
+    status_filter: Optional[str] = None,
+    role_filter: Optional[str] = None,
+    user_type_filter: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)  # ✅ Added authentication
+):
+    """
+    Get all users in with filtering and pagination.
+    Includes expert profile information for consultants.
+    """
+    
+    try:
+        logger.info(f"Fetching users for company: {current_user.company_id}")
+        
+        # ✅ Use current user's company_id
+        company_id = current_user.company_id
+        
+        # Build base query
+        # query = db.query(User).filter(User.company_id == company_id)
+        query = db.query(User)
+        
+        # Apply search filter
+        if search:
+            search_term = f"%{search.lower()}%"
+            query = query.filter(
+                or_(
+                    User.first_name.ilike(search_term),
+                    User.last_name.ilike(search_term),
+                    User.email.ilike(search_term),
+                    User.job_title.ilike(search_term),
+                    User.username.ilike(search_term)
+                )
+            )
+        
+        # Apply status filter
+        if status_filter:
+            if status_filter == "active":
+                query = query.filter(and_(User.is_active == True, User.is_verified == True))
+            elif status_filter == "inactive":
+                query = query.filter(or_(User.is_active == False, User.is_verified == False))
+            elif status_filter == "pending":
+                query = query.filter(User.is_verified == False)
+        
+        # Apply role filter
+        if role_filter:
+            query = query.filter(User.user_role == role_filter)
+        
+        # Apply user type filter
+        if user_type_filter:
+            query = query.filter(User.user_type == user_type_filter)
+        
+        # Get total count
+        total_users = query.count()
+        
+        # Apply pagination
+        users = query.order_by(User.created_at.desc()).offset(skip).limit(limit).all()
+        
+        # Format response with expert profile data
+        user_list = []
+        for user in users:
+            # Get company name
+            company = db.query(Company).filter(Company.id == user.company_id).first()
+            company_name = company.company_name if company else None
+            
+            user_data = {
+                "id": user.id,
+                "company_id": user.company_id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "username": user.username or "",
+                "user_role": user.user_role or "user",
+                "department": user.department or "",
+                "job_title": user.job_title or "",
+                "mobile_number": user.mobile_number or "",
+                "qid_number": user.qid_number or "",
+                "user_type": user.user_type or "client",
+                "language_preference": user.language_preference or "en",
+                "timezone": user.timezone or "Asia/Qatar",
+                "is_active": bool(user.is_active) if user.is_active is not None else True,
+                "is_verified": bool(user.is_verified) if user.is_verified is not None else True,
+                "last_login_at": user.last_login_at.isoformat() if user.last_login_at else None,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "company_name": company_name or "N/A"
+            }
+            
+            # Add expert profile if user is a consultant
+            # if user.user_type == "consultant":
+            #     expert_profile = db.query(ExpertProfile).filter(
+            #         ExpertProfile.user_id == user.id
+            #     ).first()
+                
+            #     if expert_profile:
+            #         user_data["expert_profile"] = {
+            #             "specialization": expert_profile.specialization,
+            #             "experience_years": expert_profile.experience_years,
+            #             "hourly_rate": float(expert_profile.hourly_rate) if expert_profile.hourly_rate else None,
+            #             "availability_status": expert_profile.availability_status,
+            #             "certifications": expert_profile.certifications,
+            #             "languages": expert_profile.languages
+            #         }
+            
+            user_list.append(user_data)
+        
+        logger.info(f"Successfully returning {len(user_list)} users (total: {total_users})")
+        
+        return {
+            "users": user_list,
+            "total": total_users,
+            "skip": skip,
+            "limit": limit
+        }
+        
+    except Exception as e:
+        logger.error(f"Error in get_company_users: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch users: {str(e)}"
+        )
+
+
 
 # =====================================================
 # EXISTING: GET SINGLE USER ENDPOINT (your original code)

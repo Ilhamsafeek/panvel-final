@@ -72,7 +72,7 @@ class Settings(BaseSettings):
     # AI Configuration - Claude/Anthropic (Primary AI Engine)
     # ANTHROPIC_API_KEY: Optional[str] = None
     CLAUDE_API_KEY: Optional[str] = None  #  ADD THIS LINE
-    CLAUDE_MODEL: str = "claude-opus-4-20250514"
+    CLAUDE_MODEL: str = "claude-sonnet-4-20250514"
     CLAUDE_MAX_TOKENS: int = 16000  #  ADD THIS LINE
     CLAUDE_TEMPERATURE: float = 0.7  #  ADD THIS LINE
     MAX_TOKENS: int = 8000

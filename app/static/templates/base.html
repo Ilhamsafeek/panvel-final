@@ -2280,14 +2280,14 @@
         // ============================================
         // GLOBAL SEARCH
         // ============================================
-        document.querySelector('.global-search')?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                const query = e.target.value;
-                if (query) {
-                    window.location.href = `/search?q=${encodeURIComponent(query)}`;
-                }
-            }
-        });
+        // document.querySelector('.global-search')?.addEventListener('keypress', (e) => {
+        //     if (e.key === 'Enter') {
+        //         const query = e.target.value;
+        //         if (query) {
+        //             window.location.href = `/search?q=${encodeURIComponent(query)}`;
+        //         }
+        //     }
+        // });
 
         // ============================================
         // KEYBOARD SHORTCUTS
@@ -2747,14 +2747,12 @@
     </script>
 
 
-
+<!-- Global Search Script - MUST BE OUTSIDE BLOCK -->
+    <script src="/static/js/global_search.js?v=4"></script>
+    
     <!-- Page Specific Scripts -->
     {% block extra_js %}
     <script src="/static/js/common/auth.js"></script>
-
-        <!-- Global Search Script -->
-    <script src="/static/js/global_search.js?v=1"></script>
-
     {% endblock %}
 </body>
 

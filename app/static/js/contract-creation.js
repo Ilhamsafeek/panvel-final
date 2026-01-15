@@ -291,6 +291,7 @@ function buildAIPrompt() {
     if (paymentStructure) fullPrompt += `, payment structure: ${paymentStructure}`;
     if (specialRequirements) fullPrompt += `. Special requirements: ${specialRequirements}`;
     if (language === 'ar') fullPrompt += ` in Arabic language`;
+    if (language === 'mirror') fullPrompt += ` Give me mirror response with English and Arabic and generate side by side`;
     if (selectedClauses.length > 0) {
         fullPrompt += `. Include the following clauses: ${selectedClauses.map(c => c.replace(/_/g, ' ')).join(', ')}`;
     }

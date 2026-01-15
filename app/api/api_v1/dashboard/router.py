@@ -88,15 +88,11 @@ async def get_dashboard_statistics(
         # Counts contracts where current workflow step is assigned to current user
         my_pending_approvals_result = db.execute(
             text("""
-                SELECT COUNT(DISTINCT wi.contract_id) as count
-                FROM workflow_instances wi
-                JOIN workflows w ON wi.workflow_id = w.id
-                JOIN workflow_steps ws ON wi.workflow_id = ws.workflow_id 
-                    AND wi.current_step = ws.step_number
-                JOIN contracts c ON wi.contract_id = c.id
-                WHERE (c.company_id = :company_id OR c.party_b_id = :company_id)
-                AND wi.status IN ('pending', 'in_progress', 'active')
-                AND ws.assignee_user_id = :user_id
+                SELECT COUNT(*) as count
+                FROM contracts
+                WHERE action_person_id = :user_id
+                AND (company_id = :company_id OR party_b_id = :company_id)
+                AND status IN ('approval', 'signature', 'review','draft')
             """),
             {"company_id": company_id, "user_id": user_id}
         ).fetchone()
@@ -601,3 +597,104 @@ async def get_dashboard_stats(
 ):
     """Legacy stats endpoint - redirects to /statistics"""
     return await get_dashboard_statistics(current_user, db)
+
+
+
+@router.get("/pending-actions")
+async def get_pending_actions(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all contracts where action_person_id = current user ID
+    These are contracts requiring the current user's action
+    """
+    try:
+        logger.info("="*80)
+        logger.info(f"📋 FETCHING PENDING ACTIONS")
+        logger.info("="*80)
+        logger.info(f"👤 User ID: {current_user.id}")
+        logger.info(f"🏢 Company ID: {current_user.company_id}")
+        
+        # Query contracts where action_person_id = current user
+        query = text("""
+            SELECT 
+                c.id,
+                c.contract_number,
+                c.contract_title,
+                c.status,
+                c.created_at,
+                c.updated_at,
+                c.contract_type,
+                c.contract_value,
+                c.currency,
+                c.action_person_id,
+                CASE 
+                    WHEN c.status = 'draft' THEN 'draft'
+                    WHEN c.status = 'approval' THEN 'approval'
+                    WHEN c.status = 'signature' THEN 'signature'
+                    WHEN c.status = 'review' THEN 'review'
+                    ELSE 'review'
+                END as action_type,
+                CASE
+                    WHEN c.status = 'draft' THEN 'This contract requires your drafting'
+                    WHEN c.status = 'approval' THEN 'This contract requires your approval'
+                    WHEN c.status = 'signature' THEN 'This contract requires your signature'
+                    WHEN c.status = 'review' THEN 'This contract requires your review'
+                    ELSE 'Action required on this contract'
+                END as description
+            FROM contracts c
+            WHERE c.action_person_id = :user_id
+            AND c.company_id = :company_id
+            AND c.status IN ('approval', 'signature', 'review','draft')
+            ORDER BY c.updated_at DESC
+        """)
+        
+        result = db.execute(query, {
+            "user_id": current_user.id,
+            "company_id": current_user.company_id
+        }).fetchall()
+        
+        logger.info(f"✅ Found {len(result)} pending actions")
+        
+        # Format response
+        actions = []
+        for row in result:
+            action = {
+                "id": str(row.id),
+                "contract_id": str(row.id),
+                "contract_number": row.contract_number,
+                "contract_title": row.contract_title,
+                "status": row.status,
+                "action_type": row.action_type,
+                "description": row.description,
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+                "updated_at": row.updated_at.isoformat() if row.updated_at else None,
+                "due_date": None,  # Can be added later if needed
+                "is_urgent": False,  # Can be calculated based on due_date or other criteria
+                "contract_type": row.contract_type,
+                "contract_value": float(row.contract_value) if row.contract_value else None,
+                "currency": row.currency
+            }
+            actions.append(action)
+            
+        logger.info("="*80)
+        logger.info(f"✅ PENDING ACTIONS FETCHED SUCCESSFULLY")
+        logger.info(f"📊 Total Actions: {len(actions)}")
+        logger.info("="*80)
+        
+        return {
+            "success": True,
+            "data": actions,
+            "count": len(actions)
+        }
+        
+    except Exception as e:
+        logger.error("="*80)
+        logger.error(f"❌ ERROR FETCHING PENDING ACTIONS")
+        logger.error("="*80)
+        logger.error(f"Error Type: {type(e).__name__}")
+        logger.error(f"Error Message: {str(e)}")
+        logger.error("="*80)
+        logger.error("Full Traceback:", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
