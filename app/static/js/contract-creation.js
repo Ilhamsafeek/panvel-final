@@ -1117,13 +1117,11 @@ async function saveContract() {
             const formData = new FormData();
             formData.append('file', uploadedFile);
             formData.append('contract_title', contractName);
+            formData.append('tags', document.getElementById('tagsSelect')?.value || null);
             formData.append('profile_type', selectedProfile);
+
             if (projectId && projectId !== 'create_new' && projectId !== '') {
                 formData.append('project_id', projectId);
-            }
-
-            if (tags && tags.length > 0) {  // ✅ ADD THIS
-                formData.append('tags', tags[0]);  // ✅ Send single tag
             }
 
 
@@ -1172,6 +1170,7 @@ async function saveContract() {
                 end_date: endDate,
                 contract_value: contractValue ? parseFloat(contractValue) : null,
                 currency: currency,
+                tags: document.getElementById('tagsSelect')?.value || null,  // ✅ Send as string, not array
                 selected_clauses: selectedClauses ?
                     (Array.isArray(selectedClauses) ?
                         selectedClauses.reduce((acc, clause) => {
@@ -1191,7 +1190,7 @@ async function saveContract() {
                     payment_terms: paymentTerms,
                     prompt: buildAIPrompt(),
                     additional_requirements: additionalPrompt,
-                    tags: tags
+                    tags: document.getElementById('tagsSelect')?.value ? [document.getElementById('tagsSelect').value] : []
                 }
             };
 
@@ -1249,7 +1248,7 @@ async function saveContract() {
                 project_id: projectId && projectId !== 'create_new' && projectId !== ''
                     ? parseInt(projectId)
                     : null,
-                tags: tags,
+                tags: document.getElementById('tagsSelect')?.value || null,  // ✅ Send as string, not array  // ✅ NEW
                 status: 'draft'
             };
 
@@ -1482,7 +1481,7 @@ async function createContractFromTemplate(templateId) {
             profile_type: selectedProfile || 'contractor',
             template_id: parseInt(templateId),
             project_id: document.getElementById('projectSelect')?.value || null,
-            tags: []
+            tags: document.getElementById('tagsSelect')?.value ? [document.getElementById('tagsSelect').value] : []  // ✅ NEW
         };
 
         console.log(' Creating contract:', contractData);

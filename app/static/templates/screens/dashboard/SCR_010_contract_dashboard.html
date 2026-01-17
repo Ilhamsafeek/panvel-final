@@ -446,6 +446,15 @@
         font-weight: 600;
     }
 
+    .single-tag {
+        font-size: 0.75rem;
+        color: white;
+        background: rgb(54, 59, 59);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
     .contract-actions {
         position: absolute;
         top: 1rem;
@@ -1201,6 +1210,7 @@
             <option value="created_date">Created Date</option>
             <option value="contract_number">Contract Number</option>
             <option value="title">Title (A-Z)</option>
+            <option value="tag">Tag A-Z</option>
         </select>
 
         <!-- <button class="advanced-filters-toggle" onclick="toggleAdvancedFilters()">
@@ -1272,14 +1282,14 @@
     <div class="contracts-grid-container">
         <div class="contracts-header">
             <div class="results-count" id="resultsCount">Showing 0 contracts</div>
-            <div class="view-controls">
+            <!-- <div class="view-controls">
                 <button class="view-toggle active" onclick="toggleView('grid')" title="Grid View">
                     <i class="ti ti-layout-grid"></i>
                 </button>
                 <button class="view-toggle" onclick="toggleView('list')" title="List View">
                     <i class="ti ti-list"></i>
                 </button>
-            </div>
+            </div> -->
         </div>
 
         <div class="contracts-grid" id="contractsGrid">
@@ -1366,6 +1376,21 @@
                     return titleA.localeCompare(titleB);
                 });
                 break;
+            
+
+             case 'tag':  // ✅ FIXED - was sorting by title
+            filteredContracts.sort((a, b) => {
+                const tagA = (a.single_tag || '').toLowerCase();
+                const tagB = (b.single_tag || '').toLowerCase();
+                
+                // Put contracts without tags at the end
+                if (!tagA && tagB) return 1;
+                if (tagA && !tagB) return -1;
+                if (!tagA && !tagB) return 0;
+                
+                return tagA.localeCompare(tagB);
+            });
+            break;
         }
     }
 
@@ -1500,6 +1525,7 @@
         const typeFilter = document.getElementById('typeFilter')?.value || '';
         const dateFilter = document.getElementById('dateFilter')?.value || '';
         const sortFilter = document.getElementById('sortFilter')?.value || ''; // 🆕 ADD THIS LINE
+        const tagFilter = document.getElementById('tagFilter')?.value || '';  // ✅ NEW
 
         // 🆕 Store current sort
         currentSortBy = sortFilter;
@@ -1524,37 +1550,41 @@
             delete activeFilters.type;
         }
 
+
+         if (tagFilter) {
+        filteredContracts = filteredContracts.filter(contract => 
+            contract.single_tag === tagFilter
+        );
+    }
+
         // Apply date range filter
-        if (dateFilter) {
-            const now = new Date();
+ if (dateFilter) {
+        const now = new Date();
+        const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        filteredContracts = filteredContracts.filter(contract => {
+            const contractDate = new Date(contract.created_at || contract.updated_at);
+
             switch (dateFilter) {
                 case 'today':
-                    filteredContracts = filteredContracts.filter(c => {
-                        const cDate = new Date(c.created_at);
-                        return cDate.toDateString() === now.toDateString();
-                    });
-                    break;
+                    return contractDate >= startOfToday;
                 case 'week':
                     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                    filteredContracts = filteredContracts.filter(c => new Date(c.created_at) >= weekAgo);
-                    break;
+                    return contractDate >= weekAgo;
                 case 'month':
-                    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                    filteredContracts = filteredContracts.filter(c => new Date(c.created_at) >= monthAgo);
-                    break;
+                    const monthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+                    return contractDate >= monthAgo;
                 case 'quarter':
-                    const quarterAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-                    filteredContracts = filteredContracts.filter(c => new Date(c.created_at) >= quarterAgo);
-                    break;
+                    const quarterAgo = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+                    return contractDate >= quarterAgo;
                 case 'year':
-                    const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-                    filteredContracts = filteredContracts.filter(c => new Date(c.created_at) >= yearAgo);
-                    break;
+                    const yearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+                    return contractDate >= yearAgo;
+                default:
+                    return true;
             }
-            activeFilters.date = dateFilter;
-        } else {
-            delete activeFilters.date;
-        }
+        });
+    }
 
         // Apply sub-tab filters
         applySubTabFilter();
@@ -2049,78 +2079,78 @@
     // =====================================================
     //  NEW FUNCTION: Display Risk Analysis Results Modal
     // =====================================================
-function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
-    // Remove any existing modal
-    const existingModal = document.getElementById('riskResultsModal');
-    if (existingModal) existingModal.remove();
+    function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
+        // Remove any existing modal
+        const existingModal = document.getElementById('riskResultsModal');
+        if (existingModal) existingModal.remove();
 
-    console.log('Analysis data received:', analysis); // Debug log
+        console.log('Analysis data received:', analysis); // Debug log
 
-    // Extract data from the analysis structure
-    const executiveSummary = analysis.executive_summary || {};
-    const contractOverview = analysis.contract_overview || {};
-    const clauseWiseAnalysis = analysis.clause_wise_analysis || [];
-    const regulatoryCompliance = analysis.regulatory_compliance || {};
-    const riskMitigation = analysis.risk_mitigation || {};
-    const negotiationPoints = analysis.negotiation_points || {};
-    const riskSummary = analysis.risk_summary || analysis;
-    const conclusion = analysis.conclusion || {};
+        // Extract data from the analysis structure
+        const executiveSummary = analysis.executive_summary || {};
+        const contractOverview = analysis.contract_overview || {};
+        const clauseWiseAnalysis = analysis.clause_wise_analysis || [];
+        const regulatoryCompliance = analysis.regulatory_compliance || {};
+        const riskMitigation = analysis.risk_mitigation || {};
+        const negotiationPoints = analysis.negotiation_points || {};
+        const riskSummary = analysis.risk_summary || analysis;
+        const conclusion = analysis.conclusion || {};
 
-    // Determine risk level and color
-    const riskScore = executiveSummary.overall_score || analysis.overall_score || analysis.risk_score || 50;
-    const riskLevel = executiveSummary.overall_risk_rating || analysis.risk_level || (riskScore >= 70 ? 'High' : riskScore >= 40 ? 'Medium' : 'Low');
-    const riskColor = riskScore >= 70 ? '#dc3545' : riskScore >= 40 ? '#ffc107' : '#28a745';
+        // Determine risk level and color
+        const riskScore = executiveSummary.overall_score || analysis.overall_score || analysis.risk_score || 50;
+        const riskLevel = executiveSummary.overall_risk_rating || analysis.risk_level || (riskScore >= 70 ? 'High' : riskScore >= 40 ? 'Medium' : 'Low');
+        const riskColor = riskScore >= 70 ? '#dc3545' : riskScore >= 40 ? '#ffc107' : '#28a745';
 
-    // Extract risk counts
-    const highRisks = riskSummary.high_risks || analysis.high_risks || 0;
-    const mediumRisks = riskSummary.medium_risks || analysis.medium_risks || 0;
-    const lowRisks = riskSummary.low_risks || analysis.low_risks || 0;
+        // Extract risk counts
+        const highRisks = riskSummary.high_risks || analysis.high_risks || 0;
+        const mediumRisks = riskSummary.medium_risks || analysis.medium_risks || 0;
+        const lowRisks = riskSummary.low_risks || analysis.low_risks || 0;
 
-    // Extract executive summary text
-    let execSummaryText = '';
-    if (typeof executiveSummary === 'object' && executiveSummary.overview) {
-        execSummaryText = extractText(executiveSummary.overview);
-    } else if (typeof executiveSummary === 'string') {
-        execSummaryText = executiveSummary;
-    } else {
-        execSummaryText = extractText(analysis.executive_summary) || 'Contract has been analyzed for potential risks.';
-    }
+        // Extract executive summary text
+        let execSummaryText = '';
+        if (typeof executiveSummary === 'object' && executiveSummary.overview) {
+            execSummaryText = extractText(executiveSummary.overview);
+        } else if (typeof executiveSummary === 'string') {
+            execSummaryText = executiveSummary;
+        } else {
+            execSummaryText = extractText(analysis.executive_summary) || 'Contract has been analyzed for potential risks.';
+        }
 
-    // Build Critical Red Flags HTML
-    let redFlagsHtml = '';
-    const redFlags = riskSummary.red_flags || analysis.red_flags || [];
-    if (redFlags.length > 0) {
-        redFlagsHtml = redFlags.map(flag => {
-            const flagText = extractText(flag);
-            return `
+        // Build Critical Red Flags HTML
+        let redFlagsHtml = '';
+        const redFlags = riskSummary.red_flags || analysis.red_flags || [];
+        if (redFlags.length > 0) {
+            redFlagsHtml = redFlags.map(flag => {
+                const flagText = extractText(flag);
+                return `
             <div style="background: rgba(220, 53, 69, 0.05); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid #dc3545; display: flex; align-items: start; gap: 0.5rem;">
                 <i class="ti ti-flag" style="color: #dc3545; font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem;"></i>
                 <span style="color: var(--text-color); line-height: 1.5;">${flagText}</span>
             </div>
             `;
-        }).join('');
-    }
-
-    // Build Risk Items HTML
-    const riskItems = riskSummary.risk_items || analysis.risk_items || [];
-    const riskItemsHtml = riskItems.map(item => {
-        // Extract all possible fields
-        const issueText = extractText(item.issue) || extractText(item.title) || extractText(item.type) || 'Risk Item';
-        const descText = extractText(item.description) || extractText(item.details) || 'Review recommended';
-        const mitigationText = extractText(item.mitigation) || extractText(item.recommended_action);
-        const severityText = (extractText(item.severity) || 'Medium').toLowerCase();
-        const typeText = extractText(item.type) || 'General';
-        const clauseRef = extractText(item.clause_reference) || extractText(item.clause) || extractText(item.article);
-        const financialImpact = extractText(item.financial_impact);
-        const scoreValue = item.score || '';
-
-        // Determine severity badge text
-        let severityBadge = severityText.toUpperCase();
-        if (severityText.includes('critical') || severityText === 'high') {
-            severityBadge = 'CRITICAL';
+            }).join('');
         }
 
-        return `
+        // Build Risk Items HTML
+        const riskItems = riskSummary.risk_items || analysis.risk_items || [];
+        const riskItemsHtml = riskItems.map(item => {
+            // Extract all possible fields
+            const issueText = extractText(item.issue) || extractText(item.title) || extractText(item.type) || 'Risk Item';
+            const descText = extractText(item.description) || extractText(item.details) || 'Review recommended';
+            const mitigationText = extractText(item.mitigation) || extractText(item.recommended_action);
+            const severityText = (extractText(item.severity) || 'Medium').toLowerCase();
+            const typeText = extractText(item.type) || 'General';
+            const clauseRef = extractText(item.clause_reference) || extractText(item.clause) || extractText(item.article);
+            const financialImpact = extractText(item.financial_impact);
+            const scoreValue = item.score || '';
+
+            // Determine severity badge text
+            let severityBadge = severityText.toUpperCase();
+            if (severityText.includes('critical') || severityText === 'high') {
+                severityBadge = 'CRITICAL';
+            }
+
+            return `
         <div class="risk-item" style="background: ${getSeverityBg(severityText)}; border-left: 4px solid ${getSeverityColor(severityText)}; padding: 1.25rem; border-radius: 8px; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem; gap: 1rem;">
                 <div style="flex: 1;">
@@ -2161,27 +2191,27 @@ function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
             ` : ''}
         </div>
         `;
-    }).join('') || '<div style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="ti ti-info-circle"></i> No specific risks identified</div>';
+        }).join('') || '<div style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="ti ti-info-circle"></i> No specific risks identified</div>';
 
-    // Build Compliance Issues HTML
-    let complianceHtml = '';
-    const complianceIssues = analysis.compliance_issues || regulatoryCompliance.compliance_gaps || [];
-    if (complianceIssues.length > 0) {
-        complianceHtml = complianceIssues.map(issue => {
-            // Handle both string and object formats
-            let issueText = '';
-            let severity = 'medium';
-            let regulation = '';
-            
-            if (typeof issue === 'string') {
-                issueText = issue;
-            } else if (typeof issue === 'object') {
-                issueText = extractText(issue.issue) || extractText(issue.description) || JSON.stringify(issue);
-                severity = extractText(issue.severity) || 'medium';
-                regulation = extractText(issue.regulation) || '';
-            }
+        // Build Compliance Issues HTML
+        let complianceHtml = '';
+        const complianceIssues = analysis.compliance_issues || regulatoryCompliance.compliance_gaps || [];
+        if (complianceIssues.length > 0) {
+            complianceHtml = complianceIssues.map(issue => {
+                // Handle both string and object formats
+                let issueText = '';
+                let severity = 'medium';
+                let regulation = '';
 
-            return `
+                if (typeof issue === 'string') {
+                    issueText = issue;
+                } else if (typeof issue === 'object') {
+                    issueText = extractText(issue.issue) || extractText(issue.description) || JSON.stringify(issue);
+                    severity = extractText(issue.severity) || 'medium';
+                    regulation = extractText(issue.regulation) || '';
+                }
+
+                return `
             <div style="background: rgba(255, 193, 7, 0.05); padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid #ffc107; display: flex; align-items: start; gap: 0.75rem;">
                 <i class="ti ti-alert-triangle" style="color: #ffc107; font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem;"></i>
                 <div style="flex: 1;">
@@ -2190,28 +2220,28 @@ function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
                 </div>
             </div>
             `;
-        }).join('');
-    }
+            }).join('');
+        }
 
-    // Build Recommendations HTML
-    let recommendationsHtml = '';
-    const recommendations = conclusion.recommendations_priority || 
-                          riskMitigation.immediate_actions || 
-                          analysis.recommendations || [];
-    
-    if (recommendations.length > 0) {
-        recommendationsHtml = recommendations.map(rec => {
-            let recText = '';
-            let priority = '';
-            
-            if (typeof rec === 'string') {
-                recText = rec;
-            } else if (typeof rec === 'object') {
-                recText = extractText(rec.recommendation) || extractText(rec.action) || extractText(rec);
-                priority = extractText(rec.priority);
-            }
+        // Build Recommendations HTML
+        let recommendationsHtml = '';
+        const recommendations = conclusion.recommendations_priority ||
+            riskMitigation.immediate_actions ||
+            analysis.recommendations || [];
 
-            return `
+        if (recommendations.length > 0) {
+            recommendationsHtml = recommendations.map(rec => {
+                let recText = '';
+                let priority = '';
+
+                if (typeof rec === 'string') {
+                    recText = rec;
+                } else if (typeof rec === 'object') {
+                    recText = extractText(rec.recommendation) || extractText(rec.action) || extractText(rec);
+                    priority = extractText(rec.priority);
+                }
+
+                return `
             <li style="margin-bottom: 0.75rem; color: var(--text-color); display: flex; align-items: start; gap: 0.5rem;">
                 <i class="ti ti-check" style="color: var(--success-color); font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem;"></i>
                 <span style="line-height: 1.6;">
@@ -2220,22 +2250,22 @@ function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
                 </span>
             </li>
             `;
-        }).join('');
-    } else {
-        recommendationsHtml = '<li style="color: var(--text-muted); list-style: none;">No specific recommendations available</li>';
-    }
+            }).join('');
+        } else {
+            recommendationsHtml = '<li style="color: var(--text-muted); list-style: none;">No specific recommendations available</li>';
+        }
 
-    // Build Clause-Wise Analysis HTML (if available)
-    let clauseAnalysisHtml = '';
-    if (clauseWiseAnalysis.length > 0) {
-        const topClauses = clauseWiseAnalysis.slice(0, 5);
-        clauseAnalysisHtml = topClauses.map(clause => {
-            const clauseTitle = extractText(clause.clause_title) || extractText(clause.clause_number) || 'Clause';
-            const severity = (extractText(clause.severity) || 'medium').toLowerCase();
-            const risks = clause.risks_identified || [];
-            const clauseSummary = extractText(clause.clause_summary);
-            
-            return `
+        // Build Clause-Wise Analysis HTML (if available)
+        let clauseAnalysisHtml = '';
+        if (clauseWiseAnalysis.length > 0) {
+            const topClauses = clauseWiseAnalysis.slice(0, 5);
+            clauseAnalysisHtml = topClauses.map(clause => {
+                const clauseTitle = extractText(clause.clause_title) || extractText(clause.clause_number) || 'Clause';
+                const severity = (extractText(clause.severity) || 'medium').toLowerCase();
+                const risks = clause.risks_identified || [];
+                const clauseSummary = extractText(clause.clause_summary);
+
+                return `
             <div style="background: ${getSeverityBg(severity)}; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid ${getSeverityColor(severity)};">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
                     <span style="font-weight: 600; color: var(--text-color);">${clauseTitle}</span>
@@ -2247,19 +2277,19 @@ function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
                 ${risks.length > 0 ? `<div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;"><i class="ti ti-alert-circle" style="font-size: 0.9rem;"></i> ${risks.slice(0, 2).map(r => extractText(r)).join('; ')}</div>` : ''}
             </div>
             `;
-        }).join('');
-    }
+            }).join('');
+        }
 
-    // Build Negotiation Points HTML (if available)
-    let negotiationHtml = '';
-    if (negotiationPoints.critical_issues && negotiationPoints.critical_issues.length > 0) {
-        const topNegotiations = negotiationPoints.critical_issues.slice(0, 4);
-        negotiationHtml = topNegotiations.map(issue => {
-            const issueTitle = extractText(issue.issue) || 'Negotiation Point';
-            const priority = (extractText(issue.priority) || 'medium').toLowerCase();
-            const recommendedPosition = extractText(issue.recommended_position);
-            
-            return `
+        // Build Negotiation Points HTML (if available)
+        let negotiationHtml = '';
+        if (negotiationPoints.critical_issues && negotiationPoints.critical_issues.length > 0) {
+            const topNegotiations = negotiationPoints.critical_issues.slice(0, 4);
+            negotiationHtml = topNegotiations.map(issue => {
+                const issueTitle = extractText(issue.issue) || 'Negotiation Point';
+                const priority = (extractText(issue.priority) || 'medium').toLowerCase();
+                const recommendedPosition = extractText(issue.recommended_position);
+
+                return `
             <div style="background: ${getSeverityBg(priority)}; padding: 0.75rem 1rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid ${getSeverityColor(priority)};">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
                     <span style="font-weight: 600; color: var(--text-color);">${issueTitle}</span>
@@ -2270,11 +2300,11 @@ function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
                 ${recommendedPosition ? `<div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;"><i class="ti ti-arrow-right"></i> ${recommendedPosition}</div>` : ''}
             </div>
             `;
-        }).join('');
-    }
+            }).join('');
+        }
 
-    // Create the modal HTML
-    const modalHtml = `
+        // Create the modal HTML
+        const modalHtml = `
     <div id="riskResultsModal" class="modal" style="display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10000; align-items: center; justify-content: center; padding: 1rem;">
         <div class="modal-content" style="background: var(--card-bg, #fff); border-radius: 12px; max-width: 1000px; width: 95%; max-height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
             
@@ -2427,137 +2457,137 @@ function displayRiskAnalysisResultsModal(contractId, contractTitle, analysis) {
     </div>
     `;
 
-    // Append modal to body
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
+        // Append modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-    // Store analysis data globally for export
-    window.currentRiskAnalysis = analysis;
-    window.currentContractId = contractId;
-    window.currentContractTitle = contractTitle;
-}
-
-// Helper function to extract text from various formats
-function extractText(value) {
-    if (!value) return '';
-    if (typeof value === 'string') return value;
-    if (typeof value === 'number') return String(value);
-    if (typeof value === 'object') {
-        if (value.text) return value.text;
-        if (value.value) return value.value;
-        if (value.content) return value.content;
-        if (value.description) return value.description;
-        // Don't stringify objects - return empty string
-        return '';
-    }
-    return String(value);
-}
-
-// Helper functions for severity styling
-function getSeverityColor(severity) {
-    const sev = (severity || 'medium').toString().toLowerCase();
-    if (sev.includes('critical') || sev === 'high') return '#dc3545';
-    if (sev.includes('medium') || sev.includes('moderate')) return '#ffc107';
-    if (sev === 'low') return '#28a745';
-    return '#6c757d';
-}
-
-function getSeverityBg(severity) {
-    const sev = (severity || 'medium').toString().toLowerCase();
-    if (sev.includes('critical') || sev === 'high') return 'rgba(220, 53, 69, 0.06)';
-    if (sev.includes('medium') || sev.includes('moderate')) return 'rgba(255, 193, 7, 0.06)';
-    if (sev === 'low') return 'rgba(40, 167, 69, 0.06)';
-    return 'rgba(108, 117, 125, 0.06)';
-}
-
-function getRiskIcon(type) {
-    const t = (type || '').toLowerCase();
-    if (t.includes('legal')) return 'gavel';
-    if (t.includes('financial') || t.includes('liability')) return 'coin';
-    if (t.includes('operational')) return 'settings';
-    if (t.includes('compliance') || t.includes('regulatory')) return 'clipboard-check';
-    if (t.includes('termination')) return 'ban';
-    if (t.includes('indemnif')) return 'shield-x';
-    if (t.includes('warranty')) return 'certificate';
-    if (t.includes('tax')) return 'receipt-tax';
-    return 'alert-triangle';
-}
-
-function adjustColor(color, amount) {
-    const clamp = (val) => Math.min(Math.max(val, 0), 255);
-    const num = parseInt(color.replace('#', ''), 16);
-    const r = clamp((num >> 16) + amount);
-    const g = clamp(((num >> 8) & 0x00FF) + amount);
-    const b = clamp((num & 0x0000FF) + amount);
-    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-}
-
-// Close modal functions
-function closeRiskResultsModal() {
-    const modal = document.getElementById('riskResultsModal');
-    if (modal) modal.remove();
-}
-
-function closeRiskResultsAndRefresh() {
-    closeRiskResultsModal();
-    if (typeof loadContracts === 'function') {
-        loadContracts();
-    } else {
-        location.reload();
-    }
-}
-
-// Navigation functions
-function goToContractEditor(contractId) {
-    window.location.href = `/contract-editor/${contractId}`;
-}
-
-// Download report function
-// Download report function - UPDATED VERSION
-function downloadRiskReport(contractId) {
-    if (!window.currentRiskAnalysis) {
-        alert('Risk analysis data not available');
-        return;
+        // Store analysis data globally for export
+        window.currentRiskAnalysis = analysis;
+        window.currentContractId = contractId;
+        window.currentContractTitle = contractTitle;
     }
 
-    // Generate a comprehensive text report
-    const analysis = window.currentRiskAnalysis;
-    const contractTitle = window.currentContractTitle || 'Contract';
-    
-    // Extract data from nested structures
-    const executiveSummary = analysis.executive_summary || {};
-    const riskSummary = analysis.risk_summary || analysis;
-    const conclusion = analysis.conclusion || {};
-    const regulatoryCompliance = analysis.regulatory_compliance || {};
-    const riskMitigation = analysis.risk_mitigation || {};
-    const negotiationPoints = analysis.negotiation_points || {};
-    
-    // Build text report
-    let report = `RISK ANALYSIS REPORT
+    // Helper function to extract text from various formats
+    function extractText(value) {
+        if (!value) return '';
+        if (typeof value === 'string') return value;
+        if (typeof value === 'number') return String(value);
+        if (typeof value === 'object') {
+            if (value.text) return value.text;
+            if (value.value) return value.value;
+            if (value.content) return value.content;
+            if (value.description) return value.description;
+            // Don't stringify objects - return empty string
+            return '';
+        }
+        return String(value);
+    }
+
+    // Helper functions for severity styling
+    function getSeverityColor(severity) {
+        const sev = (severity || 'medium').toString().toLowerCase();
+        if (sev.includes('critical') || sev === 'high') return '#dc3545';
+        if (sev.includes('medium') || sev.includes('moderate')) return '#ffc107';
+        if (sev === 'low') return '#28a745';
+        return '#6c757d';
+    }
+
+    function getSeverityBg(severity) {
+        const sev = (severity || 'medium').toString().toLowerCase();
+        if (sev.includes('critical') || sev === 'high') return 'rgba(220, 53, 69, 0.06)';
+        if (sev.includes('medium') || sev.includes('moderate')) return 'rgba(255, 193, 7, 0.06)';
+        if (sev === 'low') return 'rgba(40, 167, 69, 0.06)';
+        return 'rgba(108, 117, 125, 0.06)';
+    }
+
+    function getRiskIcon(type) {
+        const t = (type || '').toLowerCase();
+        if (t.includes('legal')) return 'gavel';
+        if (t.includes('financial') || t.includes('liability')) return 'coin';
+        if (t.includes('operational')) return 'settings';
+        if (t.includes('compliance') || t.includes('regulatory')) return 'clipboard-check';
+        if (t.includes('termination')) return 'ban';
+        if (t.includes('indemnif')) return 'shield-x';
+        if (t.includes('warranty')) return 'certificate';
+        if (t.includes('tax')) return 'receipt-tax';
+        return 'alert-triangle';
+    }
+
+    function adjustColor(color, amount) {
+        const clamp = (val) => Math.min(Math.max(val, 0), 255);
+        const num = parseInt(color.replace('#', ''), 16);
+        const r = clamp((num >> 16) + amount);
+        const g = clamp(((num >> 8) & 0x00FF) + amount);
+        const b = clamp((num & 0x0000FF) + amount);
+        return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    }
+
+    // Close modal functions
+    function closeRiskResultsModal() {
+        const modal = document.getElementById('riskResultsModal');
+        if (modal) modal.remove();
+    }
+
+    function closeRiskResultsAndRefresh() {
+        closeRiskResultsModal();
+        if (typeof loadContracts === 'function') {
+            loadContracts();
+        } else {
+            location.reload();
+        }
+    }
+
+    // Navigation functions
+    function goToContractEditor(contractId) {
+        window.location.href = `/contract-editor/${contractId}`;
+    }
+
+    // Download report function
+    // Download report function - UPDATED VERSION
+    function downloadRiskReport(contractId) {
+        if (!window.currentRiskAnalysis) {
+            alert('Risk analysis data not available');
+            return;
+        }
+
+        // Generate a comprehensive text report
+        const analysis = window.currentRiskAnalysis;
+        const contractTitle = window.currentContractTitle || 'Contract';
+
+        // Extract data from nested structures
+        const executiveSummary = analysis.executive_summary || {};
+        const riskSummary = analysis.risk_summary || analysis;
+        const conclusion = analysis.conclusion || {};
+        const regulatoryCompliance = analysis.regulatory_compliance || {};
+        const riskMitigation = analysis.risk_mitigation || {};
+        const negotiationPoints = analysis.negotiation_points || {};
+
+        // Build text report
+        let report = `RISK ANALYSIS REPORT
 ${contractTitle}
-Generated: ${new Date().toLocaleString('en-GB', { 
-    day: '2-digit', 
-    month: '2-digit', 
-    year: 'numeric', 
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit' 
-})}
+Generated: ${new Date().toLocaleString('en-GB', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        })}
 ${'='.repeat(80)}
 
 `;
 
-    // EXECUTIVE SUMMARY
-    const execSummaryText = extractText(executiveSummary.overview) || 
-                           extractText(analysis.executive_summary) || 
-                           'Contract has been analyzed for potential risks.';
-    
-    const overallScore = executiveSummary.overall_score || analysis.overall_score || analysis.risk_score || 50;
-    const riskLevel = executiveSummary.overall_risk_rating || analysis.risk_level || 'Medium';
-    const highRisks = riskSummary.high_risks || analysis.high_risks || 0;
-    const mediumRisks = riskSummary.medium_risks || analysis.medium_risks || 0;
-    const lowRisks = riskSummary.low_risks || analysis.low_risks || 0;
-    
-    report += `EXECUTIVE SUMMARY
+        // EXECUTIVE SUMMARY
+        const execSummaryText = extractText(executiveSummary.overview) ||
+            extractText(analysis.executive_summary) ||
+            'Contract has been analyzed for potential risks.';
+
+        const overallScore = executiveSummary.overall_score || analysis.overall_score || analysis.risk_score || 50;
+        const riskLevel = executiveSummary.overall_risk_rating || analysis.risk_level || 'Medium';
+        const highRisks = riskSummary.high_risks || analysis.high_risks || 0;
+        const mediumRisks = riskSummary.medium_risks || analysis.medium_risks || 0;
+        const lowRisks = riskSummary.low_risks || analysis.low_risks || 0;
+
+        report += `EXECUTIVE SUMMARY
 ${'-'.repeat(80)}
 ${execSummaryText}
 
@@ -2569,273 +2599,273 @@ Low Risks: ${lowRisks}
 
 `;
 
-    // KEY RISK AREAS
-    const keyRiskAreas = executiveSummary.key_risk_areas || [];
-    if (keyRiskAreas.length > 0) {
-        report += `KEY RISK AREAS
+        // KEY RISK AREAS
+        const keyRiskAreas = executiveSummary.key_risk_areas || [];
+        if (keyRiskAreas.length > 0) {
+            report += `KEY RISK AREAS
 ${'-'.repeat(80)}
 ${keyRiskAreas.map((area, i) => `${i + 1}. ${extractText(area)}`).join('\n')}
 
 `;
-    }
+        }
 
-    // CRITICAL RED FLAGS
-    const redFlags = riskSummary.red_flags || analysis.red_flags || [];
-    if (redFlags.length > 0) {
-        report += `CRITICAL RED FLAGS
+        // CRITICAL RED FLAGS
+        const redFlags = riskSummary.red_flags || analysis.red_flags || [];
+        if (redFlags.length > 0) {
+            report += `CRITICAL RED FLAGS
 ${'-'.repeat(80)}
 ${redFlags.map((flag, i) => `${i + 1}. ${extractText(flag)}`).join('\n')}
 
 `;
-    }
+        }
 
-    // RISK ITEMS
-    const riskItems = riskSummary.risk_items || analysis.risk_items || [];
-    if (riskItems.length > 0) {
-        report += `RISK ITEMS
+        // RISK ITEMS
+        const riskItems = riskSummary.risk_items || analysis.risk_items || [];
+        if (riskItems.length > 0) {
+            report += `RISK ITEMS
 ${'-'.repeat(80)}
 `;
-        riskItems.forEach((item, i) => {
-            const issue = extractText(item.issue) || extractText(item.type) || 'Risk Item';
-            const severity = (extractText(item.severity) || 'Medium').toUpperCase();
-            const clauseRef = extractText(item.clause_reference) || extractText(item.clause);
-            const description = extractText(item.description) || '';
-            const mitigation = extractText(item.mitigation);
-            const financialImpact = extractText(item.financial_impact);
-            
-            report += `
+            riskItems.forEach((item, i) => {
+                const issue = extractText(item.issue) || extractText(item.type) || 'Risk Item';
+                const severity = (extractText(item.severity) || 'Medium').toUpperCase();
+                const clauseRef = extractText(item.clause_reference) || extractText(item.clause);
+                const description = extractText(item.description) || '';
+                const mitigation = extractText(item.mitigation);
+                const financialImpact = extractText(item.financial_impact);
+
+                report += `
 ${i + 1}. ${issue}
    Severity: ${severity}`;
-            
-            if (clauseRef) {
-                report += `
-   Clause: ${clauseRef}`;
-            }
-            
-            report += `
-   Description: ${description}`;
-            
-            if (financialImpact) {
-                report += `
-   Financial Impact: ${financialImpact}`;
-            }
-            
-            if (mitigation) {
-                report += `
-   Mitigation: ${mitigation}`;
-            }
-            
-            report += '\n';
-        });
-        report += '\n';
-    }
 
-    // COMPLIANCE ISSUES
-    const complianceIssues = analysis.compliance_issues || 
-                            regulatoryCompliance.compliance_gaps || 
-                            regulatoryCompliance.qfcra_compliance || [];
-    
-    if (complianceIssues.length > 0) {
-        report += `REGULATORY & COMPLIANCE ISSUES
-${'-'.repeat(80)}
-`;
-        complianceIssues.forEach((issue, i) => {
-            let issueText = '';
-            let regulation = '';
-            let severity = '';
-            let recommendation = '';
-            
-            if (typeof issue === 'string') {
-                issueText = issue;
-            } else if (typeof issue === 'object') {
-                regulation = extractText(issue.regulation) || '';
-                issueText = extractText(issue.issue) || extractText(issue.description) || '';
-                severity = extractText(issue.severity) || '';
-                recommendation = extractText(issue.recommendation) || extractText(issue.mitigation) || '';
-            }
-            
-            report += `\n${i + 1}. ${regulation ? `${regulation}` : 'Compliance Issue'}`;
-            if (severity) {
-                report += `
-   Severity: ${severity.toUpperCase()}`;
-            }
-            if (issueText) {
-                report += `
-   Issue: ${issueText}`;
-            }
-            if (recommendation) {
-                report += `
-   Mitigation: ${recommendation}`;
-            }
-            report += '\n';
-        });
-        report += '\n';
-    }
-
-    // NEGOTIATION POINTS
-    const criticalIssues = negotiationPoints.critical_issues || [];
-    if (criticalIssues.length > 0) {
-        report += `PRIORITY NEGOTIATION POINTS
-${'-'.repeat(80)}
-`;
-        criticalIssues.forEach((issue, i) => {
-            const issueTitle = extractText(issue.issue) || 'Negotiation Point';
-            const priority = extractText(issue.priority) || '';
-            const currentPosition = extractText(issue.current_position) || '';
-            const recommendedPosition = extractText(issue.recommended_position) || '';
-            const fallbackOptions = issue.fallback_options || [];
-            
-            report += `\n${i + 1}. ${issueTitle}`;
-            if (priority) {
-                report += `
-   Priority: ${priority.toUpperCase()}`;
-            }
-            if (currentPosition) {
-                report += `
-   Current Position: ${currentPosition}`;
-            }
-            if (recommendedPosition) {
-                report += `
-   Recommended Position: ${recommendedPosition}`;
-            }
-            if (fallbackOptions.length > 0) {
-                report += `
-   Fallback Options: ${fallbackOptions.map(opt => extractText(opt)).join('; ')}`;
-            }
-            report += '\n';
-        });
-        report += '\n';
-    }
-
-    // RECOMMENDATIONS
-    // Try multiple possible locations for recommendations
-    const recommendations = conclusion.recommendations_priority || 
-                          conclusion.next_steps ||
-                          riskMitigation.immediate_actions || 
-                          analysis.recommendations || 
-                          [];
-    
-    if (recommendations.length > 0) {
-        report += `RECOMMENDATIONS
-${'-'.repeat(80)}
-`;
-        recommendations.forEach((rec, i) => {
-            let recText = '';
-            let priority = '';
-            let rationale = '';
-            
-            if (typeof rec === 'string') {
-                recText = rec;
-            } else if (typeof rec === 'object') {
-                recText = extractText(rec.recommendation) || 
-                         extractText(rec.action) || 
-                         extractText(rec.text) ||
-                         extractText(rec);
-                priority = extractText(rec.priority);
-                rationale = extractText(rec.rationale) || extractText(rec.reason);
-            }
-            
-            if (recText) {
-                report += `${i + 1}. `;
-                if (priority) {
-                    report += `[${priority.toUpperCase()}] `;
-                }
-                report += `${recText}`;
-                if (rationale) {
+                if (clauseRef) {
                     report += `
-   Rationale: ${rationale}`;
+   Clause: ${clauseRef}`;
+                }
+
+                report += `
+   Description: ${description}`;
+
+                if (financialImpact) {
+                    report += `
+   Financial Impact: ${financialImpact}`;
+                }
+
+                if (mitigation) {
+                    report += `
+   Mitigation: ${mitigation}`;
+                }
+
+                report += '\n';
+            });
+            report += '\n';
+        }
+
+        // COMPLIANCE ISSUES
+        const complianceIssues = analysis.compliance_issues ||
+            regulatoryCompliance.compliance_gaps ||
+            regulatoryCompliance.qfcra_compliance || [];
+
+        if (complianceIssues.length > 0) {
+            report += `REGULATORY & COMPLIANCE ISSUES
+${'-'.repeat(80)}
+`;
+            complianceIssues.forEach((issue, i) => {
+                let issueText = '';
+                let regulation = '';
+                let severity = '';
+                let recommendation = '';
+
+                if (typeof issue === 'string') {
+                    issueText = issue;
+                } else if (typeof issue === 'object') {
+                    regulation = extractText(issue.regulation) || '';
+                    issueText = extractText(issue.issue) || extractText(issue.description) || '';
+                    severity = extractText(issue.severity) || '';
+                    recommendation = extractText(issue.recommendation) || extractText(issue.mitigation) || '';
+                }
+
+                report += `\n${i + 1}. ${regulation ? `${regulation}` : 'Compliance Issue'}`;
+                if (severity) {
+                    report += `
+   Severity: ${severity.toUpperCase()}`;
+                }
+                if (issueText) {
+                    report += `
+   Issue: ${issueText}`;
+                }
+                if (recommendation) {
+                    report += `
+   Mitigation: ${recommendation}`;
                 }
                 report += '\n';
-            }
-        });
-        report += '\n';
-    }
+            });
+            report += '\n';
+        }
 
-    // CLAUSE-WISE ANALYSIS
-    const clauseWiseAnalysis = analysis.clause_wise_analysis || [];
-    if (clauseWiseAnalysis.length > 0) {
-        report += `CLAUSE-WISE ANALYSIS
+        // NEGOTIATION POINTS
+        const criticalIssues = negotiationPoints.critical_issues || [];
+        if (criticalIssues.length > 0) {
+            report += `PRIORITY NEGOTIATION POINTS
 ${'-'.repeat(80)}
 `;
-        clauseWiseAnalysis.forEach((clause, i) => {
-            const clauseNumber = extractText(clause.clause_number) || extractText(clause.clause_title) || `Clause ${i + 1}`;
-            const clauseTitle = extractText(clause.clause_title);
-            const clauseSummary = extractText(clause.clause_summary);
-            const severity = extractText(clause.severity);
-            const risks = clause.risks_identified || [];
-            const enforceability = extractText(clause.enforceability);
-            
-            report += `\n${i + 1}. ${clauseNumber}`;
-            if (clauseTitle && clauseTitle !== clauseNumber) {
-                report += ` - ${clauseTitle}`;
-            }
-            if (severity) {
-                report += `
+            criticalIssues.forEach((issue, i) => {
+                const issueTitle = extractText(issue.issue) || 'Negotiation Point';
+                const priority = extractText(issue.priority) || '';
+                const currentPosition = extractText(issue.current_position) || '';
+                const recommendedPosition = extractText(issue.recommended_position) || '';
+                const fallbackOptions = issue.fallback_options || [];
+
+                report += `\n${i + 1}. ${issueTitle}`;
+                if (priority) {
+                    report += `
+   Priority: ${priority.toUpperCase()}`;
+                }
+                if (currentPosition) {
+                    report += `
+   Current Position: ${currentPosition}`;
+                }
+                if (recommendedPosition) {
+                    report += `
+   Recommended Position: ${recommendedPosition}`;
+                }
+                if (fallbackOptions.length > 0) {
+                    report += `
+   Fallback Options: ${fallbackOptions.map(opt => extractText(opt)).join('; ')}`;
+                }
+                report += '\n';
+            });
+            report += '\n';
+        }
+
+        // RECOMMENDATIONS
+        // Try multiple possible locations for recommendations
+        const recommendations = conclusion.recommendations_priority ||
+            conclusion.next_steps ||
+            riskMitigation.immediate_actions ||
+            analysis.recommendations ||
+            [];
+
+        if (recommendations.length > 0) {
+            report += `RECOMMENDATIONS
+${'-'.repeat(80)}
+`;
+            recommendations.forEach((rec, i) => {
+                let recText = '';
+                let priority = '';
+                let rationale = '';
+
+                if (typeof rec === 'string') {
+                    recText = rec;
+                } else if (typeof rec === 'object') {
+                    recText = extractText(rec.recommendation) ||
+                        extractText(rec.action) ||
+                        extractText(rec.text) ||
+                        extractText(rec);
+                    priority = extractText(rec.priority);
+                    rationale = extractText(rec.rationale) || extractText(rec.reason);
+                }
+
+                if (recText) {
+                    report += `${i + 1}. `;
+                    if (priority) {
+                        report += `[${priority.toUpperCase()}] `;
+                    }
+                    report += `${recText}`;
+                    if (rationale) {
+                        report += `
+   Rationale: ${rationale}`;
+                    }
+                    report += '\n';
+                }
+            });
+            report += '\n';
+        }
+
+        // CLAUSE-WISE ANALYSIS
+        const clauseWiseAnalysis = analysis.clause_wise_analysis || [];
+        if (clauseWiseAnalysis.length > 0) {
+            report += `CLAUSE-WISE ANALYSIS
+${'-'.repeat(80)}
+`;
+            clauseWiseAnalysis.forEach((clause, i) => {
+                const clauseNumber = extractText(clause.clause_number) || extractText(clause.clause_title) || `Clause ${i + 1}`;
+                const clauseTitle = extractText(clause.clause_title);
+                const clauseSummary = extractText(clause.clause_summary);
+                const severity = extractText(clause.severity);
+                const risks = clause.risks_identified || [];
+                const enforceability = extractText(clause.enforceability);
+
+                report += `\n${i + 1}. ${clauseNumber}`;
+                if (clauseTitle && clauseTitle !== clauseNumber) {
+                    report += ` - ${clauseTitle}`;
+                }
+                if (severity) {
+                    report += `
    Severity: ${severity.toUpperCase()}`;
-            }
-            if (clauseSummary) {
-                report += `
+                }
+                if (clauseSummary) {
+                    report += `
    Summary: ${clauseSummary}`;
-            }
-            if (risks.length > 0) {
-                report += `
+                }
+                if (risks.length > 0) {
+                    report += `
    Risks: ${risks.map(r => extractText(r)).join('; ')}`;
-            }
-            if (enforceability) {
-                report += `
+                }
+                if (enforceability) {
+                    report += `
    Enforceability: ${enforceability}`;
+                }
+                report += '\n';
+            });
+            report += '\n';
+        }
+
+        // CONTRACT OVERVIEW
+        const contractOverview = analysis.contract_overview || {};
+        if (Object.keys(contractOverview).length > 0) {
+            report += `CONTRACT OVERVIEW
+${'-'.repeat(80)}
+`;
+            if (contractOverview.parties_involved) {
+                report += `Parties: ${contractOverview.parties_involved.map(p => extractText(p)).join(', ')}\n`;
+            }
+            if (contractOverview.purpose) {
+                report += `Purpose: ${extractText(contractOverview.purpose)}\n`;
+            }
+            if (contractOverview.contract_value) {
+                report += `Value: ${extractText(contractOverview.contract_value)}\n`;
+            }
+            if (contractOverview.term_summary) {
+                report += `Term: ${extractText(contractOverview.term_summary)}\n`;
+            }
+            if (contractOverview.governing_law) {
+                report += `Governing Law: ${extractText(contractOverview.governing_law)}\n`;
             }
             report += '\n';
-        });
-        report += '\n';
-    }
+        }
 
-    // CONTRACT OVERVIEW
-    const contractOverview = analysis.contract_overview || {};
-    if (Object.keys(contractOverview).length > 0) {
-        report += `CONTRACT OVERVIEW
+        // CONCLUSION
+        if (Object.keys(conclusion).length > 0) {
+            report += `CONCLUSION
 ${'-'.repeat(80)}
 `;
-        if (contractOverview.parties_involved) {
-            report += `Parties: ${contractOverview.parties_involved.map(p => extractText(p)).join(', ')}\n`;
+            if (conclusion.key_findings) {
+                report += `Key Findings:\n${conclusion.key_findings.map((f, i) => `${i + 1}. ${extractText(f)}`).join('\n')}\n\n`;
+            }
+            if (conclusion.final_risk_position) {
+                report += `Final Risk Position: ${extractText(conclusion.final_risk_position)}\n\n`;
+            }
+            if (conclusion.execution_readiness) {
+                report += `Execution Readiness: ${extractText(conclusion.execution_readiness)}\n`;
+            }
+            if (conclusion.conditions_for_execution && conclusion.conditions_for_execution.length > 0) {
+                report += `\nConditions for Execution:\n${conclusion.conditions_for_execution.map((c, i) => `${i + 1}. ${extractText(c)}`).join('\n')}\n`;
+            }
+            report += '\n';
         }
-        if (contractOverview.purpose) {
-            report += `Purpose: ${extractText(contractOverview.purpose)}\n`;
-        }
-        if (contractOverview.contract_value) {
-            report += `Value: ${extractText(contractOverview.contract_value)}\n`;
-        }
-        if (contractOverview.term_summary) {
-            report += `Term: ${extractText(contractOverview.term_summary)}\n`;
-        }
-        if (contractOverview.governing_law) {
-            report += `Governing Law: ${extractText(contractOverview.governing_law)}\n`;
-        }
-        report += '\n';
-    }
 
-    // CONCLUSION
-    if (Object.keys(conclusion).length > 0) {
-        report += `CONCLUSION
-${'-'.repeat(80)}
-`;
-        if (conclusion.key_findings) {
-            report += `Key Findings:\n${conclusion.key_findings.map((f, i) => `${i + 1}. ${extractText(f)}`).join('\n')}\n\n`;
-        }
-        if (conclusion.final_risk_position) {
-            report += `Final Risk Position: ${extractText(conclusion.final_risk_position)}\n\n`;
-        }
-        if (conclusion.execution_readiness) {
-            report += `Execution Readiness: ${extractText(conclusion.execution_readiness)}\n`;
-        }
-        if (conclusion.conditions_for_execution && conclusion.conditions_for_execution.length > 0) {
-            report += `\nConditions for Execution:\n${conclusion.conditions_for_execution.map((c, i) => `${i + 1}. ${extractText(c)}`).join('\n')}\n`;
-        }
-        report += '\n';
-    }
-
-    // ANALYSIS METADATA
-    report += `\n${'='.repeat(80)}
+        // ANALYSIS METADATA
+        report += `\n${'='.repeat(80)}
 Analysis Information:
 - Profile Type: ${analysis.profile_type || 'Not specified'}
 - Analysis Version: ${analysis.analysis_version || 'N/A'}
@@ -2844,21 +2874,21 @@ ${'='.repeat(80)}
 End of Report
 `;
 
-    // Download as text file
-    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const timestamp = new Date().toISOString().split('T')[0];
-    a.download = `Risk_Analysis_Report_${contractId}_${timestamp}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // Show success message
-    console.log('Risk analysis report downloaded successfully');
-}
+        // Download as text file
+        const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const timestamp = new Date().toISOString().split('T')[0];
+        a.download = `Risk_Analysis_Report_${contractId}_${timestamp}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Show success message
+        console.log('Risk analysis report downloaded successfully');
+    }
 
     //  NEW: Show Loading Overlay
     function showLoadingOverlay(message) {
@@ -3315,8 +3345,7 @@ End of Report
             </div>
             
             <div class="contract-header">
-                <span class="contract-id">${contract.contract_number}</span>
-                
+                <span class="contract-id">${contract.contract_number} ${contract.single_tag ? `<span class="single-tag">${contract.single_tag}</span>` : ''}</span>                
             </div>
             
             <h3 class="contract-title" title="${contract.title}">${contract.title}-${contract.contract_number.replace('CNT-', '')}</h3>
@@ -3357,7 +3386,7 @@ End of Report
         let actions = '';
 
         // if (contract.status === 'draft' || contract.status === 'review') {
-            actions += `
+        actions += `
             <button class="action-btn" onclick="event.stopPropagation(); editContract('${contract.id}')" title="Edit">
                 <i class="ti ti-edit"></i>
             </button>
@@ -3372,7 +3401,7 @@ End of Report
 
         // if (contract.status === 'signed') {
         //     actions += `
-           
+
         //     <button class="action-btn" onclick="event.stopPropagation(); viewAuditTrail('${contract.id}')" title="Audit Trail">
         //         <i class="ti ti-history"></i>
         //     </button>
@@ -3561,20 +3590,20 @@ End of Report
     }
 
     // Clear all filters
-function clearAllFilters() {
-    activeFilters = {};
-    document.getElementById('searchInput').value = '';
-    document.getElementById('typeFilter').value = '';
-    document.getElementById('dateFilter').value = '';
-    document.getElementById('valueFilter').value = '';
-    document.getElementById('priorityFilter').value = '';
-    document.getElementById('departmentFilter').value = '';
-    document.getElementById('regionFilter').value = '';
-    document.getElementById('sortFilter').value = '';
-    
-    currentSortBy = ''; 
-    applyFilters();
-}
+    function clearAllFilters() {
+        activeFilters = {};
+        document.getElementById('searchInput').value = '';
+        document.getElementById('typeFilter').value = '';
+        document.getElementById('dateFilter').value = '';
+        document.getElementById('valueFilter').value = '';
+        document.getElementById('priorityFilter').value = '';
+        document.getElementById('departmentFilter').value = '';
+        document.getElementById('regionFilter').value = '';
+        document.getElementById('sortFilter').value = '';
+
+        currentSortBy = '';
+        applyFilters();
+    }
 
     // Toggle advanced filters
     function toggleAdvancedFilters() {
@@ -3673,50 +3702,50 @@ function clearAllFilters() {
         return date.toLocaleDateString('en-US', options);
     }
 
-// Helper function to get relative time - FIXED VERSION
-function getTimeAgo(date) {
-    // Handle different date input types
-    let dateObj;
-    
-    if (typeof date === 'string') {
-        // Database format: "2025-01-15 15:41:15"
-        // Treat it as LOCAL time (server time), not UTC
-        dateObj = new Date(date.replace(' ', 'T'));
-    } else if (date instanceof Date) {
-        dateObj = date;
-    } else {
-        return 'Just now';
-    }
-    
-    // Get current time
-    const now = new Date();
-    
-    // Calculate difference in seconds
-    const seconds = Math.floor((now - dateObj) / 1000);
-    
-    // If the date is in the future or very recent (within 5 seconds), show "Just now"
-    if (seconds < 5 || seconds < 0) {
-        return 'Just now';
-    }
-    
-    const intervals = {
-        year: 31536000,
-        month: 2592000,
-        week: 604800,
-        day: 86400,
-        hour: 3600,
-        minute: 60
-    };
-    
-    for (const [name, value] of Object.entries(intervals)) {
-        const interval = Math.floor(seconds / value);
-        if (interval >= 1) {
-            return `${interval} ${name}${interval > 1 ? 's' : ''} ago`;
+    // Helper function to get relative time - FIXED VERSION
+    function getTimeAgo(date) {
+        // Handle different date input types
+        let dateObj;
+
+        if (typeof date === 'string') {
+            // Database format: "2025-01-15 15:41:15"
+            // Treat it as LOCAL time (server time), not UTC
+            dateObj = new Date(date.replace(' ', 'T'));
+        } else if (date instanceof Date) {
+            dateObj = date;
+        } else {
+            return 'Just now';
         }
+
+        // Get current time
+        const now = new Date();
+
+        // Calculate difference in seconds
+        const seconds = Math.floor((now - dateObj) / 1000);
+
+        // If the date is in the future or very recent (within 5 seconds), show "Just now"
+        if (seconds < 5 || seconds < 0) {
+            return 'Just now';
+        }
+
+        const intervals = {
+            year: 31536000,
+            month: 2592000,
+            week: 604800,
+            day: 86400,
+            hour: 3600,
+            minute: 60
+        };
+
+        for (const [name, value] of Object.entries(intervals)) {
+            const interval = Math.floor(seconds / value);
+            if (interval >= 1) {
+                return `${interval} ${name}${interval > 1 ? 's' : ''} ago`;
+            }
+        }
+
+        return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
     }
-    
-    return `${seconds} second${seconds !== 1 ? 's' : ''} ago`;
-}
 
 
     function getStatusLabel(status) {
@@ -4343,15 +4372,15 @@ function getTimeAgo(date) {
 
 
     async function viewAuditTrail(contractId) {
-    console.log(`🔍 Opening activity logs for contract: ${contractId}`);
-    
-    // Create and show loading modal first
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.id = 'auditTrailModalPopup';
-    modal.style.display = 'block';
-    
-    modal.innerHTML = `
+        console.log(`🔍 Opening activity logs for contract: ${contractId}`);
+
+        // Create and show loading modal first
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.id = 'auditTrailModalPopup';
+        modal.style.display = 'block';
+
+        modal.innerHTML = `
         <div class="modal-content modal-lg" style="max-width: 900px;">
             <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 1.5rem; border-radius: 12px 12px 0 0;">
                 <h3 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
@@ -4371,44 +4400,44 @@ function getTimeAgo(date) {
             </div>
         </div>
     `;
-    
-    document.body.appendChild(modal);
-    document.body.style.overflow = 'hidden';
-    
-    // Add CSS for spinner animation if not exists
-    if (!document.getElementById('audit-spinner-style')) {
-        const style = document.createElement('style');
-        style.id = 'audit-spinner-style';
-        style.textContent = `
+
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+
+        // Add CSS for spinner animation if not exists
+        if (!document.getElementById('audit-spinner-style')) {
+            const style = document.createElement('style');
+            style.id = 'audit-spinner-style';
+            style.textContent = `
             @keyframes spin {
                 0% { transform: rotate(0deg); }
                 100% { transform: rotate(360deg); }
             }
         `;
-        document.head.appendChild(style);
-    }
-    
-    try {
-        // Fetch activity logs from API - SIMPLE ENDPOINT
-        const response = await fetch(`/api/contracts/activity/${contractId}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to fetch activity logs');
+            document.head.appendChild(style);
         }
-        
-        const data = await response.json();
-        console.log('✅ Activity logs received:', data);
-        
-        // Update modal with real data
-        const modalBody = modal.querySelector('.modal-body');
-        
-        if (data.success && data.activities && data.activities.length > 0) {
-            modalBody.innerHTML = `
+
+        try {
+            // Fetch activity logs from API - SIMPLE ENDPOINT
+            const response = await fetch(`/api/contracts/activity/${contractId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch activity logs');
+            }
+
+            const data = await response.json();
+            console.log('✅ Activity logs received:', data);
+
+            // Update modal with real data
+            const modalBody = modal.querySelector('.modal-body');
+
+            if (data.success && data.activities && data.activities.length > 0) {
+                modalBody.innerHTML = `
                 <!-- Statistics Cards -->
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 2rem;">
                     <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -4431,12 +4460,12 @@ function getTimeAgo(date) {
                     
                     <div style="position: relative;">
                         ${data.activities.map((activity, index) => {
-                            const timestamp = activity.timestamp ? new Date(activity.timestamp) : new Date();
-                            const timeAgo = getTimeAgo(timestamp);
-                            const actionIcon = getActionIcon(activity.action_type);
-                            const actionColor = getActionColor(activity.action_type);
-                            
-                            return `
+                    const timestamp = activity.timestamp ? new Date(activity.timestamp) : new Date();
+                    const timeAgo = getTimeAgo(timestamp);
+                    const actionIcon = getActionIcon(activity.action_type);
+                    const actionColor = getActionColor(activity.action_type);
+
+                    return `
                                 <div style="position: relative; padding-left: 2.5rem; padding-bottom: 2rem; ${index === data.activities.length - 1 ? 'padding-bottom: 0;' : ''}">
                                     <!-- Timeline Line -->
                                     ${index < data.activities.length - 1 ? `
@@ -4475,13 +4504,13 @@ function getTimeAgo(date) {
                                     </div>
                                 </div>
                             `;
-                        }).join('')}
+                }).join('')}
                     </div>
                 </div>
             `;
-        } else {
-            // No activities found
-            modalBody.innerHTML = `
+            } else {
+                // No activities found
+                modalBody.innerHTML = `
                 <div style="text-align: center; padding: 3rem; color: #6b7280;">
                     <i class="ti ti-file-search" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
                     <h3 style="margin: 0 0 0.5rem 0;">No Activity Logs Found</h3>
@@ -4490,27 +4519,27 @@ function getTimeAgo(date) {
                     </p>
                 </div>
             `;
-        }
-        
-        // Add footer
-        const existingFooter = modal.querySelector('.modal-footer');
-        if (!existingFooter) {
-            const footer = document.createElement('div');
-            footer.className = 'modal-footer';
-            footer.style.cssText = 'padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; background-color: #f9fafb; border-radius: 0 0 12px 12px;';
-            footer.innerHTML = `
+            }
+
+            // Add footer
+            const existingFooter = modal.querySelector('.modal-footer');
+            if (!existingFooter) {
+                const footer = document.createElement('div');
+                footer.className = 'modal-footer';
+                footer.style.cssText = 'padding: 1.5rem; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; background-color: #f9fafb; border-radius: 0 0 12px 12px;';
+                footer.innerHTML = `
                 <button class="btn btn-primary" onclick="closeAuditTrailPopup()" style="padding: 0.625rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 500;">
                     Close
                 </button>
             `;
-            modal.querySelector('.modal-content').appendChild(footer);
-        }
-        
-    } catch (error) {
-        console.error('❌ Error loading activity logs:', error);
-        
-        const modalBody = modal.querySelector('.modal-body');
-        modalBody.innerHTML = `
+                modal.querySelector('.modal-content').appendChild(footer);
+            }
+
+        } catch (error) {
+            console.error('❌ Error loading activity logs:', error);
+
+            const modalBody = modal.querySelector('.modal-body');
+            modalBody.innerHTML = `
             <div style="text-align: center; padding: 3rem; color: #ef4444;">
                 <i class="ti ti-alert-circle" style="font-size: 4rem; opacity: 0.3; margin-bottom: 1rem;"></i>
                 <h3 style="margin: 0 0 0.5rem 0;">Failed to Load Activity Logs</h3>
@@ -4522,75 +4551,75 @@ function getTimeAgo(date) {
                 </button>
             </div>
         `;
+        }
     }
-}
 
-// Helper function to get action icon
-function getActionIcon(actionType) {
-    const icons = {
-        'contract_created': 'ti-file-plus',
-        'contract_updated': 'ti-edit',
-        'contract_deleted': 'ti-trash',
-        'contract_signed': 'ti-signature',
-        'contract_approved': 'ti-check',
-        'contract_rejected': 'ti-x',
-        'obligation_created': 'ti-checklist',
-        'obligation_updated': 'ti-edit',
-        'document_uploaded': 'ti-upload',
-        'document_downloaded': 'ti-download',
-        'comment_added': 'ti-message',
-        'workflow_started': 'ti-git-branch',
-        'ai_generation': 'ti-sparkles',
-        'blockchain_storage': 'ti-lock'
-    };
-    return icons[actionType] || 'ti-point-filled';
-}
-
-// Helper function to get action color
-function getActionColor(actionType) {
-    const colors = {
-        'contract_created': '#10b981',
-        'contract_updated': '#3b82f6',
-        'contract_deleted': '#ef4444',
-        'contract_signed': '#8b5cf6',
-        'contract_approved': '#22c55e',
-        'contract_rejected': '#f59e0b',
-        'obligation_created': '#14b8a6',
-        'document_uploaded': '#6366f1',
-        'ai_generation': '#ec4899',
-        'blockchain_storage': '#f97316'
-    };
-    return colors[actionType] || '#6b7280';
-}
-
-// Helper function to format timestamp
-// Helper function to format timestamp - FIXED VERSION
-function formatTimestamp(timestamp) {
-    if (!timestamp) return 'N/A';
-    
-    // Handle database format: "2025-01-15 15:41:15"
-    let date;
-    if (typeof timestamp === 'string') {
-        date = new Date(timestamp.replace(' ', 'T'));
-    } else {
-        date = new Date(timestamp);
+    // Helper function to get action icon
+    function getActionIcon(actionType) {
+        const icons = {
+            'contract_created': 'ti-file-plus',
+            'contract_updated': 'ti-edit',
+            'contract_deleted': 'ti-trash',
+            'contract_signed': 'ti-signature',
+            'contract_approved': 'ti-check',
+            'contract_rejected': 'ti-x',
+            'obligation_created': 'ti-checklist',
+            'obligation_updated': 'ti-edit',
+            'document_uploaded': 'ti-upload',
+            'document_downloaded': 'ti-download',
+            'comment_added': 'ti-message',
+            'workflow_started': 'ti-git-branch',
+            'ai_generation': 'ti-sparkles',
+            'blockchain_storage': 'ti-lock'
+        };
+        return icons[actionType] || 'ti-point-filled';
     }
-    
-    // Check if date is valid
-    if (isNaN(date.getTime())) {
-        return 'Invalid Date';
+
+    // Helper function to get action color
+    function getActionColor(actionType) {
+        const colors = {
+            'contract_created': '#10b981',
+            'contract_updated': '#3b82f6',
+            'contract_deleted': '#ef4444',
+            'contract_signed': '#8b5cf6',
+            'contract_approved': '#22c55e',
+            'contract_rejected': '#f59e0b',
+            'obligation_created': '#14b8a6',
+            'document_uploaded': '#6366f1',
+            'ai_generation': '#ec4899',
+            'blockchain_storage': '#f97316'
+        };
+        return colors[actionType] || '#6b7280';
     }
-    
-    // Format: Jan 15, 2025, 3:41 PM
-    return date.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    });
-}
+
+    // Helper function to format timestamp
+    // Helper function to format timestamp - FIXED VERSION
+    function formatTimestamp(timestamp) {
+        if (!timestamp) return 'N/A';
+
+        // Handle database format: "2025-01-15 15:41:15"
+        let date;
+        if (typeof timestamp === 'string') {
+            date = new Date(timestamp.replace(' ', 'T'));
+        } else {
+            date = new Date(timestamp);
+        }
+
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+            return 'Invalid Date';
+        }
+
+        // Format: Jan 15, 2025, 3:41 PM
+        return date.toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
 
 
 </script>

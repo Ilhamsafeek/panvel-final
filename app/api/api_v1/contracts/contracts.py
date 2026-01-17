@@ -322,7 +322,7 @@ async def create_contract_from_template(
             "created_by": current_user.id,
             "created_at": datetime.utcnow(),  # ✅ FIXED
             "updated_at": datetime.utcnow(),  # ✅ FIXED
-            "single_tag": request.get("tags")[0] if request.get("tags") and len(request.get("tags")) > 0 else None,  # ✅ Convert array to comma-separated
+            "single_tag": request.get("tags") if request.get("tags") else None,  # ✅ Convert array to comma-separated
             
         }
         
@@ -567,6 +567,7 @@ async def generate_contract_with_ai(
             "profile_type": profile_type,
             "contract_value": request_data.contract_value,
             "currency": request_data.currency,
+            "language": request_data.language,
             "status": "draft",
             "current_version": 1,
             "is_ai_generated": 1,
@@ -582,12 +583,12 @@ async def generate_contract_with_ai(
         #  FIXED: Include party_b_lead_id and party_b_id in INSERT
         result = db.execute(text("""
             INSERT INTO contracts (company_id, project_id, contract_number, contract_title,
-                         contract_type, profile_type, contract_value, currency,
+                         contract_type, profile_type, contract_value, currency, language,
                          status, current_version, is_ai_generated, ai_generation_params,
                          party_b_lead_id, party_b_id, single_tag,
                          created_by, created_at, updated_at)
     VALUES (:company_id, :project_id, :contract_number, :contract_title,
-            :contract_type, :profile_type, :contract_value, :currency,
+            :contract_type, :profile_type, :contract_value, :currency, :language,
             :status, :current_version, :is_ai_generated, :ai_generation_params,
             :party_b_lead_id, :party_b_id, :single_tag,
             :created_by, :created_at, :updated_at)
@@ -939,6 +940,7 @@ async def get_contracts(
             "title": contract.contract_title,
             "counterparty": counterparty_name,
             "status": contract.status,
+            "single_tag": contract.single_tag,
             "contract_type": contract.contract_type,
             "module": module,
             "value": float(contract.contract_value) if contract.contract_value else 0,
@@ -1088,6 +1090,7 @@ async def get_contract_editor_data(
                 c.contract_number,
                 c.contract_title,
                 c.contract_type,
+                c.language,
                 c.status,
                 c.approval_status,
                 c.created_at,
@@ -1366,6 +1369,7 @@ async def get_contract_editor_data(
                 "is_counterparty": is_counterparty,
                 "is_ai_generated": result.is_ai_generated,
                 "ai_generation_params": result.ai_generation_params,
+                "language": result.language,
                 "is_esignee": is_esignee
             },
             "workflow": {
