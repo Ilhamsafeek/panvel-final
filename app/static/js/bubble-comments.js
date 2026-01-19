@@ -494,7 +494,7 @@ function showBubble(commentId, event) {
         '<div style="padding:12px;background:linear-gradient(135deg,#fff9e6,#fff3cd);border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center;">' +
             '<div style="display:flex;align-items:center;gap:10px;">' +
                 '<div style="width:36px;height:36px;background:linear-gradient(135deg,#ffc107,#ff9800);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;">' + initials + '</div>' +
-                '<div><div style="font-weight:600;">' + escapeHtml(name) + '</div><div style="font-size:11px;color:#7f8c8d;">' + time + '</div></div>' +
+                '<div><div style="font-weight:600;">' + escapeHtml(name) + '</div></div>' +
             '</div>' +
             '<div style="display:flex;gap:4px;">' + actions + '</div>' +
         '</div>' +
