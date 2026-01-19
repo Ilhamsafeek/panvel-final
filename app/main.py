@@ -899,6 +899,7 @@ async def contract_editor_page(
         "current_page": "editor",
         "user": user_context,
         "subscriptions": user_context['subscriptions'],
+        "current_user": current_user,
     })
 
 @app.get("/contract/edit/{contract_id}", response_class=HTMLResponse)
@@ -917,6 +918,7 @@ async def contract_editor_with_id(
         "current_page": "editor",
         "user": user_context,
         "subscriptions": user_context['subscriptions'],
+         "current_user": current_user,
     })
 
 @app.get("/contract/counter-party-edit/{contract_id}", response_class=HTMLResponse)

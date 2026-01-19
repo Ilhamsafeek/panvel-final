@@ -59,9 +59,8 @@ async def add_comment(
 ):
     """Add a new bubble comment with exact positioning"""
     try:
-        logger.info(f"📝 Adding comment by user {current_user.id} at position {data.position_start}-{data.position_end}")
+        logger.info(f"📝 Adding comment by user {current_user.id}")
         
-        # Store position info as JSON with XPath for precise location
         position_info = {
             'start': data.position_start,
             'end': data.position_end,
@@ -83,11 +82,10 @@ async def add_comment(
             'user_id': current_user.id,
             'comment_text': data.comment_text,
             'selected_text': data.selected_text,
-            'position_info': json.dumps(position_info)  # Store as JSON string
+            'position_info': json.dumps(position_info)
         })
         db.commit()
         
-        # Get the inserted ID
         comment_id = result.lastrowid
         
         # Get user name
@@ -98,15 +96,13 @@ async def add_comment(
         user_result = db.execute(user_query, {'user_id': current_user.id}).fetchone()
         user_name = user_result[0] if user_result else "Unknown User"
         
-        logger.info(f"✅ Comment {comment_id} added successfully with exact position")
-        
         return {
             'success': True,
             'message': 'Comment added successfully',
             'comment': {
                 'id': comment_id,
                 'contract_id': data.contract_id,
-                'user_id': current_user.id,
+                'user_id': current_user.id,  # ← Include user_id
                 'user_name': user_name,
                 'comment_text': data.comment_text,
                 'selected_text': data.selected_text,
@@ -116,7 +112,7 @@ async def add_comment(
                 'original_text': data.original_text,
                 'new_text': data.new_text,
                 'created_at': datetime.now().isoformat(),
-                'can_delete': True
+                'can_delete': True  # Owner can always delete their own
             }
         }
         
@@ -124,7 +120,7 @@ async def add_comment(
         logger.error(f"❌ Error adding comment: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
-
+        
 
 @router.get("/comments/{contract_id}")
 async def get_comments(
@@ -162,7 +158,7 @@ async def get_comments(
             # Parse position info JSON
             try:
                 if row[6]:  # position_info column
-                    pos_info = json.loads(row[6]) if isinstance(row[6], str) else eval(row[6])
+                    pos_info = json.loads(row[6]) if isinstance(row[6], str) else row[6]
                 else:
                     pos_info = {}
             except:
@@ -171,7 +167,7 @@ async def get_comments(
             comments.append({
                 'id': row[0],
                 'contract_id': row[1],
-                'user_id': row[2],
+                'user_id': row[2],  # Include user_id so frontend can compare
                 'user_name': row[3],
                 'comment_text': row[4],
                 'selected_text': row[5],
@@ -183,14 +179,15 @@ async def get_comments(
                 'new_text': pos_info.get('new_text'),
                 'created_at': row[7].isoformat() if row[7] else '',
                 'updated_at': row[8].isoformat() if row[8] else '',
-                'can_delete': bool(row[9])
+                'can_delete': bool(row[9])  # Only owner can delete
             })
         
         logger.info(f"✅ Retrieved {len(comments)} comments for contract {contract_id}")
         
         return {
             'success': True,
-            'comments': comments
+            'comments': comments,
+            'current_user_id': current_user.id  # ← ADD THIS LINE
         }
         
     except Exception as e:

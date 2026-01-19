@@ -1,164 +1,124 @@
 /* =====================================================
-   BUBBLE COMMENTS - SIMPLIFIED STYLING WITH PROTECTION
+   BUBBLE COMMENTS - UNLOCKED EDITABLE STYLES
+   - Text remains editable (highlighted but not locked)
+   - Comment icon appears after highlighted text
    ===================================================== */
 
-/* Comment Highlights in Text - PROTECTED */
+/* Comment Highlights - EDITABLE (not locked) */
 .comment-highlight {
-    background: rgba(255, 193, 7, 0.25);
+    background: rgba(255, 193, 7, 0.2);
     border-bottom: 2px solid #ffc107;
-    cursor: pointer;
-    padding: 2px 0;
+    padding: 1px 0;
     position: relative;
-    transition: all 0.2s ease;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
+    transition: background 0.2s ease;
+    /* NO user-select: none - text is selectable and editable */
 }
 
 .comment-highlight:hover {
-    background: rgba(255, 193, 7, 0.4);
+    background: rgba(255, 193, 7, 0.35);
 }
 
-/* Add lock icon indicator */
-.comment-highlight::after {
-    content: '🔒';
-    position: absolute;
-    top: -8px;
-    right: -12px;
-    font-size: 10px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.comment-highlight:hover::after {
-    opacity: 0.6;
-}
-
-/* Track Changes - Insertions - PROTECTED */
+/* Track Changes - Insertions - EDITABLE */
 .track-insert {
     background: rgba(40, 167, 69, 0.15);
     border-bottom: 2px solid #28a745;
-    color: #155724;
-    padding: 2px 0;
-    cursor: pointer;
+    padding: 1px 0;
     position: relative;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
 }
 
 .track-insert:hover {
     background: rgba(40, 167, 69, 0.25);
 }
 
-.track-insert::after {
-    content: '🔒';
-    position: absolute;
-    top: -8px;
-    right: -12px;
-    font-size: 10px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.track-insert:hover::after {
-    opacity: 0.6;
-}
-
-/* Track Changes - Deletions - PROTECTED */
+/* Track Changes - Deletions - EDITABLE */
 .track-delete {
     text-decoration: line-through;
     text-decoration-color: #dc3545;
     text-decoration-thickness: 2px;
-    background: rgba(220, 53, 69, 0.15);
-    color: #dc3545;
-    padding: 2px 4px;
-    border-radius: 3px;
-    cursor: pointer;
+    background: rgba(220, 53, 69, 0.1);
+    padding: 1px 0;
     position: relative;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
 }
 
 .track-delete:hover {
-    background: rgba(220, 53, 69, 0.25);
+    background: rgba(220, 53, 69, 0.2);
 }
 
-.track-delete::after {
-    content: '🔒';
-    position: absolute;
-    top: -8px;
-    right: -12px;
-    font-size: 10px;
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.track-delete:hover::after {
-    opacity: 0.6;
-}
-
-/* Flash animation when trying to edit protected text */
-@keyframes protectedFlash {
-    0%, 100% {
-        box-shadow: none;
-    }
-    50% {
-        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.4);
-        transform: scale(1.02);
-    }
-}
-
-/* Protection warning overlay */
-.protection-warning {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    background: #fff3cd;
-    border: 2px solid #ffc107;
-    border-left: 4px solid #dc3545;
-    padding: 12px 16px;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 10001;
-    display: flex;
+/* =====================================================
+   COMMENT ICON - Clickable bubble icon
+   ===================================================== */
+.comment-icon {
+    display: inline-flex !important;
     align-items: center;
-    gap: 10px;
-    animation: slideInRight 0.3s ease;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 3px;
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: #000;
+    border-radius: 50%;
+    font-size: 10px;
+    cursor: pointer;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
 }
 
-@keyframes slideInRight {
-    from {
-        transform: translateX(400px);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+.comment-icon:hover {
+    transform: scale(1.2);
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    box-shadow: 0 3px 8px rgba(255, 152, 0, 0.4);
 }
 
-/* Bubble Tooltip */
+.comment-icon:active {
+    transform: scale(0.95);
+}
+
+.comment-icon i {
+    font-size: 10px;
+    line-height: 1;
+}
+
+/* Different icon colors for change types */
+.track-insert .comment-icon {
+    background: linear-gradient(135deg, #28a745, #20c997);
+}
+
+.track-insert .comment-icon:hover {
+    background: linear-gradient(135deg, #20c997, #17a2b8);
+}
+
+.track-delete .comment-icon {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.track-delete .comment-icon:hover {
+    background: linear-gradient(135deg, #c82333, #bd2130);
+}
+
+/* =====================================================
+   COMMENT BUBBLE - Enhanced styling
+   ===================================================== */
 .comment-bubble {
     position: fixed;
     background: white;
-    border: 2px solid #e0e0e0;
+    border: 2px solid #ffc107;
     border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    z-index: 9999;
+    padding: 0;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
     min-width: 300px;
     max-width: 400px;
-    display: none;
+    z-index: 10000;
+    animation: bubbleSlideIn 0.2s ease;
+    overflow: hidden;
 }
 
-.comment-bubble.active {
-    display: block;
-    animation: bubbleFadeIn 0.2s ease;
-}
-
-@keyframes bubbleFadeIn {
+@keyframes bubbleSlideIn {
     from {
         opacity: 0;
         transform: translateY(-10px);
@@ -173,27 +133,27 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 12px 15px;
+    background: linear-gradient(135deg, #fff9e6, #fff3cd);
+    border-bottom: 1px solid #ffe69c;
 }
 
 .comment-author {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .comment-author-avatar {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #ffc107, #ff9800);
+    color: #000;
     border-radius: 50%;
-    background: var(--primary-color);
-    color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 600;
+    font-weight: 700;
     font-size: 14px;
 }
 
@@ -209,7 +169,7 @@
 }
 
 .comment-time {
-    font-size: 12px;
+    font-size: 11px;
     color: #7f8c8d;
 }
 
@@ -218,219 +178,369 @@
     gap: 6px;
 }
 
-.comment-action-btn {
-    background: none;
+.comment-actions .btn-icon {
+    width: 32px;
+    height: 32px;
     border: none;
-    padding: 6px;
-    cursor: pointer;
-    border-radius: 6px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 16px;
 }
 
-.comment-action-btn:hover {
-    background: #f0f0f0;
-}
-
-.comment-action-btn.delete:hover {
-    background: #fee;
+.comment-actions .btn-delete {
+    background: #fee2e2;
     color: #dc3545;
 }
 
+.comment-actions .btn-delete:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.comment-actions .btn-accept {
+    background: #d1fae5;
+    color: #28a745;
+}
+
+.comment-actions .btn-accept:hover {
+    background: #28a745;
+    color: white;
+}
+
+.comment-actions .btn-reject {
+    background: #fee2e2;
+    color: #dc3545;
+}
+
+.comment-actions .btn-reject:hover {
+    background: #dc3545;
+    color: white;
+}
+
+.comment-actions .btn-resolve {
+    background: #dbeafe;
+    color: #3b82f6;
+}
+
+.comment-actions .btn-resolve:hover {
+    background: #3b82f6;
+    color: white;
+}
+
 .comment-bubble-body {
-    margin-bottom: 12px;
+    padding: 15px;
 }
 
 .comment-text {
     font-size: 14px;
+    color: #333;
     line-height: 1.6;
-    color: #34495e;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
-.comment-selected-text {
+/* Change Details */
+.change-details {
     background: #f8f9fa;
-    padding: 10px;
-    border-radius: 6px;
-    border-left: 3px solid var(--primary-color);
-    font-size: 13px;
-    color: #5a6c7d;
-    font-style: italic;
-    margin-top: 8px;
-}
-
-/* Track Changes Details */
-.track-changes-details {
-    background: #f8f9fa;
-    padding: 12px;
     border-radius: 8px;
-    margin-top: 12px;
-    font-size: 13px;
+    padding: 12px;
+    margin-top: 10px;
 }
 
-.track-change-label {
+.change-label {
+    font-size: 12px;
     font-weight: 600;
-    color: #495057;
+    color: #6c757d;
     margin-bottom: 6px;
-    display: block;
-}
-
-.track-original {
-    padding: 8px;
-    background: rgba(220, 53, 69, 0.1);
-    border-left: 3px solid #dc3545;
-    border-radius: 4px;
-    margin-bottom: 8px;
-    text-decoration: line-through;
-    color: #dc3545;
-}
-
-.track-new {
-    padding: 8px;
-    background: rgba(40, 167, 69, 0.1);
-    border-left: 3px solid #28a745;
-    border-radius: 4px;
-    color: #28a745;
-}
-
-/* Comment Badge Counter */
-.comment-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #dc3545;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 700;
-    border: 2px solid white;
+    gap: 6px;
 }
 
-/* Comments Panel */
+.change-text {
+    font-size: 13px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    line-height: 1.5;
+}
+
+.change-text.delete-text,
+.change-text.original-text {
+    background: #fee2e2;
+    color: #991b1b;
+    text-decoration: line-through;
+}
+
+.change-text.new-text {
+    background: #d1fae5;
+    color: #166534;
+}
+
+.change-arrow {
+    text-align: center;
+    color: #9ca3af;
+    padding: 4px 0;
+}
+
+.comment-bubble-footer {
+    padding: 10px 15px;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comment-badge-type {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+}
+
+.comment-badge-type.comment {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.comment-badge-type.insert {
+    background: #d1fae5;
+    color: #166534;
+}
+
+.comment-badge-type.delete {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.owner-badge {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: #e0e7ff;
+    color: #4338ca;
+    font-weight: 500;
+}
+
+/* =====================================================
+   COMMENTS PANEL SIDEBAR
+   ===================================================== */
 .comments-panel {
     position: fixed;
-    right: 0;
-    top: 60px;
-    width: 400px;
-    height: calc(100vh - 60px);
+    right: -350px;
+    top: 80px;
+    width: 340px;
+    height: calc(100vh - 100px);
     background: white;
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
-    transform: translateX(100%);
-    transition: transform 0.3s ease;
-    z-index: 998;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.1);
+    border-radius: 12px 0 0 12px;
+    z-index: 999;
+    transition: right 0.3s ease;
     display: flex;
     flex-direction: column;
 }
 
-.comments-panel.active {
-    transform: translateX(0);
+.comments-panel.open {
+    right: 0;
 }
 
 .comments-panel-header {
-    padding: 20px;
-    border-bottom: 1px solid #e0e0e0;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #fff9e6, #fff3cd);
+    border-bottom: 1px solid #ffe69c;
+    border-radius: 12px 0 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .comments-panel-title {
-    font-size: 18px;
     font-weight: 600;
+    font-size: 16px;
     color: #2c3e50;
     display: flex;
     align-items: center;
-    gap: 10px;
-}
-
-.comments-panel-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #7f8c8d;
-    padding: 4px;
+    gap: 8px;
 }
 
 .comments-panel-body {
     flex: 1;
     overflow-y: auto;
-    padding: 20px;
+    padding: 15px;
+}
+
+.comments-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9ca3af;
+}
+
+.comments-empty i {
+    font-size: 48px;
+    margin-bottom: 10px;
+    opacity: 0.5;
 }
 
 .comment-item {
+    padding: 12px;
     background: #f8f9fa;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
     cursor: pointer;
-    transition: all 0.2s;
-    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
+    border-left: 3px solid #ffc107;
 }
 
 .comment-item:hover {
-    background: #e9ecef;
-    border-left-color: var(--primary-color);
+    background: #fff3cd;
+    transform: translateX(3px);
 }
 
-.comment-item.comment-type {
-    border-left-color: #ffc107;
+.comment-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
 }
 
-.comment-item.insert-type {
-    border-left-color: #28a745;
+.comment-avatar {
+    width: 28px;
+    height: 28px;
+    background: #ffc107;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
 }
 
-.comment-item.delete-type {
-    border-left-color: #dc3545;
+.comment-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.comment-meta .comment-author {
+    font-size: 13px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.owner-tag {
+    font-size: 10px;
+    color: #6366f1;
+    margin-left: 4px;
+}
+
+.comment-meta .comment-time {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+.comment-preview {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.comment-selected-text {
+    font-size: 11px;
+    color: #9ca3af;
+    font-style: italic;
+    padding: 6px 8px;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 4px;
 }
 
 /* Toggle Button */
 .comments-toggle-btn {
     position: fixed;
     right: 20px;
-    bottom: 30px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    color: white;
+    bottom: 80px;
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #ffc107, #ff9800);
     border: none;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    cursor: pointer;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
-    transition: all 0.3s;
-    z-index: 997;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(255, 193, 7, 0.4);
+    transition: all 0.3s ease;
+    z-index: 998;
 }
 
 .comments-toggle-btn:hover {
     transform: scale(1.1);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 24px rgba(255, 193, 7, 0.6);
 }
 
-/* Empty State */
-.comments-empty {
-    text-align: center;
-    padding: 40px 20px;
-    color: #7f8c8d;
+.comments-toggle-btn i {
+    font-size: 24px;
+    color: #000;
 }
 
-.comments-empty i {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.3;
+.comments-toggle-btn .comment-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 22px;
+    height: 22px;
+    background: #dc3545;
+    color: white;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    border: 2px solid white;
+    padding: 0 5px;
 }
 
-.comments-empty p {
-    font-size: 14px;
+/* Pulse animation for highlights */
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(255, 193, 7, 0);
+    }
+}
+
+/* Notification styles */
+.notification {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .comment-bubble {
+        min-width: 280px;
+        max-width: calc(100vw - 40px);
+        left: 20px !important;
+        right: 20px !important;
+    }
+    
+    .comments-panel {
+        width: 100%;
+        right: -100%;
+    }
 }

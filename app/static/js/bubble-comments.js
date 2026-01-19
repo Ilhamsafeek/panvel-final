@@ -1,1189 +1,804 @@
 // =====================================================
-// BUBBLE COMMENTS - FIXED WITH DEBUGGING
+// BUBBLE COMMENTS - FINAL FIXED VERSION
+// - Waits for contract content before highlighting
+// - Strong icon protection (cannot delete with keyboard)
 // =====================================================
 
-let allComments = [];
-let currentBubble = null;
+window.bcAllComments = [];
+window.bcCurrentBubble = null;
+window.bcContractId = null;
+window.bcUserId = null;
+window.bcLoaded = false;
+window.bcHighlighted = false;
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎨 BUBBLE COMMENTS INITIALIZING...');
-    initializeBubbleComments();
+// =====================================================
+// INITIALIZE
+// =====================================================
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Bubble comments initializing...');
+    
+    window.bcContractId = getContractId();
+    window.bcUserId = getUserId();
+    
+    console.log('📋 Contract ID:', window.bcContractId);
+    console.log('👤 User ID:', window.bcUserId);
+    
+    if (window.bcContractId) {
+        loadComments();
+    }
+    
+    // Retry loading if contract ID not found yet
+    setTimeout(function() {
+        if (!window.bcContractId) {
+            window.bcContractId = getContractId();
+            if (window.bcContractId && !window.bcLoaded) loadComments();
+        }
+    }, 1500);
+    
+    // Watch for contract content to be loaded (for dynamic loading)
+    waitForContractContent();
+    
+    // Close bubble on outside click
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.comment-icon')) return;
+        if (e.target.closest('.comment-bubble')) return;
+        if (e.target.closest('#commentBubble')) return;
+        if (window.bcCurrentBubble) closeBubble();
+    }, true);
+    
+    // Setup strong icon protection
+    setupStrongIconProtection();
 });
 
-function initializeBubbleComments() {
-    console.log('📋 Starting Bubble Comments System');
-    
-    // Get contract ID - check multiple sources
-    function getContractId() {
-        // Method 1: URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        let id = urlParams.get('id');
-        if (id) return id;
-        
-        // Method 2: Global contractId variable
-        if (typeof contractId !== 'undefined' && contractId) return contractId;
-        
-        // Method 3: Hidden input
-        const input = document.getElementById('contractId');
-        if (input && input.value) return input.value;
-        
-        // Method 4: Parse from URL path
-        const pathParts = window.location.pathname.split('/');
-        const editIndex = pathParts.indexOf('edit');
-        if (editIndex !== -1 && pathParts[editIndex + 1]) {
-            return pathParts[editIndex + 1];
+// =====================================================
+// WAIT FOR CONTRACT CONTENT TO LOAD
+// =====================================================
+function waitForContractContent() {
+    var checkInterval = setInterval(function() {
+        var content = document.getElementById('contractContent');
+        if (content && content.innerHTML.length > 100) {
+            console.log('📄 Contract content detected, length:', content.innerHTML.length);
+            clearInterval(checkInterval);
+            
+            // Re-highlight after content loads
+            if (window.bcAllComments.length > 0 && !window.bcHighlighted) {
+                console.log('🔄 Re-highlighting after content load...');
+                setTimeout(function() {
+                    highlightCommentsInDocument();
+                }, 500);
+            }
         }
-        
-        return null;
-    }
+    }, 500);
     
-    currentContractId = getContractId();
-    console.log('🆔 Contract ID:', currentContractId);
-    
-    if (currentContractId) {
-        console.log('📥 Will load comments for contract:', currentContractId);
-        // Load immediately
-        loadComments();
-        
-        // Also load after a delay (in case content isn't ready)
-        setTimeout(loadComments, 1000);
-        setTimeout(loadComments, 3000);
-    } else {
-        console.warn('⚠️ No contract ID found!');
-    }
-    
-    // Setup event listeners
-    setupCommentListeners();
-    
-    // Close bubble when clicking outside
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.comment-bubble') && 
-            !e.target.closest('.comment-highlight') && 
-            !e.target.closest('.track-insert') && 
-            !e.target.closest('.track-delete')) {
-            closeBubble();
-        }
-    });
-    
-    console.log('✅ Bubble Comments Initialized');
+    // Stop checking after 30 seconds
+    setTimeout(function() { clearInterval(checkInterval); }, 30000);
 }
 
-function setupCommentListeners() {
-    console.log('🔗 Setting up listeners...');
+// =====================================================
+// STRONG ICON PROTECTION - CANNOT DELETE WITH KEYBOARD
+// =====================================================
+function setupStrongIconProtection() {
+    // Use capture phase to intercept before other handlers
+    document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Backspace' && e.key !== 'Delete') return;
+        
+        var sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        
+        var range = sel.getRangeAt(0);
+        var content = document.getElementById('contractContent');
+        if (!content || !content.contains(range.commonAncestorContainer)) return;
+        
+        // Check 1: Selection contains icon
+        var cloned = range.cloneContents();
+        if (cloned.querySelector && cloned.querySelector('.comment-icon')) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            showNotification('Cannot delete comment icon. Use the comment bubble.', 'warning');
+            return false;
+        }
+        
+        // Check 2: Cursor is right before/after icon (Backspace case)
+        if (e.key === 'Backspace' && range.collapsed) {
+            var node = range.startContainer;
+            var offset = range.startOffset;
+            
+            // If at start of text node, check previous sibling
+            if (node.nodeType === 3 && offset === 0) {
+                var prev = node.previousSibling;
+                if (prev && (prev.classList && prev.classList.contains('comment-icon'))) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    showNotification('Cannot delete comment icon.', 'warning');
+                    return false;
+                }
+                // Check if previous sibling contains icon at end
+                if (prev && prev.querySelector && prev.querySelector('.comment-icon:last-child')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    showNotification('Cannot delete comment icon.', 'warning');
+                    return false;
+                }
+            }
+            
+            // If in element, check child before cursor
+            if (node.nodeType === 1 && offset > 0) {
+                var prevChild = node.childNodes[offset - 1];
+                if (prevChild && prevChild.classList && prevChild.classList.contains('comment-icon')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    showNotification('Cannot delete comment icon.', 'warning');
+                    return false;
+                }
+            }
+        }
+        
+        // Check 3: Delete key - cursor is right before icon
+        if (e.key === 'Delete' && range.collapsed) {
+            var node = range.startContainer;
+            var offset = range.startOffset;
+            
+            // If at end of text node, check next sibling
+            if (node.nodeType === 3 && offset === node.textContent.length) {
+                var next = node.nextSibling;
+                if (next && next.classList && next.classList.contains('comment-icon')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    showNotification('Cannot delete comment icon.', 'warning');
+                    return false;
+                }
+            }
+            
+            // If in element, check child after cursor
+            if (node.nodeType === 1 && offset < node.childNodes.length) {
+                var nextChild = node.childNodes[offset];
+                if (nextChild && nextChild.classList && nextChild.classList.contains('comment-icon')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                    showNotification('Cannot delete comment icon.', 'warning');
+                    return false;
+                }
+            }
+        }
+        
+        // Check 4: Check if inside a highlight span and trying to delete the icon
+        var parentHighlight = range.startContainer.nodeType === 3 
+            ? range.startContainer.parentElement 
+            : range.startContainer;
+        
+        while (parentHighlight && parentHighlight !== content) {
+            if (parentHighlight.classList && 
+                (parentHighlight.classList.contains('comment-highlight') || 
+                 parentHighlight.classList.contains('track-insert') || 
+                 parentHighlight.classList.contains('track-delete'))) {
+                
+                var icon = parentHighlight.querySelector('.comment-icon');
+                if (icon) {
+                    // Check if about to delete the icon
+                    var iconRect = icon.getBoundingClientRect();
+                    var rangeRect = range.getBoundingClientRect();
+                    
+                    if (e.key === 'Backspace') {
+                        // If cursor is right after icon
+                        var textAfterIcon = icon.nextSibling;
+                        if (!textAfterIcon || (textAfterIcon.nodeType === 3 && textAfterIcon.textContent === '')) {
+                            if (range.startContainer === parentHighlight || 
+                                range.startContainer.previousSibling === icon) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.stopImmediatePropagation();
+                                showNotification('Cannot delete comment icon.', 'warning');
+                                return false;
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            parentHighlight = parentHighlight.parentElement;
+        }
+    }, true); // Capture phase
     
-    // Add comment button
-    const addCommentBtn = document.getElementById('addCommentBtn');
-    if (addCommentBtn) {
-        addCommentBtn.addEventListener('click', openAddCommentModal);
-        console.log('✅ Add comment button listener added');
-    } else {
-        console.warn('⚠️ addCommentBtn not found');
-    }
+    // Also prevent cut operations that include icons
+    document.addEventListener('cut', function(e) {
+        var sel = window.getSelection();
+        if (!sel.rangeCount) return;
+        var range = sel.getRangeAt(0);
+        var cloned = range.cloneContents();
+        if (cloned.querySelector && cloned.querySelector('.comment-icon')) {
+            e.preventDefault();
+            showNotification('Cannot cut comment icons.', 'warning');
+        }
+    }, true);
     
-    // Toggle comments panel
-    const toggleBtn = document.getElementById('toggleCommentsBtn');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', toggleCommentsPanel);
-        console.log('✅ Toggle button listener added');
+    // MutationObserver to restore accidentally deleted icons
+    var content = document.getElementById('contractContent');
+    if (content) {
+        var observer = new MutationObserver(function(mutations) {
+            var needsRestore = false;
+            mutations.forEach(function(m) {
+                m.removedNodes.forEach(function(node) {
+                    if (node.classList && node.classList.contains('comment-icon')) {
+                        needsRestore = true;
+                    }
+                    if (node.querySelector && node.querySelector('.comment-icon')) {
+                        needsRestore = true;
+                    }
+                });
+            });
+            if (needsRestore && window.bcAllComments.length > 0) {
+                console.log('⚠️ Icon removed, restoring...');
+                setTimeout(highlightCommentsInDocument, 100);
+            }
+        });
+        observer.observe(content, { childList: true, subtree: true });
     }
+}
+
+// =====================================================
+// GET CONTRACT ID
+// =====================================================
+function getContractId() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var id = urlParams.get('id');
+    if (id) return id;
+    
+    var match = window.location.pathname.match(/\/contract\/edit\/(\d+)/);
+    if (match) return match[1];
+    
+    if (typeof contractId !== 'undefined' && contractId) return contractId;
+    if (window.contractId) return window.contractId;
+    if (window.currentContractId) return window.currentContractId;
+    
+    var input = document.getElementById('contractId');
+    if (input && input.value) return input.value;
+    
+    return null;
+}
+
+// =====================================================
+// GET USER ID
+// =====================================================
+function getUserId() {
+    var el = document.getElementById('currentUserId');
+    if (el) return parseInt(el.value || el.dataset.userId || 0);
+    if (window.currentUserId) return window.currentUserId;
+    return null;
 }
 
 // =====================================================
 // LOAD COMMENTS
 // =====================================================
-async function loadComments() {
-    try {
-        console.log('📥 Loading comments for contract:', currentContractId);
-        
-        const response = await fetch(`/api/contracts/comments/${currentContractId}`, {
-            credentials: 'include'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const data = await response.json();
-        console.log('📦 API Response:', data);
-        
-        if (data.success) {
-            allComments = data.comments || [];
-            console.log(`✅ Loaded ${allComments.length} comments:`, allComments);
-            
-            // Wait for contract content to be ready
-            const content = document.getElementById('contractContent');
-            if (!content || content.innerHTML.trim().length < 100) {
-                console.log('⏳ Contract content not ready, will retry highlighting...');
-                // Retry after delays
-                setTimeout(() => {
-                    console.log('🔄 Retry 1: Highlighting comments...');
-                    highlightCommentsInDocument();
-                }, 1000);
-                setTimeout(() => {
-                    console.log('🔄 Retry 2: Highlighting comments...');
-                    highlightCommentsInDocument();
-                }, 3000);
-                setTimeout(() => {
-                    console.log('🔄 Retry 3: Highlighting comments...');
-                    highlightCommentsInDocument();
-                }, 5000);
-            } else {
-                // Content ready, highlight immediately
-                highlightCommentsInDocument();
-            }
-            
-            // Update comments panel
-            updateCommentsPanel();
-            
-            // Update badge count
-            updateCommentBadge();
-        } else {
-            console.error('❌ API returned success=false:', data);
-        }
-    } catch (error) {
-        console.error('❌ Error loading comments:', error);
-    }
-}
-
-
-// =====================================================
-// HIGHLIGHT AT EXACT POSITION (for new comments)
-// =====================================================
-function highlightAtExactPosition(selectionData, commentId, changeType) {
-    console.log('🎯 Highlighting at EXACT position:', selectionData);
-    
-    try {
-        const range = selectionData.range;
-        if (!range) {
-            console.error('❌ No range data, falling back to text search');
-            // Fallback to old method
-            highlightTextInContent(
-                document.getElementById('contractContent'),
-                selectionData.text,
-                getHighlightClass(changeType),
-                commentId
-            );
-            return;
-        }
-        
-        // Clone the range to avoid modifying original
-        const highlightRange = range.cloneRange();
-        
-        // Create highlight span
-        const span = document.createElement('span');
-        const className = getHighlightClass(changeType);
-        span.className = className;
-        span.dataset.commentId = commentId;
-        span.style.cursor = 'pointer';
-        span.style.position = 'relative';
-        
-        // CRITICAL: Make text non-editable
-        span.contentEditable = 'false';
-        span.setAttribute('data-protected', 'true');
-        span.title = 'This text has a comment. Click to view or resolve the comment before editing.';
-        
-        // Add click listeners
-        span.onclick = function(e) {
-            console.log(`🖱️ Clicked on comment ${commentId}`);
-            e.preventDefault();
-            e.stopPropagation();
-            showBubble(parseInt(commentId), e);
-        };
-        
-        span.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            showBubble(parseInt(commentId), e);
-        }, true);
-        
-        // Prevent editing
-        span.addEventListener('keydown', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            showNotification('This text is protected by a comment. Resolve the comment first.', 'warning');
-            this.style.animation = 'protectedFlash 0.5s ease 2';
-        });
-        
-        span.addEventListener('beforeinput', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            showNotification('Cannot edit commented text. Resolve or delete the comment first.', 'warning');
-        });
-        
-        // Wrap the range contents
-        try {
-            highlightRange.surroundContents(span);
-            console.log('✅ Exact position highlighted successfully');
-        } catch (e) {
-            console.error('❌ Could not wrap range:', e);
-            console.log('Falling back to text search method...');
-            // Fallback to old method if wrapping fails
-            highlightTextInContent(
-                document.getElementById('contractContent'),
-                selectionData.text,
-                className,
-                commentId
-            );
-        }
-        
-    } catch (error) {
-        console.error('❌ Error highlighting exact position:', error);
-    }
-}
-
-
-// =====================================================
-// HIGHLIGHT COMMENTS IN DOCUMENT - FIXED VERSION
-// =====================================================
-function highlightCommentsInDocument() {
-    console.log('🎨 Highlighting comments in document...');
-    
-    const content = document.getElementById('contractContent');
-    if (!content) {
-        console.error('❌ contractContent element not found!');
+function loadComments() {
+    if (!window.bcContractId) window.bcContractId = getContractId();
+    if (!window.bcContractId) {
+        console.error('❌ No contract ID');
         return;
     }
     
-    console.log('✅ Found contractContent element');
+    console.log('📥 Loading comments for:', window.bcContractId);
     
-    // Remove existing highlights first
-    const existing = content.querySelectorAll('.comment-highlight, .track-insert, .track-delete');
-    console.log(`🧹 Removing ${existing.length} existing highlights`);
-    existing.forEach(el => {
-        const parent = el.parentNode;
-        while (el.firstChild) {
-            parent.insertBefore(el.firstChild, el);
+    fetch('/api/contracts/comments/' + window.bcContractId, { credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        console.log('📥 API response:', data);
+        
+        if (data.success) {
+            window.bcAllComments = data.comments || [];
+            window.bcLoaded = true;
+            
+            if (data.current_user_id) {
+                window.bcUserId = data.current_user_id;
+            }
+            
+            console.log('✅ Loaded', window.bcAllComments.length, 'comments');
+            
+            // Check if content is ready
+            var content = document.getElementById('contractContent');
+            if (content && content.innerHTML.length > 100) {
+                setTimeout(highlightCommentsInDocument, 300);
+            } else {
+                // Content not ready, waitForContractContent will handle it
+                console.log('⏳ Waiting for contract content...');
+            }
+            
+            updateCommentsPanel();
+            updateCommentBadge();
         }
+    })
+    .catch(function(err) {
+        console.error('❌ Load error:', err);
+    });
+}
+
+// =====================================================
+// HIGHLIGHT COMMENTS
+// =====================================================
+function highlightCommentsInDocument() {
+    var content = document.getElementById('contractContent');
+    if (!content) {
+        console.error('❌ contractContent not found');
+        return;
+    }
+    
+    if (content.innerHTML.length < 100) {
+        console.log('⏳ Content not ready yet, waiting...');
+        setTimeout(highlightCommentsInDocument, 500);
+        return;
+    }
+    
+    console.log('🎨 Highlighting', window.bcAllComments.length, 'comments');
+    
+    // Remove existing highlights
+    content.querySelectorAll('.comment-highlight, .track-insert, .track-delete').forEach(function(el) {
+        var icon = el.querySelector('.comment-icon');
+        if (icon) icon.remove();
+        var parent = el.parentNode;
+        while (el.firstChild) parent.insertBefore(el.firstChild, el);
         parent.removeChild(el);
     });
+    content.querySelectorAll('.comment-icon').forEach(function(i) { i.remove(); });
+    content.normalize();
     
-    // Apply new highlights
-    allComments.forEach((comment, index) => {
-        console.log(`🔍 Processing comment ${index + 1}:`, comment);
-        
-        try {
-            const className = getHighlightClass(comment.change_type);
-            console.log(`  Class: ${className}, Text: "${comment.selected_text}"`);
-            
-            const success = highlightTextInContent(content, comment.selected_text, className, comment.id);
-            
-            if (success) {
-                console.log(`  ✅ Highlighted successfully`);
-            } else {
-                console.warn(`  ⚠️ Could not find text to highlight`);
-            }
-        } catch (error) {
-            console.error(`  ❌ Error highlighting comment:`, error);
-        }
+    // Apply highlights
+    var successCount = 0;
+    window.bcAllComments.forEach(function(comment, idx) {
+        var success = applyHighlight(content, comment);
+        if (success) successCount++;
+        console.log('  [' + (idx+1) + '] ID ' + comment.id + ':', success ? '✅' : '⚠️');
     });
     
-    console.log('✅ Highlighting complete');
+    window.bcHighlighted = true;
+    console.log('✅ Highlighted', successCount, '/', window.bcAllComments.length, 'comments');
 }
 
-function getHighlightClass(changeType) {
-    switch (changeType) {
-        case 'insert': return 'track-insert';
-        case 'delete': return 'track-delete';
-        default: return 'comment-highlight';
-    }
-}
-
-function highlightTextInContent(container, searchText, className, commentId) {
-    console.log(`🔎 Searching for text: "${searchText}"`);
+function applyHighlight(container, comment) {
+    var className = comment.change_type === 'insert' ? 'track-insert' : comment.change_type === 'delete' ? 'track-delete' : 'comment-highlight';
+    var text = comment.selected_text;
+    if (!text) return false;
     
-    // Get all text nodes
-    const textNodes = [];
-    const walker = document.createTreeWalker(
-        container,
-        NodeFilter.SHOW_TEXT,
-        null,
-        false
-    );
+    var walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null, false);
+    var node;
     
-    let node;
     while (node = walker.nextNode()) {
-        if (node.textContent.trim()) {
-            textNodes.push(node);
+        var idx = node.textContent.indexOf(text);
+        if (idx !== -1) {
+            try {
+                var range = document.createRange();
+                range.setStart(node, idx);
+                range.setEnd(node, idx + text.length);
+                
+                var wrapper = document.createElement('span');
+                wrapper.className = className;
+                wrapper.dataset.commentId = comment.id;
+                
+                var icon = createCommentIcon(comment.id);
+                var contents = range.extractContents();
+                wrapper.appendChild(contents);
+                wrapper.appendChild(icon);
+                range.insertNode(wrapper);
+                return true;
+            } catch (e) { continue; }
         }
     }
-    
-    console.log(`  Found ${textNodes.length} text nodes`);
-    
-    // Search for the text in nodes
-    for (const textNode of textNodes) {
-        const text = textNode.textContent;
-        const index = text.indexOf(searchText);
-        
-        if (index !== -1) {
-            console.log(`  ✅ Found text at index ${index} in node:`, textNode);
-            
-            // Create highlight span
-            const span = document.createElement('span');
-            span.className = className;
-            span.dataset.commentId = commentId;
-            span.style.cursor = 'pointer';
-            span.style.position = 'relative';
-            
-            // CRITICAL: Make text non-editable
-            span.contentEditable = 'false';
-            span.setAttribute('data-protected', 'true');
-            
-            // Add lock icon for visual indication
-            span.title = 'This text has a comment. Click to view or resolve the comment before editing.';
-            
-            // CRITICAL: Add click listener with proper event handling
-            span.onclick = function(e) {
-                console.log(`🖱️ Clicked on comment ${commentId}`);
-                e.preventDefault();
-                e.stopPropagation();
-                showBubble(parseInt(commentId), e);
-            };
-            
-            // Also add addEventListener as backup
-            span.addEventListener('click', function(e) {
-                console.log(`🖱️ Event listener triggered for comment ${commentId}`);
-                e.preventDefault();
-                e.stopPropagation();
-                showBubble(parseInt(commentId), e);
-            }, true);
-            
-            // Prevent editing attempts
-            span.addEventListener('keydown', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                showNotification('This text is protected by a comment. Resolve the comment first.', 'warning');
-                // Flash the highlight
-                this.style.animation = 'protectedFlash 0.5s ease 2';
-            });
-            
-            span.addEventListener('beforeinput', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                showNotification('Cannot edit commented text. Resolve or delete the comment first.', 'warning');
-            });
-            
-            // Prevent paste
-            span.addEventListener('paste', function(e) {
-                e.preventDefault();
-                showNotification('Cannot paste into commented text.', 'warning');
-            });
-            
-            // Prevent drag & drop
-            span.addEventListener('drop', function(e) {
-                e.preventDefault();
-                showNotification('Cannot drop content into commented text.', 'warning');
-            });
-            
-            // Split text and wrap
-            const before = text.substring(0, index);
-            const highlighted = text.substring(index, index + searchText.length);
-            const after = text.substring(index + searchText.length);
-            
-            const parent = textNode.parentNode;
-            
-            if (before) {
-                parent.insertBefore(document.createTextNode(before), textNode);
-            }
-            
-            span.textContent = highlighted;
-            parent.insertBefore(span, textNode);
-            
-            if (after) {
-                parent.insertBefore(document.createTextNode(after), textNode);
-            }
-            
-            parent.removeChild(textNode);
-            
-            console.log('  ✅ Wrapped text with protected highlight and click listeners');
-            return true;
-        }
-    }
-    
-    console.warn('  ⚠️ Text not found in document');
     return false;
 }
 
 // =====================================================
-// ATTACH CLICK LISTENERS TO ALL HIGHLIGHTS
+// CREATE PROTECTED COMMENT ICON
 // =====================================================
-function attachClickListenersToHighlights() {
-    const highlights = document.querySelectorAll('.comment-highlight, .track-insert, .track-delete');
-    console.log(`🔗 Attaching click listeners to ${highlights.length} highlights...`);
+function createCommentIcon(commentId) {
+    var icon = document.createElement('span');
+    icon.className = 'comment-icon';
+    icon.dataset.commentId = commentId;
+    icon.innerHTML = '<i class="ti ti-message-circle-filled"></i>';
+    icon.title = 'Click to view comment';
     
-    highlights.forEach(highlight => {
-        const commentId = highlight.getAttribute('data-comment-id');
-        
-        // Remove existing listener by cloning
-        const newHighlight = highlight.cloneNode(true);
-        highlight.parentNode.replaceChild(newHighlight, highlight);
-        
-        // Add onclick handler
-        newHighlight.onclick = function(e) {
-            console.log(`🖱️ Clicked highlight for comment ${commentId}`);
-            e.preventDefault();
-            e.stopPropagation();
-            showBubble(parseInt(commentId), e);
-        };
-        
-        // Also add addEventListener as backup
-        newHighlight.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            showBubble(parseInt(commentId), e);
-        }, true);
-    });
+    // CRITICAL: Make completely non-editable
+    icon.contentEditable = 'false';
+    icon.setAttribute('contenteditable', 'false');
+    icon.setAttribute('unselectable', 'on');
+    icon.setAttribute('data-protected', 'true');
     
-    console.log('✅ Click listeners attached to all highlights');
+    icon.style.cssText = 'display:inline-flex !important;align-items:center;justify-content:center;width:18px;height:18px;margin-left:2px;background:linear-gradient(135deg,#ffc107,#ff9800);color:#000;border-radius:50%;font-size:10px;cursor:pointer;vertical-align:middle;user-select:none;-webkit-user-select:none;-moz-user-select:none;box-shadow:0 2px 4px rgba(0,0,0,0.2);z-index:100;pointer-events:auto;';
+    
+    var cid = parseInt(commentId);
+    
+    // Click handler
+    icon.onclick = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log('🖱️ Icon clicked:', cid);
+        showBubble(cid, e);
+        return false;
+    };
+    
+    // Prevent all keyboard actions on icon
+    icon.onkeydown = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+    };
+    
+    // Prevent selection
+    icon.onselectstart = function(e) {
+        e.preventDefault();
+        return false;
+    };
+    
+    // Prevent drag
+    icon.ondragstart = function(e) {
+        e.preventDefault();
+        return false;
+    };
+    
+    return icon;
 }
 
 // =====================================================
-// SHOW BUBBLE TOOLTIP - FIXED
+// SHOW BUBBLE
 // =====================================================
 function showBubble(commentId, event) {
-    console.log('💬 SHOWING BUBBLE for comment:', commentId);
+    console.log('💬 showBubble:', commentId);
     
-    const comment = allComments.find(c => c.id === commentId);
+    var comment = findComment(commentId);
     if (!comment) {
         console.error('❌ Comment not found:', commentId);
         return;
     }
     
-    console.log('✅ Found comment:', comment);
-    
-    // Remove existing bubble
+    console.log('✅ Found:', comment);
     closeBubble();
     
-    // Create bubble
-    const bubble = document.createElement('div');
-    bubble.className = 'comment-bubble active';
+    var isOwner = (comment.user_id == window.bcUserId);
+    var isChange = comment.change_type && comment.change_type !== 'comment';
+    
+    var bubble = document.createElement('div');
     bubble.id = 'commentBubble';
+    bubble.style.cssText = 'position:fixed;background:white;border:2px solid #ffc107;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.25);min-width:320px;max-width:420px;z-index:99999;';
     
-    // Get initials
-    const nameParts = comment.user_name.split(' ');
-    const initials = nameParts.map(n => n[0]).join('').toUpperCase();
+    var name = comment.user_name || 'User';
+    var initials = name.split(' ').map(function(n) { return n[0]; }).join('').toUpperCase().substring(0, 2);
+    var time = formatTime(new Date(comment.created_at));
     
-    // Format time
-    const timeAgo = formatTimeAgo(new Date(comment.created_at));
+    // Actions - Owner can only DELETE
+    var actions = '';
+    if (isOwner) {
+        actions = '<button onclick="deleteComment(' + comment.id + ')" style="width:32px;height:32px;border:none;border-radius:8px;background:#fee2e2;color:#dc3545;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Delete"><i class="ti ti-trash"></i></button>';
+    } else {
+        if (isChange) {
+            actions += '<button onclick="acceptChange(' + comment.id + ')" style="width:32px;height:32px;border:none;border-radius:8px;background:#d1fae5;color:#28a745;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:4px;" title="Accept"><i class="ti ti-check"></i></button>';
+            actions += '<button onclick="rejectChange(' + comment.id + ')" style="width:32px;height:32px;border:none;border-radius:8px;background:#fee2e2;color:#dc3545;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-right:4px;" title="Reject"><i class="ti ti-x"></i></button>';
+        }
+        actions += '<button onclick="resolveComment(' + comment.id + ')" style="width:32px;height:32px;border:none;border-radius:8px;background:#dbeafe;color:#3b82f6;cursor:pointer;display:flex;align-items:center;justify-content:center;" title="Resolve"><i class="ti ti-circle-check"></i></button>';
+    }
     
-    // Determine if this is a tracked change (not just a comment)
-    const isTrackedChange = comment.change_type && comment.change_type !== 'comment';
+    var details = '';
+    if (comment.change_type === 'delete') {
+        details = '<div style="margin-top:10px;padding:10px;background:#f8f9fa;border-radius:8px;"><div style="color:#dc3545;font-weight:600;font-size:12px;margin-bottom:6px;">🗑️ Delete:</div><div style="padding:8px;background:#fee2e2;border-radius:6px;color:#991b1b;text-decoration:line-through;">' + escapeHtml(comment.selected_text) + '</div></div>';
+    } else if (comment.change_type === 'insert') {
+        details = '<div style="margin-top:10px;padding:10px;background:#f8f9fa;border-radius:8px;"><div style="color:#6c757d;font-weight:600;font-size:12px;margin-bottom:6px;">✏️ Change:</div><div style="padding:8px;background:#fee2e2;border-radius:6px;color:#991b1b;text-decoration:line-through;margin-bottom:6px;">' + escapeHtml(comment.original_text || comment.selected_text) + '</div><div style="text-align:center;">↓</div><div style="padding:8px;background:#d1fae5;border-radius:6px;color:#166534;">' + escapeHtml(comment.new_text) + '</div></div>';
+    }
     
-    // Build bubble HTML
-    bubble.innerHTML = `
-        <div class="comment-bubble-header">
-            <div class="comment-author">
-                <div class="comment-author-avatar">${initials}</div>
-                <div class="comment-author-info">
-                    <div class="comment-author-name">${escapeHtml(comment.user_name)}</div>
-                </div>
-            </div>
-            <div class="comment-actions">
-                ${comment.can_delete ? `
-                    <button class="comment-action-btn delete" onclick="deleteComment(${comment.id})" title="Delete">
-                        <i class="ti ti-trash" style="font-size: 18px;"></i>
-                    </button>
-                ` : ''}
-                <button class="comment-action-btn" onclick="closeBubble()" title="Close">
-                    <i class="ti ti-x" style="font-size: 18px;"></i>
-                </button>
-            </div>
-        </div>
-        <div class="comment-bubble-body">
-            <div class="comment-text">${escapeHtml(comment.comment_text)}</div>
-            ${comment.selected_text ? `
-                <div class="comment-selected-text">
-                    <i class="ti ti-quote"></i> "${escapeHtml(comment.selected_text)}"
-                </div>
-            ` : ''}
-            ${renderTrackChanges(comment)}
-        </div>
-        ${isTrackedChange ? `
-            <div class="comment-bubble-actions" style="padding: 12px; border-top: 1px solid #e0e0e0; display: flex; gap: 8px; background: #f8f9fa;">
-                <button onclick="acceptChange(${comment.id})" style="flex: 1; padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    <i class="ti ti-check"></i> Accept Change
-                </button>
-                <button onclick="rejectChange(${comment.id})" style="flex: 1; padding: 8px 12px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                    <i class="ti ti-x"></i> Reject Change
-                </button>
-            </div>
-        ` : ''}
-    `;
+    var badge = comment.change_type === 'delete' ? 'background:#fee2e2;color:#991b1b' : comment.change_type === 'insert' ? 'background:#d1fae5;color:#166534' : 'background:#fff3cd;color:#856404';
+    var label = comment.change_type === 'delete' ? '🗑️ Deletion' : comment.change_type === 'insert' ? '✏️ Modification' : '💬 Comment';
+    
+    bubble.innerHTML = 
+        '<div style="padding:12px;background:linear-gradient(135deg,#fff9e6,#fff3cd);border-radius:10px 10px 0 0;display:flex;justify-content:space-between;align-items:center;">' +
+            '<div style="display:flex;align-items:center;gap:10px;">' +
+                '<div style="width:36px;height:36px;background:linear-gradient(135deg,#ffc107,#ff9800);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;">' + initials + '</div>' +
+                '<div><div style="font-weight:600;">' + escapeHtml(name) + '</div><div style="font-size:11px;color:#7f8c8d;">' + time + '</div></div>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;">' + actions + '</div>' +
+        '</div>' +
+        '<div style="padding:15px;">' +
+            '<div style="color:#333;line-height:1.6;">' + escapeHtml(comment.comment_text) + '</div>' +
+            details +
+        '</div>' +
+        '<div style="padding:10px 15px;background:#f8f9fa;border-radius:0 0 10px 10px;display:flex;gap:10px;">' +
+            '<span style="font-size:11px;padding:4px 10px;border-radius:20px;' + badge + ';font-weight:600;">' + label + '</span>' +
+            (isOwner ? '<span style="font-size:11px;padding:4px 10px;border-radius:20px;background:#e0e7ff;color:#4338ca;">Your comment</span>' : '') +
+        '</div>';
     
     document.body.appendChild(bubble);
-    currentBubble = bubble;
+    window.bcCurrentBubble = bubble;
     
-    console.log('✅ Bubble created and added to DOM');
+    // Position
+    var rect = event && event.target ? event.target.getBoundingClientRect() : { bottom: 200, left: 200, top: 180 };
+    var top = rect.bottom + 10;
+    var left = rect.left;
+    if (left + 350 > window.innerWidth) left = window.innerWidth - 370;
+    if (top + 300 > window.innerHeight) top = rect.top - 310;
+    bubble.style.top = Math.max(10, top) + 'px';
+    bubble.style.left = Math.max(10, left) + 'px';
     
-    // Position bubble near clicked element
-    positionBubble(bubble, event.target);
+    console.log('✅ Bubble shown');
+    
+    bubble.onclick = function(e) { e.stopPropagation(); };
 }
 
-function renderTrackChanges(comment) {
-    if (comment.change_type === 'comment' || !comment.change_type) return '';
-    
-    console.log('🔄 Rendering track changes for:', comment.change_type);
-    
-    let html = '<div class="track-changes-details">';
-    
-    if (comment.change_type === 'delete') {
-        html += `
-            <span class="track-change-label">
-                <i class="ti ti-trash"></i> Deleted Text:
-            </span>
-            <div class="track-original">${escapeHtml(comment.original_text || comment.selected_text)}</div>
-        `;
-    } else if (comment.change_type === 'insert') {
-        html += `
-            <span class="track-change-label">
-                <i class="ti ti-plus"></i> Inserted Text:
-            </span>
-            <div class="track-new">${escapeHtml(comment.new_text || comment.selected_text)}</div>
-        `;
-        if (comment.original_text) {
-            html += `
-                <span class="track-change-label" style="margin-top: 8px;">
-                    <i class="ti ti-arrow-back"></i> Replaced:
-                </span>
-                <div class="track-original">${escapeHtml(comment.original_text)}</div>
-            `;
-        }
-    }
-    
-    html += '</div>';
-    return html;
-}
-
-function positionBubble(bubble, target) {
-    console.log('📍 Positioning bubble near:', target);
-    
-    const rect = target.getBoundingClientRect();
-    const bubbleRect = bubble.getBoundingClientRect();
-    
-    let top = rect.bottom + window.scrollY + 10;
-    let left = rect.left + window.scrollX;
-    
-    // Adjust if bubble goes off screen
-    if (left + bubbleRect.width > window.innerWidth) {
-        left = window.innerWidth - bubbleRect.width - 20;
-    }
-    
-    if (top + bubbleRect.height > window.innerHeight + window.scrollY) {
-        top = rect.top + window.scrollY - bubbleRect.height - 10;
-    }
-    
-    bubble.style.top = top + 'px';
-    bubble.style.left = left + 'px';
-    
-    console.log(`✅ Bubble positioned at (${left}, ${top})`);
-}
-
+// =====================================================
+// CLOSE BUBBLE
+// =====================================================
 function closeBubble() {
-    if (currentBubble) {
-        console.log('🗑️ Closing bubble');
-        currentBubble.remove();
-        currentBubble = null;
+    if (window.bcCurrentBubble) {
+        window.bcCurrentBubble.remove();
+        window.bcCurrentBubble = null;
     }
+    document.querySelectorAll('#commentBubble').forEach(function(b) { b.remove(); });
+}
+
+// =====================================================
+// ACTIONS
+// =====================================================
+function deleteComment(id) {
+    var c = findComment(id);
+    if (!c) return;
+    if (c.user_id != window.bcUserId) { showNotification('You can only delete your own comments', 'warning'); return; }
+    if (!confirm('Delete this comment?')) return;
+    removeHighlight(id);
+    deleteFromDB(id);
+    showNotification('Comment deleted', 'success');
+}
+
+function acceptChange(id) {
+    var c = findComment(id);
+    if (!c) return;
+    if (c.user_id == window.bcUserId) { showNotification('Cannot accept your own change', 'warning'); return; }
+    if (!confirm('Accept this change?')) return;
+    
+    var el = document.querySelector('[data-comment-id="' + id + '"].comment-highlight, [data-comment-id="' + id + '"].track-insert, [data-comment-id="' + id + '"].track-delete');
+    if (el) {
+        var p = el.parentNode;
+        var icon = el.querySelector('.comment-icon');
+        if (icon) icon.remove();
+        if (c.change_type === 'delete') p.removeChild(el);
+        else if (c.change_type === 'insert' && c.new_text) p.replaceChild(document.createTextNode(c.new_text), el);
+        else { while (el.firstChild) p.insertBefore(el.firstChild, el); p.removeChild(el); }
+    }
+    deleteFromDB(id);
+    if (typeof saveAsDraft === 'function') saveAsDraft();
+    showNotification('Change accepted', 'success');
+}
+
+function rejectChange(id) {
+    var c = findComment(id);
+    if (!c) return;
+    if (c.user_id == window.bcUserId) { showNotification('Cannot reject your own change', 'warning'); return; }
+    if (!confirm('Reject this change?')) return;
+    removeHighlight(id);
+    deleteFromDB(id);
+    showNotification('Change rejected', 'info');
+}
+
+function resolveComment(id) {
+    var c = findComment(id);
+    if (!c) return;
+    if (c.user_id == window.bcUserId) { showNotification('Cannot resolve your own comment', 'warning'); return; }
+    if (!confirm('Mark as resolved?')) return;
+    removeHighlight(id);
+    deleteFromDB(id);
+    showNotification('Comment resolved', 'success');
+}
+
+function removeHighlight(id) {
+    var el = document.querySelector('[data-comment-id="' + id + '"]');
+    if (el && el.classList.contains('comment-icon')) el = el.closest('.comment-highlight, .track-insert, .track-delete');
+    if (el) {
+        var p = el.parentNode;
+        var icon = el.querySelector('.comment-icon');
+        if (icon) icon.remove();
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
+        p.normalize();
+    }
+}
+
+function deleteFromDB(id) {
+    fetch('/api/contracts/comments/' + id, { method: 'DELETE', credentials: 'include' })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.success) {
+            window.bcAllComments = window.bcAllComments.filter(function(c) { return c.id != id; });
+            closeBubble();
+            updateCommentsPanel();
+            updateCommentBadge();
+        }
+    });
+}
+
+function findComment(id) {
+    for (var i = 0; i < window.bcAllComments.length; i++) {
+        if (window.bcAllComments[i].id == id) return window.bcAllComments[i];
+    }
+    return null;
 }
 
 // =====================================================
 // ADD COMMENT
 // =====================================================
 function openAddCommentModal() {
-    console.log('➕ Opening add comment modal');
+    var sel = window.getSelection();
+    if (!sel.rangeCount || !sel.toString().trim()) { showNotification('Select text first', 'warning'); return; }
     
-    const selection = window.getSelection();
-    console.log('📝 Current selection:', selection.toString());
+    var text = sel.toString().trim();
+    var range = sel.getRangeAt(0).cloneRange();
+    var content = document.getElementById('contractContent');
     
-    if (!selection.rangeCount || selection.toString().trim() === '') {
-        showNotification('Please select text to comment on', 'warning');
-        console.warn('⚠️ No text selected');
-        return;
+    var start = 0;
+    if (content) {
+        try {
+            var pre = document.createRange();
+            pre.selectNodeContents(content);
+            pre.setEnd(range.startContainer, range.startOffset);
+            start = pre.toString().length;
+        } catch (e) {}
     }
     
-    const selectedText = selection.toString().trim();
-    const range = selection.getRangeAt(0).cloneRange();
+    window.commentSelection = { text: text, range: range, absoluteStart: start, absoluteEnd: start + text.length };
     
-    console.log('✅ Selected text:', selectedText);
-    
-    // Store selection BEFORE opening modal (selection gets cleared)
-    window.commentSelection = {
-        text: selectedText,
-        range: range
-    };
-    
-    // Show modal
-    const modal = document.getElementById('commentModal');
+    var modal = document.getElementById('commentModal');
     if (modal) {
         modal.style.display = 'flex';
-        
-        // Clear textarea
-        const textarea = document.getElementById('commentText');
-        if (textarea) {
-            textarea.value = '';
-            setTimeout(() => textarea.focus(), 100);
-        }
-        
-        // Update preview IMMEDIATELY
-        const preview = document.getElementById('selectedTextPreview');
-        if (preview) {
-            preview.textContent = selectedText;
-            preview.style.fontStyle = 'normal';
-            preview.style.color = '#333';
-            console.log('✅ Preview updated with:', selectedText);
-        } else {
-            console.error('❌ selectedTextPreview element not found');
-        }
-        
-        console.log('✅ Modal opened with selection:', selectedText);
-    } else {
-        console.error('❌ commentModal not found');
+        var ta = document.getElementById('commentText');
+        if (ta) { ta.value = ''; setTimeout(function() { ta.focus(); }, 100); }
+        var prev = document.getElementById('selectedTextPreview');
+        if (prev) prev.textContent = text;
     }
 }
 
-async function submitComment() {
-    console.log('💾 Submitting comment...');
+function submitComment() {
+    var ta = document.getElementById('commentText');
+    var text = ta ? ta.value.trim() : '';
+    if (!text || !window.commentSelection) { showNotification('Enter a comment', 'warning'); return; }
     
-    const commentText = document.getElementById('commentText').value.trim();
-    if (!commentText || !window.commentSelection) {
-        showNotification('Please enter a comment', 'warning');
-        console.warn('⚠️ No comment text or selection');
-        return;
-    }
+    if (!window.bcContractId) window.bcContractId = getContractId();
+    if (!window.bcContractId) { showNotification('No contract ID', 'error'); return; }
     
-    // Get change type from radio buttons
-    const changeType = document.querySelector('input[name="changeType"]:checked')?.value || 'comment';
-    const newText = document.getElementById('newText')?.value.trim() || null;
+    var typeEl = document.querySelector('input[name="changeType"]:checked');
+    var type = typeEl ? typeEl.value : 'comment';
+    var newEl = document.getElementById('newText');
+    var newText = newEl ? newEl.value.trim() : null;
     
-    // Validate modification requires new text
-    if (changeType === 'insert' && !newText) {
-        showNotification('Please enter the new text for modification', 'warning');
-        return;
-    }
+    if (type === 'insert' && !newText) { showNotification('Enter new text', 'warning'); return; }
     
-    console.log('📤 Sending to API with exact position:', {
-        contract_id: currentContractId,
-        comment_text: commentText,
-        selected_text: window.commentSelection.text,
-        change_type: changeType,
-        position_start: window.commentSelection.absoluteStart,
-        position_end: window.commentSelection.absoluteEnd,
-        start_xpath: window.commentSelection.startXPath,
-        original_text: window.commentSelection.text,
-        new_text: newText
-    });
-    
-    try {
-        const response = await fetch('/api/contracts/comments/add', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                contract_id: parseInt(currentContractId),
-                comment_text: commentText,
-                selected_text: window.commentSelection.text,
-                position_start: window.commentSelection.absoluteStart || 0,
-                position_end: window.commentSelection.absoluteEnd || 0,
-                start_xpath: window.commentSelection.startXPath || '',
-                change_type: changeType,
-                original_text: window.commentSelection.text,
-                new_text: newText
-            })
-        });
-        
-        const data = await response.json();
-        console.log('📥 API Response:', data);
-        
-        if (data.success) {
-            // Add position info to comment object
-            data.comment.position_start = window.commentSelection.absoluteStart;
-            data.comment.position_end = window.commentSelection.absoluteEnd;
-            data.comment.start_xpath = window.commentSelection.startXPath;
+    fetch('/api/contracts/comments/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+            contract_id: parseInt(window.bcContractId),
+            comment_text: text,
+            selected_text: window.commentSelection.text,
+            position_start: window.commentSelection.absoluteStart || 0,
+            position_end: window.commentSelection.absoluteEnd || 0,
+            start_xpath: '',
+            change_type: type,
+            original_text: window.commentSelection.text,
+            new_text: newText
+        })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.success) {
+            d.comment.position_start = window.commentSelection.absoluteStart;
+            d.comment.position_end = window.commentSelection.absoluteEnd;
+            window.bcAllComments.push(d.comment);
             
-            allComments.push(data.comment);
-            console.log('✅ Comment added with position, total:', allComments.length);
-            
-            // Highlight at EXACT position
-            highlightAtExactPosition(window.commentSelection, data.comment.id, changeType);
-            
-            // CRITICAL: Re-attach click listeners after highlighting
-            setTimeout(() => {
-                console.log('🔗 Re-attaching click listeners after highlight...');
-                attachClickListenersToHighlights();
-            }, 200);
-            
-            // Update UI
-            updateCommentsPanel();
-            updateCommentBadge();
+            try {
+                var className = type === 'insert' ? 'track-insert' : type === 'delete' ? 'track-delete' : 'comment-highlight';
+                var wrapper = document.createElement('span');
+                wrapper.className = className;
+                wrapper.dataset.commentId = d.comment.id;
+                var icon = createCommentIcon(d.comment.id);
+                var contents = window.commentSelection.range.extractContents();
+                wrapper.appendChild(contents);
+                wrapper.appendChild(icon);
+                window.commentSelection.range.insertNode(wrapper);
+            } catch (e) { console.error('Wrap error:', e); }
             
             closeModal('commentModal');
-            window.commentSelection = null;
-            
-            // Reset form
-            document.getElementById('commentText').value = '';
-            if (document.getElementById('newText')) {
-                document.getElementById('newText').value = '';
-            }
-            const defaultRadio = document.querySelector('input[name="changeType"][value="comment"]');
-            if (defaultRadio) {
-                defaultRadio.checked = true;
-                if (typeof updateChangeType === 'function') {
-                    updateChangeType('comment');
-                }
-            }
-            
-            const typeMessages = {
-                'comment': 'Comment added successfully',
-                'delete': 'Text marked for deletion',
-                'insert': 'Change tracked successfully'
-            };
-            showNotification(typeMessages[changeType] || 'Comment added', 'success');
-        } else {
-            throw new Error(data.message || 'Failed to add comment');
-        }
-    } catch (error) {
-        console.error('❌ Error adding comment:', error);
-        showNotification('Failed to add comment: ' + error.message, 'error');
-    }
-}
-
-// =====================================================
-// ACCEPT/REJECT TRACKED CHANGES
-// =====================================================
-
-async function acceptChange(commentId) {
-    console.log('✅ Accepting change for comment:', commentId);
-    
-    const comment = allComments.find(c => c.id === commentId);
-    if (!comment) {
-        console.error('❌ Comment not found');
-        return;
-    }
-    
-    if (!confirm('Accept this change? The modification will be applied to the document.')) {
-        return;
-    }
-    
-    try {
-        // Find the highlight element
-        const highlight = document.querySelector(`[data-comment-id="${commentId}"]`);
-        if (!highlight) {
-            console.error('❌ Highlight not found');
-            return;
-        }
-        
-        const parent = highlight.parentNode;
-        
-        // Apply the change based on type
-        if (comment.change_type === 'delete') {
-            // Delete: Remove the text completely
-            console.log('🗑️ Removing deleted text:', comment.selected_text);
-            parent.removeChild(highlight);
-            
-        } else if (comment.change_type === 'insert') {
-            // Insert: Replace old text with new text
-            console.log('✏️ Replacing text:', comment.original_text, '→', comment.new_text);
-            const newTextNode = document.createTextNode(comment.new_text || comment.selected_text);
-            parent.replaceChild(newTextNode, highlight);
-            
-        } else {
-            // Regular comment: just remove highlight
-            const text = highlight.textContent;
-            parent.replaceChild(document.createTextNode(text), highlight);
-        }
-        
-        // Delete comment from database
-        const response = await fetch(`/api/contracts/comments/${commentId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Remove from array
-            allComments = allComments.filter(c => c.id !== commentId);
-            
-            // Close bubble
-            closeBubble();
-            
-            // Update UI
             updateCommentsPanel();
             updateCommentBadge();
-            
-            // Auto-save the contract with changes applied
-            if (typeof saveAsDraft === 'function') {
-                console.log('💾 Auto-saving contract with accepted changes...');
-                saveAsDraft();
-            }
-            
-            showNotification('Change accepted and applied', 'success');
+            showNotification('Comment added', 'success');
         }
-    } catch (error) {
-        console.error('❌ Error accepting change:', error);
-        showNotification('Failed to accept change', 'error');
-    }
-}
-
-async function rejectChange(commentId) {
-    console.log('❌ Rejecting change for comment:', commentId);
-    
-    const comment = allComments.find(c => c.id === commentId);
-    if (!comment) {
-        console.error('❌ Comment not found');
-        return;
-    }
-    
-    if (!confirm('Reject this change? The original text will remain unchanged.')) {
-        return;
-    }
-    
-    try {
-        // Find the highlight element
-        const highlight = document.querySelector(`[data-comment-id="${commentId}"]`);
-        if (highlight) {
-            // Remove highlight but keep original text
-            const text = highlight.textContent;
-            const parent = highlight.parentNode;
-            parent.replaceChild(document.createTextNode(text), highlight);
-        }
-        
-        // Delete comment from database
-        const response = await fetch(`/api/contracts/comments/${commentId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Remove from array
-            allComments = allComments.filter(c => c.id !== commentId);
-            
-            // Close bubble
-            closeBubble();
-            
-            // Update UI
-            updateCommentsPanel();
-            updateCommentBadge();
-            
-            showNotification('Change rejected', 'info');
-        }
-    } catch (error) {
-        console.error('❌ Error rejecting change:', error);
-        showNotification('Failed to reject change', 'error');
-    }
+    })
+    .catch(function(e) { showNotification('Error adding comment', 'error'); });
 }
 
 // =====================================================
-// DELETE COMMENT
+// HELPERS
 // =====================================================
-async function deleteComment(commentId) {
-    console.log('🗑️ Deleting comment:', commentId);
-    
-    if (!confirm('Delete this comment? The highlighted text will remain.')) {
-        return;
-    }
-    
-    try {
-        const response = await fetch(`/api/contracts/comments/${commentId}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        console.log('📥 Delete response:', data);
-        
-        if (data.success) {
-            // Remove from array
-            allComments = allComments.filter(c => c.id !== commentId);
-            console.log('✅ Comment removed, remaining:', allComments.length);
-            
-            // Remove highlight
-            const highlight = document.querySelector(`[data-comment-id="${commentId}"]`);
-            if (highlight) {
-                const text = highlight.textContent;
-                const parent = highlight.parentNode;
-                parent.replaceChild(document.createTextNode(text), highlight);
-                console.log('✅ Highlight removed');
-            }
-            
-            closeBubble();
-            updateCommentsPanel();
-            updateCommentBadge();
-            
-            showNotification('Comment deleted', 'success');
-        }
-    } catch (error) {
-        console.error('❌ Error deleting comment:', error);
-        showNotification('Failed to delete comment', 'error');
-    }
+function formatTime(d) {
+    var s = Math.floor((new Date() - d) / 1000);
+    if (s < 60) return 'Just now';
+    var m = Math.floor(s / 60); if (m < 60) return m + 'm ago';
+    var h = Math.floor(m / 60); if (h < 24) return h + 'h ago';
+    return Math.floor(h / 24) + 'd ago';
 }
 
-// =====================================================
-// COMMENTS PANEL
-// =====================================================
+function escapeHtml(t) {
+    if (!t) return '';
+    var d = document.createElement('div');
+    d.textContent = t;
+    return d.innerHTML;
+}
+
+function closeModal(id) {
+    var m = document.getElementById(id);
+    if (m) m.style.display = 'none';
+}
+
 function toggleCommentsPanel() {
-    console.log('🎚️ Toggling comments panel');
-    
-    const panel = document.getElementById('commentsPanel');
-    if (panel) {
-        panel.classList.toggle('active');
-        console.log('✅ Panel toggled, active:', panel.classList.contains('active'));
-    } else {
-        console.error('❌ commentsPanel not found');
-    }
+    var p = document.getElementById('commentsPanel');
+    if (p) p.classList.toggle('open');
 }
 
 function updateCommentsPanel() {
-    const panel = document.getElementById('commentsPanelBody');
-    if (!panel) {
-        console.warn('⚠️ commentsPanelBody not found');
+    var p = document.getElementById('commentsPanelBody');
+    if (!p) return;
+    if (window.bcAllComments.length === 0) {
+        p.innerHTML = '<div style="text-align:center;padding:40px;color:#999;"><i class="ti ti-message-off" style="font-size:40px;display:block;margin-bottom:10px;"></i>No comments</div>';
         return;
     }
-    
-    console.log('📋 Updating comments panel with', allComments.length, 'comments');
-    
-    if (allComments.length === 0) {
-        panel.innerHTML = `
-            <div class="comments-empty">
-                <i class="ti ti-message-off"></i>
-                <p>No comments yet</p>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '';
-    allComments.forEach(comment => {
-        const nameParts = comment.user_name.split(' ');
-        const initials = nameParts.map(n => n[0]).join('').toUpperCase();
-        const timeAgo = formatTimeAgo(new Date(comment.created_at));
-        const typeClass = `${comment.change_type || 'comment'}-type`;
-        
-        html += `
-            <div class="comment-item ${typeClass}" onclick="scrollToComment(${comment.id})" style="cursor: pointer;">
-                <div class="comment-author" style="margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                    <div class="comment-author-avatar" style="width: 28px; height: 28px; font-size: 12px; background: var(--primary-color, #0066cc); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600;">${initials}</div>
-                    <div class="comment-author-info">
-                        <div class="comment-author-name" style="font-size: 13px; font-weight: 600; color: #2c3e50;">${escapeHtml(comment.user_name)}</div>
-                        <div class="comment-time" style="font-size: 11px; color: #7f8c8d;">${timeAgo}</div>
-                    </div>
-                </div>
-                <div class="comment-text" style="font-size: 13px; color: #34495e;">${escapeHtml(comment.comment_text)}</div>
-            </div>
-        `;
+    var h = '';
+    window.bcAllComments.forEach(function(c) {
+        var i = (c.user_name || 'U')[0].toUpperCase();
+        h += '<div onclick="scrollToComment(' + c.id + ')" style="padding:10px;background:#f8f9fa;border-radius:8px;margin-bottom:8px;cursor:pointer;border-left:3px solid #ffc107;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;"><div style="width:24px;height:24px;background:#ffc107;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">' + i + '</div><span style="font-weight:600;font-size:13px;">' + escapeHtml(c.user_name) + '</span></div><div style="font-size:12px;color:#666;">' + escapeHtml(c.comment_text.substring(0, 60)) + '</div></div>';
     });
-    
-    panel.innerHTML = html;
-    console.log('✅ Panel updated with', allComments.length, 'comments');
+    p.innerHTML = h;
 }
 
-function scrollToComment(commentId) {
-    console.log('📜 Scrolling to comment:', commentId);
-    
-    const highlight = document.querySelector(`[data-comment-id="${commentId}"]`);
-    if (highlight) {
-        highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Pulse animation
-        highlight.style.animation = 'none';
-        setTimeout(() => {
-            highlight.style.animation = 'pulse 0.5s ease 2';
-        }, 10);
-        
-        console.log('✅ Scrolled to highlight');
-    } else {
-        console.warn('⚠️ Highlight not found for comment:', commentId);
-    }
+function scrollToComment(id) {
+    var el = document.querySelector('[data-comment-id="' + id + '"]');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function updateCommentBadge() {
-    const badges = document.querySelectorAll('#commentsBadge, #commentsBadge2');
-    badges.forEach(badge => {
-        if (badge) {
-            badge.textContent = allComments.length;
-            badge.style.display = allComments.length > 0 ? 'flex' : 'none';
-        }
+    document.querySelectorAll('#commentsBadge, #commentsBadge2, .comment-badge').forEach(function(b) {
+        b.textContent = window.bcAllComments.length;
+        b.style.display = window.bcAllComments.length > 0 ? 'flex' : 'none';
     });
-    console.log('🔢 Badge updated:', allComments.length);
+}
+
+function showNotification(msg, type) {
+    var e = document.querySelector('.bc-notification');
+    if (e) e.remove();
+    var colors = { success: '#28a745', error: '#dc3545', warning: '#ffc107', info: '#17a2b8' };
+    var n = document.createElement('div');
+    n.className = 'bc-notification';
+    n.style.cssText = 'position:fixed;top:20px;right:20px;padding:12px 20px;background:' + (colors[type] || '#17a2b8') + ';color:' + (type === 'warning' ? '#000' : '#fff') + ';border-radius:8px;z-index:100000;box-shadow:0 4px 12px rgba(0,0,0,0.15);font-size:14px;';
+    n.textContent = msg;
+    document.body.appendChild(n);
+    setTimeout(function() { n.remove(); }, 3000);
 }
 
 // =====================================================
-// UTILITY FUNCTIONS
+// EXPOSE GLOBALLY
 // =====================================================
-function formatTimeAgo(date) {
-    const seconds = Math.floor((new Date() - date) / 1000);
-    
-    if (seconds < 60) return 'Just now';
-    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-    if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
-    
-    return date.toLocaleDateString();
-}
+window.toggleCommentsPanel = toggleCommentsPanel;
+window.openAddCommentModal = openAddCommentModal;
+window.submitComment = submitComment;
+window.deleteComment = deleteComment;
+window.acceptChange = acceptChange;
+window.rejectChange = rejectChange;
+window.resolveComment = resolveComment;
+window.closeBubble = closeBubble;
+window.closeModal = closeModal;
+window.scrollToComment = scrollToComment;
+window.showBubble = showBubble;
+window.loadComments = loadComments;
+window.highlightCommentsInDocument = highlightCommentsInDocument;
+window.findComment = findComment;
+window.getContractId = getContractId;
+window.createCommentIcon = createCommentIcon;
+window.allComments = window.bcAllComments;
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-function closeModal(modalId) {
-    console.log('🔒 Closing modal:', modalId);
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Add CSS for animations
-if (!document.getElementById('bubble-animations')) {
-    const style = document.createElement('style');
-    style.id = 'bubble-animations';
-    style.textContent = `
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes slideOut {
-            from { opacity: 1; transform: translateX(0); }
-            to { opacity: 0; transform: translateX(20px); }
-        }
-        @keyframes pulse {
-            0%, 100% { background: inherit; }
-            50% { background: rgba(255, 193, 7, 0.6); }
-        }
-        @keyframes protectedFlash {
-            0%, 100% { 
-                box-shadow: none;
-                transform: scale(1);
-            }
-            50% { 
-                box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.5);
-                transform: scale(1.03);
-            }
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// =====================================================
-// GLOBAL PROTECTION SYSTEM
-// =====================================================
-
-function initializeProtectionSystem() {
-    console.log('🔒 Initializing text protection system...');
-    
-    const contractContent = document.getElementById('contractContent');
-    if (!contractContent) {
-        console.warn('⚠️ Contract content not found, protection not initialized');
-        return;
-    }
-    
-    // Monitor for selection changes in protected areas
-    document.addEventListener('selectionchange', function() {
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return;
-        
-        try {
-            const range = selection.getRangeAt(0);
-            const container = range.commonAncestorContainer;
-            
-            // Check if selection is inside or overlaps with protected element
-            let node = container.nodeType === 3 ? container.parentNode : container;
-            
-            while (node && node !== contractContent) {
-                if (node.dataset && node.dataset.protected === 'true') {
-                    // Selection is in protected area
-                    console.log('⚠️ Selection in protected area');
-                    break;
-                }
-                node = node.parentNode;
-            }
-        } catch (e) {
-            // Ignore errors
-        }
-    });
-    
-    // Prevent editing protected content at editor level
-    contractContent.addEventListener('beforeinput', function(e) {
-        const selection = window.getSelection();
-        if (!selection.rangeCount) return;
-        
-        try {
-            const range = selection.getRangeAt(0);
-            const container = range.commonAncestorContainer;
-            
-            // Check if input is happening in protected area
-            let node = container.nodeType === 3 ? container.parentNode : container;
-            
-            while (node && node !== contractContent) {
-                if (node.dataset && node.dataset.protected === 'true') {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    
-                    // Flash the protected element
-                    node.style.animation = 'protectedFlash 0.4s ease 2';
-                    setTimeout(() => {
-                        node.style.animation = '';
-                    }, 800);
-                    
-                    showNotification('⚠️ This text is protected by a comment. Resolve the comment before editing.', 'warning');
-                    
-                    console.log('🔒 Blocked edit attempt on protected text');
-                    return false;
-                }
-                node = node.parentNode;
-            }
-        } catch (e) {
-            console.error('Protection check error:', e);
-        }
-    }, true); // Use capture phase
-    
-    // Also prevent delete key on protected text
-    contractContent.addEventListener('keydown', function(e) {
-        if (e.key === 'Backspace' || e.key === 'Delete') {
-            const selection = window.getSelection();
-            if (!selection.rangeCount) return;
-            
-            try {
-                const range = selection.getRangeAt(0);
-                
-                // Check if deleting will affect protected content
-                const protectedElements = contractContent.querySelectorAll('[data-protected="true"]');
-                
-                for (let element of protectedElements) {
-                    if (range.intersectsNode(element)) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        element.style.animation = 'protectedFlash 0.4s ease 2';
-                        setTimeout(() => {
-                            element.style.animation = '';
-                        }, 800);
-                        
-                        showNotification('🔒 Cannot delete commented text. Resolve or delete the comment first.', 'warning');
-                        
-                        console.log('🔒 Blocked delete attempt on protected text');
-                        return false;
-                    }
-                }
-            } catch (e) {
-                console.error('Delete protection error:', e);
-            }
-        }
-    }, true);
-    
-    console.log('✅ Protection system initialized');
-}
-
-// Initialize protection after DOM loads
-setTimeout(() => {
-    initializeProtectionSystem();
-}, 1000);
-
-console.log('🎯 Bubble Comments JavaScript Loaded with Protection');
+console.log('✅ Bubble comments loaded (final version)');
