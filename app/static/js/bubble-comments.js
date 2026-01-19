@@ -146,6 +146,93 @@ async function loadComments() {
     }
 }
 
+
+// =====================================================
+// HIGHLIGHT AT EXACT POSITION (for new comments)
+// =====================================================
+function highlightAtExactPosition(selectionData, commentId, changeType) {
+    console.log('🎯 Highlighting at EXACT position:', selectionData);
+    
+    try {
+        const range = selectionData.range;
+        if (!range) {
+            console.error('❌ No range data, falling back to text search');
+            // Fallback to old method
+            highlightTextInContent(
+                document.getElementById('contractContent'),
+                selectionData.text,
+                getHighlightClass(changeType),
+                commentId
+            );
+            return;
+        }
+        
+        // Clone the range to avoid modifying original
+        const highlightRange = range.cloneRange();
+        
+        // Create highlight span
+        const span = document.createElement('span');
+        const className = getHighlightClass(changeType);
+        span.className = className;
+        span.dataset.commentId = commentId;
+        span.style.cursor = 'pointer';
+        span.style.position = 'relative';
+        
+        // CRITICAL: Make text non-editable
+        span.contentEditable = 'false';
+        span.setAttribute('data-protected', 'true');
+        span.title = 'This text has a comment. Click to view or resolve the comment before editing.';
+        
+        // Add click listeners
+        span.onclick = function(e) {
+            console.log(`🖱️ Clicked on comment ${commentId}`);
+            e.preventDefault();
+            e.stopPropagation();
+            showBubble(parseInt(commentId), e);
+        };
+        
+        span.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            showBubble(parseInt(commentId), e);
+        }, true);
+        
+        // Prevent editing
+        span.addEventListener('keydown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            showNotification('This text is protected by a comment. Resolve the comment first.', 'warning');
+            this.style.animation = 'protectedFlash 0.5s ease 2';
+        });
+        
+        span.addEventListener('beforeinput', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            showNotification('Cannot edit commented text. Resolve or delete the comment first.', 'warning');
+        });
+        
+        // Wrap the range contents
+        try {
+            highlightRange.surroundContents(span);
+            console.log('✅ Exact position highlighted successfully');
+        } catch (e) {
+            console.error('❌ Could not wrap range:', e);
+            console.log('Falling back to text search method...');
+            // Fallback to old method if wrapping fails
+            highlightTextInContent(
+                document.getElementById('contractContent'),
+                selectionData.text,
+                className,
+                commentId
+            );
+        }
+        
+    } catch (error) {
+        console.error('❌ Error highlighting exact position:', error);
+    }
+}
+
+
 // =====================================================
 // HIGHLIGHT COMMENTS IN DOCUMENT - FIXED VERSION
 // =====================================================
@@ -389,7 +476,6 @@ function showBubble(commentId, event) {
                 <div class="comment-author-avatar">${initials}</div>
                 <div class="comment-author-info">
                     <div class="comment-author-name">${escapeHtml(comment.user_name)}</div>
-                    <div class="comment-time">${timeAgo}</div>
                 </div>
             </div>
             <div class="comment-actions">
@@ -575,11 +661,14 @@ async function submitComment() {
         return;
     }
     
-    console.log('📤 Sending to API:', {
+    console.log('📤 Sending to API with exact position:', {
         contract_id: currentContractId,
         comment_text: commentText,
         selected_text: window.commentSelection.text,
         change_type: changeType,
+        position_start: window.commentSelection.absoluteStart,
+        position_end: window.commentSelection.absoluteEnd,
+        start_xpath: window.commentSelection.startXPath,
         original_text: window.commentSelection.text,
         new_text: newText
     });
@@ -595,8 +684,9 @@ async function submitComment() {
                 contract_id: parseInt(currentContractId),
                 comment_text: commentText,
                 selected_text: window.commentSelection.text,
-                position_start: 0,
-                position_end: 0,
+                position_start: window.commentSelection.absoluteStart || 0,
+                position_end: window.commentSelection.absoluteEnd || 0,
+                start_xpath: window.commentSelection.startXPath || '',
                 change_type: changeType,
                 original_text: window.commentSelection.text,
                 new_text: newText
@@ -607,11 +697,16 @@ async function submitComment() {
         console.log('📥 API Response:', data);
         
         if (data.success) {
-            allComments.push(data.comment);
-            console.log('✅ Comment added, total:', allComments.length);
+            // Add position info to comment object
+            data.comment.position_start = window.commentSelection.absoluteStart;
+            data.comment.position_end = window.commentSelection.absoluteEnd;
+            data.comment.start_xpath = window.commentSelection.startXPath;
             
-            // Highlight in document
-            highlightCommentsInDocument();
+            allComments.push(data.comment);
+            console.log('✅ Comment added with position, total:', allComments.length);
+            
+            // Highlight at EXACT position
+            highlightAtExactPosition(window.commentSelection, data.comment.id, changeType);
             
             // CRITICAL: Re-attach click listeners after highlighting
             setTimeout(() => {
@@ -935,41 +1030,6 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
-
-function showNotification(message, type = 'info') {
-    console.log(`📢 ${type.toUpperCase()}: ${message}`);
-    
-    // Create toast
-    const toast = document.createElement('div');
-    const colors = {
-        success: '#28a745',
-        error: '#dc3545',
-        warning: '#ffc107',
-        info: '#007bff'
-    };
-    
-    toast.style.cssText = `
-        position: fixed;
-        top: 80px;
-        right: 20px;
-        background: ${colors[type] || colors.info};
-        color: white;
-        padding: 15px 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        font-size: 14px;
-        max-width: 300px;
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
 }
 
 function closeModal(modalId) {

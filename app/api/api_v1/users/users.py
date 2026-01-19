@@ -11,7 +11,8 @@ from datetime import datetime
 import logging
 import bcrypt
 import secrets
-
+from app.models.consultation import ExpertProfile
+from app.core.email import send_welcome_email_with_credentials
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
@@ -269,6 +270,7 @@ async def create_user(
     Supports creating expert profiles for consultant users.
     
     ✅ FIXED: Now uses current_user.company_id instead of hardcoded default
+    ✅ NEW: Sends welcome email with login credentials if requested
     """
     try:
         logger.info(f"Creating user: {user_data.get('email', 'unknown')}")
@@ -326,6 +328,9 @@ async def create_user(
         existing_username = db.query(User).filter(User.username == username).first()
         if existing_username:
             username = f"{username}_{secrets.randbelow(1000)}"
+        
+        # ✅ Store plain password BEFORE hashing (for welcome email)
+        plain_password = user_data["password"]
         
         # Hash password
         password = user_data["password"]
@@ -386,7 +391,51 @@ async def create_user(
         db.commit()
         db.refresh(new_user)
         
+        # =====================================================
+        # ✅ NEW: SEND WELCOME EMAIL IF REQUESTED
+        # =====================================================
+        email_sent = False
+        if user_data.get("send_welcome_email", False):
+            try:
+                logger.info(f"📧 Attempting to send welcome email to: {new_user.email}")
+                
+                # Get user role display name
+                role_display_map = {
+                    'admin': 'Administrator',
+                    'manager': 'Manager',
+                    'contract_manager': 'Contract Manager',
+                    'legal_reviewer': 'Legal Reviewer',
+                    'finance_approver': 'Finance Approver',
+                    'signatory': 'Signatory',
+                    'user': 'User'
+                }
+                role_display = role_display_map.get(new_user.user_role, new_user.user_role.replace('_', ' ').title())
+                
+                # Import the correct function
+                from app.core.email import send_welcome_email_with_credentials
+                
+                # Send welcome email with credentials
+                email_sent = send_welcome_email_with_credentials(
+                    email=new_user.email,
+                    first_name=new_user.first_name,
+                    last_name=new_user.last_name,
+                    password=plain_password,
+                    user_role=role_display
+                )
+                
+                if email_sent:
+                    logger.info(f"✅ Welcome email sent successfully to: {new_user.email}")
+                else:
+                    logger.warning(f"⚠️ Welcome email failed to send to: {new_user.email}")
+                    
+            except Exception as email_error:
+                logger.error(f"❌ Error sending welcome email: {str(email_error)}")
+                # Don't fail the user creation if email fails
+                email_sent = False
+        
+        # =====================================================
         # Prepare response
+        # =====================================================
         response = {
             "id": new_user.id,
             "company_id": new_user.company_id,
@@ -404,7 +453,8 @@ async def create_user(
             "timezone": new_user.timezone,
             "is_active": new_user.is_active,
             "is_verified": new_user.is_verified,
-            "created_at": new_user.created_at.isoformat() if new_user.created_at else None
+            "created_at": new_user.created_at.isoformat() if new_user.created_at else None,
+            "welcome_email_sent": email_sent  # ✅ NEW: Include email status
         }
         
         # Add expert profile to response if applicable
@@ -433,7 +483,7 @@ async def create_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create user: {str(e)}"
         )
-
+        
 @router.get("/search")
 async def search_users(
     email: Optional[str] = Query(None),

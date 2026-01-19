@@ -1,6 +1,6 @@
 # =====================================================
 # FILE: app/api/api_v1/contracts/comments.py
-# SIMPLIFIED BUBBLE COMMENTS API
+# SIMPLIFIED BUBBLE COMMENTS API WITH EXACT POSITIONING
 # =====================================================
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -12,6 +12,7 @@ from datetime import datetime
 from app.core.database import get_db
 from app.core.dependencies import get_current_user
 import logging
+import json
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -23,6 +24,7 @@ class CommentCreate(BaseModel):
     selected_text: str
     position_start: int
     position_end: int
+    start_xpath: Optional[str] = ''
     change_type: Optional[str] = 'comment'  # 'comment', 'insert', 'delete'
     original_text: Optional[str] = None
     new_text: Optional[str] = None
@@ -55,14 +57,15 @@ async def add_comment(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Add a new bubble comment with track changes"""
+    """Add a new bubble comment with exact positioning"""
     try:
-        logger.info(f"📝 Adding comment by user {current_user.id}")
+        logger.info(f"📝 Adding comment by user {current_user.id} at position {data.position_start}-{data.position_end}")
         
-        # Store position info as JSON
+        # Store position info as JSON with XPath for precise location
         position_info = {
             'start': data.position_start,
             'end': data.position_end,
+            'start_xpath': data.start_xpath or '',
             'change_type': data.change_type,
             'original_text': data.original_text,
             'new_text': data.new_text
@@ -80,7 +83,7 @@ async def add_comment(
             'user_id': current_user.id,
             'comment_text': data.comment_text,
             'selected_text': data.selected_text,
-            'position_info': str(position_info)
+            'position_info': json.dumps(position_info)  # Store as JSON string
         })
         db.commit()
         
@@ -94,6 +97,8 @@ async def add_comment(
         """)
         user_result = db.execute(user_query, {'user_id': current_user.id}).fetchone()
         user_name = user_result[0] if user_result else "Unknown User"
+        
+        logger.info(f"✅ Comment {comment_id} added successfully with exact position")
         
         return {
             'success': True,
@@ -127,7 +132,7 @@ async def get_comments(
     db: Session = Depends(get_db),
     current_user = Depends(get_current_user)
 ):
-    """Get all comments for a contract"""
+    """Get all comments for a contract with position data"""
     try:
         query = text("""
             SELECT 
@@ -154,10 +159,12 @@ async def get_comments(
         
         comments = []
         for row in results:
-            # Parse position info
-            import json
+            # Parse position info JSON
             try:
-                pos_info = eval(row[6]) if row[6] else {}
+                if row[6]:  # position_info column
+                    pos_info = json.loads(row[6]) if isinstance(row[6], str) else eval(row[6])
+                else:
+                    pos_info = {}
             except:
                 pos_info = {}
             
@@ -170,6 +177,7 @@ async def get_comments(
                 'selected_text': row[5],
                 'position_start': pos_info.get('start', 0),
                 'position_end': pos_info.get('end', 0),
+                'start_xpath': pos_info.get('start_xpath', ''),
                 'change_type': pos_info.get('change_type', 'comment'),
                 'original_text': pos_info.get('original_text'),
                 'new_text': pos_info.get('new_text'),
@@ -177,6 +185,8 @@ async def get_comments(
                 'updated_at': row[8].isoformat() if row[8] else '',
                 'can_delete': bool(row[9])
             })
+        
+        logger.info(f"✅ Retrieved {len(comments)} comments for contract {contract_id}")
         
         return {
             'success': True,
@@ -214,6 +224,8 @@ async def delete_comment(
         """)
         db.execute(delete_query, {'comment_id': comment_id})
         db.commit()
+        
+        logger.info(f"✅ Comment {comment_id} deleted successfully")
         
         return {
             'success': True,

@@ -77,6 +77,95 @@ def send_email_smtp(
         logger.error(f"❌ Email sending failed: {str(e)}", exc_info=True)
         return False
 
+
+def send_welcome_email_with_credentials(
+    email: str, 
+    first_name: str, 
+    last_name: str,
+    password: str, 
+    user_role: str = "User"
+) -> bool:
+    """
+    Send welcome email with login credentials to new user
+    """
+    try:
+        logger.info(f"📧 Sending welcome email with credentials to: {email}")
+        
+        user_full_name = f"{first_name} {last_name}"
+        subject = "🎉 Welcome to CALIM 360 - Your Account is Ready!"
+        
+        html_body = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: Arial, sans-serif; background: #f4f4f4; }}
+                .container {{ max-width: 600px; margin: 30px auto; background: white; border-radius: 12px; overflow: hidden; }}
+                .header {{ background: linear-gradient(135deg, #1a5f7a, #159895); padding: 40px; text-align: center; color: white; }}
+                .content {{ padding: 40px 30px; }}
+                .credentials {{ background: #f8f9fa; border-left: 4px solid #159895; padding: 20px; margin: 20px 0; }}
+                .cred-row {{ margin: 10px 0; padding: 10px; background: white; border-radius: 4px; }}
+                .label {{ font-weight: bold; color: #666; }}
+                .value {{ font-family: monospace; background: #e9ecef; padding: 5px 10px; border-radius: 4px; }}
+                .button {{ display: inline-block; background: #159895; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }}
+                .warning {{ background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Welcome to CALIM 360</h1>
+                </div>
+                <div class="content">
+                    <h2 style="color: #1a5f7a;">Hello {user_full_name}!</h2>
+                    <p>Your account has been successfully created.</p>
+                    
+                    <div class="credentials">
+                        <h3 style="margin-top: 0;">🔐 Your Login Credentials</h3>
+                        <div class="cred-row">
+                            <span class="label">Email:</span> <span class="value">{email}</span>
+                        </div>
+                        <div class="cred-row">
+                            <span class="label">Password:</span> <span class="value">{password}</span>
+                        </div>
+                        <div class="cred-row">
+                            <span class="label">Role:</span> <span class="value">{user_role}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="warning">
+                        <strong>🔒 Security Notice:</strong> Please change your password immediately after first login.
+                    </div>
+                    
+                    <center>
+                        <a href="https://calim360.com/login" class="button">Login Now →</a>
+                    </center>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_body = f"""
+Welcome to CALIM 360!
+
+Hello {user_full_name},
+
+Your login credentials:
+Email: {email}
+Password: {password}
+Role: {user_role}
+
+Login: https://calim360.com/login
+
+IMPORTANT: Please change your password after first login.
+        """
+        
+        return send_email_smtp(email, subject, html_body, text_body)
+        
+    except Exception as e:
+        logger.error(f"❌ Error sending welcome email: {str(e)}")
+        return False
 # =====================================================
 # 1. REGISTRATION VERIFICATION EMAIL
 # =====================================================

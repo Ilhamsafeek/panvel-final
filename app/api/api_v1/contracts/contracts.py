@@ -132,6 +132,7 @@ async def get_my_contracts(
         FROM contracts c
         LEFT JOIN users u ON c.created_by = u.id
         WHERE {where_clause}
+        AND contract_type <> 'risk_analysis'
         ORDER BY c.created_at DESC
         LIMIT :limit OFFSET :offset
         """)
@@ -652,21 +653,24 @@ async def get_contract_statistics(
     # Total contracts (including AI-generated)
     total_contracts = db.query(func.count(Contract.id)).filter(
         Contract.company_id == company_id,
-        Contract.is_deleted == False
+        Contract.is_deleted == False,
+        Contract.contract_type != 'risk_analysis'
     ).scalar() or 0
     
     # Active contracts
     active_contracts = db.query(func.count(Contract.id)).filter(
         Contract.company_id == company_id,
         Contract.status.in_(['active', 'signed', 'executed']),
-        Contract.is_deleted == False
+        Contract.is_deleted == False,
+        Contract.contract_type != 'risk_analysis'
     ).scalar() or 0
     
     # Pending review
     pending_review = db.query(func.count(Contract.id)).filter(
         Contract.company_id == company_id,
         Contract.status.in_(['pending_review', 'review', 'pending_approval']),
-        Contract.is_deleted == False
+        Contract.is_deleted == False,
+        Contract.contract_type != 'risk_analysis'
     ).scalar() or 0
     
     # Expiring soon (within 30 days)
@@ -679,14 +683,16 @@ async def get_contract_statistics(
         Contract.end_date.isnot(None),
         Contract.end_date <= thirty_days,
         Contract.end_date >= today,
-        Contract.is_deleted == False
+        Contract.is_deleted == False,
+        Contract.contract_type != 'risk_analysis'
     ).scalar() or 0
     
     # Completed contracts
     completed_contracts = db.query(func.count(Contract.id)).filter(
         Contract.company_id == company_id,
         or_(Contract.status == 'completed', Contract.status == 'expired'),
-        Contract.is_deleted == False
+        Contract.is_deleted == False,
+        Contract.contract_type != 'risk_analysis'
     ).scalar() or 0
     
     # Active projects
@@ -709,6 +715,7 @@ async def get_contract_statistics(
         SELECT COUNT(DISTINCT c.id) as count
         FROM contracts c
         WHERE c.company_id = :company_id
+        AND c.contract_type <> 'risk_analysis'
         AND c.is_deleted = 0
         AND c.status IN ('pending_approval', 'pending_review', 'review', 'approval','counterparty_internal_review')
         AND (
@@ -830,7 +837,8 @@ async def get_contracts(
             Contract.company_id == company_id,
             Contract.party_b_id == company_id
         ),
-        Contract.is_deleted == False
+        Contract.is_deleted == False,
+        Contract.contract_type != 'risk_analysis'
     )
     
     # Module filter
