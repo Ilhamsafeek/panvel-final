@@ -2,6 +2,7 @@
    BUBBLE COMMENTS - UNLOCKED EDITABLE STYLES
    - Text remains editable (highlighted but not locked)
    - Comment icon appears after highlighted text
+   - ENHANCED ICON PROTECTION
    ===================================================== */
 
 /* Comment Highlights - EDITABLE (not locked) */
@@ -46,6 +47,7 @@
 
 /* =====================================================
    COMMENT ICON - Clickable bubble icon
+   ENHANCED PROTECTION - Cannot be deleted
    ===================================================== */
 .comment-icon {
     display: inline-flex !important;
@@ -63,10 +65,17 @@
     position: relative;
     top: -1px;
     transition: all 0.2s ease;
-    user-select: none;
-    -webkit-user-select: none;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     flex-shrink: 0;
+    z-index: 10;
+    
+    /* CRITICAL: Icon protection - cannot be selected or deleted */
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    pointer-events: auto !important;
 }
 
 .comment-icon:hover {
@@ -82,9 +91,43 @@
 .comment-icon i {
     font-size: 10px;
     line-height: 1;
+    pointer-events: none;
 }
 
-/* Different icon colors for change types */
+/* =====================================================
+   ICON PROTECTION STYLES - CRITICAL
+   ===================================================== */
+.comment-icon[contenteditable="false"] {
+    outline: none !important;
+    caret-color: transparent !important;
+}
+
+.comment-icon::selection,
+.comment-icon *::selection {
+    background: transparent !important;
+}
+
+.comment-icon[data-protected="true"] {
+    z-index: 10;
+}
+
+/* Keep icon visible during text selection */
+.comment-highlight::selection,
+.track-insert::selection,
+.track-delete::selection {
+    background: rgba(255, 193, 7, 0.3);
+}
+
+.comment-highlight .comment-icon,
+.track-insert .comment-icon,
+.track-delete .comment-icon {
+    position: relative;
+    z-index: 10;
+}
+
+/* =====================================================
+   DIFFERENT ICON COLORS FOR CHANGE TYPES
+   ===================================================== */
 .track-insert .comment-icon {
     background: linear-gradient(135deg, #28a745, #20c997);
 }
@@ -515,7 +558,7 @@
 }
 
 /* Notification styles */
-.notification {
+.bc-notification {
     animation: slideIn 0.3s ease;
 }
 
