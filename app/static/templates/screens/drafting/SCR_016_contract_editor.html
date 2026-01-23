@@ -5439,8 +5439,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (userData.user_type !== 'internal' && contractData.status !== 'tampered') {
         await saveAsDraft();
     }
-});
 
+            setTimeout(() => {
+                verifyContract(contractId);
+            }, 1000);
+
+});
 
 
     function toggleClauseSection() {
@@ -11035,34 +11039,8 @@ ${(riskAnalysisData.risk_items || []).map(item => `
 </script>
 
 
-<!-- Add this before </body> -->
-<script src="/static/js/blockchain-verification.js"></script>
-
 <script>
-    // Get contract ID from URL or form
 
-
-    // Set contract ID when page loads
-    document.addEventListener('DOMContentLoaded', function () {
-
-        if (contractId) {
-            // const indicator = document.getElementById('blockchain-indicator');
-            // if (indicator) {
-            //     indicator.id = `blockchain-indicator-${contractId}`;
-            //     indicator.setAttribute('data-contract-id', contractId);
-            // }
-
-            // Auto-verify after 1 second
-            setTimeout(() => {
-                verifyContract(contractId);
-            }, 1000);
-
-
-            if (typeof contractId !== 'undefined' && contractId) {
-
-            }
-        }
-    });
 
 
     window.refreshComments = function () {
@@ -16528,4 +16506,7 @@ function isInternalUser(userType) {
 <script src="/app/static/js/negotiation.js"></script>
 <script src="/app/static/js/contract-edit.js?v=1"></script>
 <script src="/app/static/js/bubble-comments.js?v=6"></script>
+<script src="/app/static/js/blockchain-verification.js"></script>
+
+
 {% endblock %}

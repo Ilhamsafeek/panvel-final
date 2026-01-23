@@ -308,23 +308,23 @@ Please investigate this security incident immediately.
 // AUTO-VERIFY ON PAGE LOAD
 // =====================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔐 Blockchain verification system loaded');
+// document.addEventListener('DOMContentLoaded', function() {
+//     console.log('🔐 Blockchain verification system loaded');
     
-    // Get contract ID from URL or data attribute
-    const urlParams = new URLSearchParams(window.location.search);
-    const contractId = urlParams.get('id') || 
-                      document.querySelector('[data-contract-id]')?.dataset.contractId;
+//     // Get contract ID from URL or data attribute
+//     const urlParams = new URLSearchParams(window.location.search);
+//     const contractId = urlParams.get('id') || 
+//                       document.querySelector('[data-contract-id]')?.dataset.contractId;
     
-    if (contractId) {
-        console.log('📋 Contract ID found:', contractId);
+//     if (contractId) {
+//         console.log('📋 Contract ID found:', contractId);
         
-        // Auto-verify after 1 second
-        setTimeout(() => {
-            verifyContract(contractId);
-        }, 1000);
-    }
-});
+//         // Auto-verify after 1 second
+//         setTimeout(() => {
+//             verifyContract(contractId);
+//         }, 1000);
+//     }
+// });
 
 // =====================================================
 // EXPORT FUNCTIONS
@@ -521,11 +521,3 @@ async function showBlockchainCertificateById(contractId, contractNumber) {
     }
 }
 
-// Auto-verify on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const indicator = document.querySelector('[id^="blockchain-indicator-"]');
-    if (indicator) {
-        const contractId = indicator.id.split('-').pop();
-        verifyContract(contractId);
-    }
-});
