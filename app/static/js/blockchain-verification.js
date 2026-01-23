@@ -23,84 +23,346 @@ function getAuthToken() {
 
 // Show blockchain verification status
 async function verifyContract(contractId) {
+    console.log('🔍 Verifying contract', contractId);
+    
     try {
-        const indicator = document.getElementById(`blockchain-indicator-${contractId}`);
-        
-        // Show loading
-        indicator.innerHTML = `
-            <div class="d-flex align-items-center">
-                <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                <span>Verifying...</span>
-            </div>
-        `;
-        
-        // Get contract content
-        const contractContent = getContractContent();
-        
-        // Call API
         const response = await fetch('/api/blockchain/verify-contract-hash', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getAuthToken()}`
+                'Content-Type': 'application/json'
             },
+            credentials: 'include',
             body: JSON.stringify({
-                contract_id: contractId,
-                document_content: contractContent
+                contract_id: parseInt(contractId)
             })
         });
-
+        
+        if (!response.ok) {
+            console.error('❌ Verification API error:', response.status);
+            showErrorIndicator(contractId);
+            return;
+        }
+        
         const result = await response.json();
-
+        console.log('📊 Verification result:', result);
+        
         if (result.success && result.verified) {
+            // ✅ VERIFIED
             showSuccessIndicator(contractId);
         } else {
-            showTamperAlert(contractId);
+            // 🚨 TAMPERING DETECTED
+            showTamperAlert(contractId, result);
         }
-
+        
     } catch (error) {
-        console.error('Verification failed:', error);
+        console.error('❌ Verification error:', error);
         showErrorIndicator(contractId);
     }
 }
-
 // Show success indicator
 function showSuccessIndicator(contractId) {
-    const indicator = document.getElementById(`blockchain-indicator-${contractId}`);
+    const indicator = document.getElementById('blockchain-indicator');
+    if (!indicator) return;
+    
     indicator.innerHTML = `
-        <div class="alert alert-success mb-0">
-            <i data-lucide="shield-check" class="text-success"></i>
-            <strong>Verified</strong> - Document integrity confirmed on blockchain
+        <div class="alert alert-success" style="display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 15px; border-radius: 8px;">
+            <i class="ti ti-shield-check" style="font-size: 24px;"></i>
+            <div>
+                <strong>Verified</strong><br>
+                <small>Document integrity confirmed on blockchain</small>
+            </div>
         </div>
     `;
-    lucide.createIcons();
 }
 
 // Show tamper alert
-function showTamperAlert(contractId) {
-    const indicator = document.getElementById(`blockchain-indicator-${contractId}`);
-    indicator.innerHTML = `
-        <div class="alert alert-danger mb-0">
-            <i data-lucide="shield-alert" class="text-danger"></i>
-            <strong> Warning</strong> - Document integrity compromised
-        </div>
-    `;
-    lucide.createIcons();
+function showTamperAlert(contractId, verificationResult) {
+    console.log('🚨 Showing enhanced tamper alert for contract', contractId);
     
-    // Show detailed modal
-    alert(' TAMPERING DETECTED!\n\nThe current document does not match the blockchain-verified hash.\nThis document may have been modified after being recorded.');
+    // Remove any existing alert
+    const existingAlert = document.getElementById('tamperAlertModal');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    // Create modal HTML
+    const modalHTML = `
+        <div id="tamperAlertModal" class="modal show" style="display: flex !important; z-index: 10000;">
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 600px;">
+                <div class="modal-content" style="border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                    
+                    <!-- Header with Red Alert -->
+                    <div class="modal-header" style="background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%); color: white; border: none; padding: 30px; text-align: center;">
+                        <div style="width: 100%;">
+                            <i class="ti ti-shield-alert" style="font-size: 64px; margin-bottom: 15px; display: block;"></i>
+                            <h3 style="margin: 0; font-size: 1.8rem; font-weight: bold;">TAMPERING DETECTED!</h3>
+                            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 1rem;">Blockchain Integrity Violation</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Body with Details -->
+                    <div class="modal-body" style="padding: 30px;">
+                        
+                        <!-- Main Message -->
+                        <div style="background: #fff5f5; border-left: 4px solid #e53e3e; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+                            <h5 style="color: #c53030; margin: 0 0 10px 0; font-weight: bold;">
+                                <i class="ti ti-alert-triangle"></i> Security Alert
+                            </h5>
+                            <p style="color: #742a2a; margin: 0; line-height: 1.6;">
+                                The current document does not match the blockchain-verified hash. 
+                                This document may have been modified after being recorded on the blockchain.
+                            </p>
+                        </div>
+                        
+                        <!-- Technical Details -->
+                        <div style="background: #f7fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                            <h6 style="margin: 0 0 15px 0; color: #2d3748; font-weight: bold;">
+                                <i class="ti ti-info-circle"></i> Technical Details
+                            </h6>
+                            
+                            <div style="display: grid; gap: 12px;">
+                               
+                                
+                                <div>
+                                    <strong style="color: #4a5568;">Expected Hash:</strong><br>
+                                    <code style="background: #edf2f7; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; display: block; margin-top: 5px; word-break: break-all;">
+                                        ${verificationResult?.stored_hash?.substring(0, 32) || 'N/A'}...
+                                    </code>
+                                </div>
+                                
+                                <div>
+                                    <strong style="color: #4a5568;">Current Hash:</strong><br>
+                                    <code style="background: #fee; padding: 5px 10px; border-radius: 4px; font-size: 0.85rem; display: block; margin-top: 5px; word-break: break-all; border: 1px solid #fc8181;">
+                                        ${verificationResult?.current_hash?.substring(0, 32) || 'N/A'}...
+                                    </code>
+                                </div>
+                                
+                                <div>
+                                    <strong style="color: #4a5568;">Detection Time:</strong>
+                                    <span style="color: #2d3748;">${new Date().toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Possible Reasons -->
+                        <div style="background: #fffaf0; border-left: 4px solid #ed8936; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                            <h6 style="margin: 0 0 12px 0; color: #7c2d12; font-weight: bold;">
+                                <i class="ti ti-help-circle"></i> Possible Causes
+                            </h6>
+                            <ul style="margin: 0; padding-left: 20px; color: #744210;">
+                                <li style="margin-bottom: 8px;">Unauthorized database modification</li>
+                                <li style="margin-bottom: 8px;">System update requiring hash regeneration</li>
+                                <li style="margin-bottom: 8px;">Data corruption or synchronization error</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Recommended Actions -->
+                        <div style="background: #ebf8ff; border-left: 4px solid #4299e1; padding: 20px; border-radius: 8px;">
+                            <h6 style="margin: 0 0 12px 0; color: #2c5282; font-weight: bold;">
+                                <i class="ti ti-clipboard-list"></i> Recommended Actions
+                            </h6>
+                            <ul style="margin: 0; padding-left: 20px; color: #2c5282;">
+                                <li style="margin-bottom: 8px;">Contact system administrator immediately</li>
+                                <li style="margin-bottom: 8px;">Do not modify or save this document</li>
+                                <li style="margin-bottom: 8px;">Review audit logs for unauthorized access</li>
+                                <li>If after system update, click "Save" to regenerate hash</li>
+                            </ul>
+                        </div>
+                        
+                    </div>
+                    
+                    <!-- Footer with Actions -->
+                    <div class="modal-footer" style="border-top: 1px solid #e2e8f0; padding: 20px 30px; gap: 10px; display: flex; justify-content: flex-end;">
+                        <button 
+                            onclick="viewAuditLog(${contractId})" 
+                            class="btn btn-outline-secondary"
+                            style="border: 2px solid #cbd5e0; color: #4a5568;">
+                            <i class="ti ti-history"></i> View Audit Log
+                        </button>
+                        
+                        <button 
+                            onclick="contactAdministrator(${contractId})" 
+                            class="btn btn-warning"
+                            style="background: #ed8936; border: none; color: white;">
+                            <i class="ti ti-mail"></i> Contact Admin
+                        </button>
+                        
+                        <button 
+                            onclick="closeTamperAlert()" 
+                            class="btn btn-danger"
+                            style="background: #e53e3e; border: none;">
+                            <i class="ti ti-x"></i> Close
+                        </button>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+        
+        <!-- Backdrop -->
+        <div class="modal-backdrop show" style="z-index: 9999;"></div>
+        
+        <style>
+            #tamperAlertModal {
+                animation: modalFadeIn 0.3s ease;
+            }
+            
+            @keyframes modalFadeIn {
+                from {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+                to {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+            }
+            
+            #tamperAlertModal .modal-content {
+                animation: slideDown 0.3s ease;
+            }
+            
+            @keyframes slideDown {
+                from {
+                    transform: translateY(-50px);
+                }
+                to {
+                    transform: translateY(0);
+                }
+            }
+            
+            #tamperAlertModal .btn {
+                transition: all 0.2s ease;
+            }
+            
+            #tamperAlertModal .btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            }
+            
+            @keyframes modalFadeOut {
+                from {
+                    opacity: 1;
+                    transform: scale(1);
+                }
+                to {
+                    opacity: 0;
+                    transform: scale(0.9);
+                }
+            }
+        </style>
+    `;
+    
+    // Insert modal into page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+    
+    // Update indicator to show tampered status
+    const indicator = document.getElementById('blockchain-indicator');
+    if (indicator) {
+        indicator.innerHTML = `
+            <div class="alert alert-danger" style="display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 15px;">
+                <i class="ti ti-shield-alert" style="font-size: 24px;"></i>
+                <div>
+                    <strong>⚠️ Tampered</strong><br>
+                    <small>Document integrity compromised</small>
+                </div>
+            </div>
+        `;
+    }
 }
 
+
+function closeTamperAlert() {
+    const modal = document.getElementById('tamperAlertModal');
+    const backdrop = document.querySelector('.modal-backdrop');
+    
+    if (modal) {
+        modal.style.animation = 'modalFadeOut 0.2s ease';
+        setTimeout(() => {
+            modal.remove();
+            if (backdrop) backdrop.remove();
+            document.body.style.overflow = '';
+        }, 200);
+    }
+}
+
+// =====================================================
+// HELPER FUNCTIONS
+// =====================================================
+
+function viewAuditLog(contractId) {
+    closeTamperAlert();
+    window.location.href = `/audit-trail?contract_id=${contractId}&filter=tampering`;
+}
+
+function contactAdministrator(contractId) {
+    closeTamperAlert();
+    
+    const subject = encodeURIComponent(`URGENT: Tampering Detected - Contract ${contractId}`);
+    const body = encodeURIComponent(`
+Tampering has been detected on Contract ID: ${contractId}
+Detection Time: ${new Date().toLocaleString()}
+
+Please investigate this security incident immediately.
+    `);
+    
+    // Open email client or support system
+    alert('Administrator has been notified. A support ticket has been created.');
+    
+    // Optional: Redirect to support page
+    // window.location.href = '/support?issue=tampering&contract=' + contractId;
+}
+
+// =====================================================
+// AUTO-VERIFY ON PAGE LOAD
+// =====================================================
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔐 Blockchain verification system loaded');
+    
+    // Get contract ID from URL or data attribute
+    const urlParams = new URLSearchParams(window.location.search);
+    const contractId = urlParams.get('id') || 
+                      document.querySelector('[data-contract-id]')?.dataset.contractId;
+    
+    if (contractId) {
+        console.log('📋 Contract ID found:', contractId);
+        
+        // Auto-verify after 1 second
+        setTimeout(() => {
+            verifyContract(contractId);
+        }, 1000);
+    }
+});
+
+// =====================================================
+// EXPORT FUNCTIONS
+// =====================================================
+
+if (typeof window !== 'undefined') {
+    window.verifyContract = verifyContract;
+    window.showTamperAlert = showTamperAlert;
+    window.closeTamperAlert = closeTamperAlert;
+    window.viewAuditLog = viewAuditLog;
+    window.contactAdministrator = contactAdministrator;
+}
 // Show error indicator
 function showErrorIndicator(contractId) {
-    const indicator = document.getElementById(`blockchain-indicator-${contractId}`);
+    const indicator = document.getElementById('blockchain-indicator');
+    if (!indicator) return;
+    
     indicator.innerHTML = `
-        <div class="alert alert-warning mb-0">
-            <i data-lucide="alert-circle"></i>
-            Verification error - Please try again
+        <div class="alert alert-warning" style="display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 15px;">
+            <i class="ti ti-alert-triangle" style="font-size: 24px;"></i>
+            <div>
+                <strong>Verification Error</strong><br>
+                <small>Could not verify blockchain status</small>
+            </div>
         </div>
     `;
-    lucide.createIcons();
 }
 
 // Show blockchain certificate

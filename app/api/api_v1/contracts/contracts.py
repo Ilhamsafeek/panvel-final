@@ -6353,6 +6353,7 @@ async def update_contract_metadata(
     """
     Update AI generation parameters for a contract
     This allows regeneration with modified metadata
+    ✅ NOW INCLUDES BLOCKCHAIN HASH UPDATE
     """
     try:
         logger.info(f"📝 Updating metadata for contract {contract_id}")
@@ -6360,10 +6361,11 @@ async def update_contract_metadata(
 
         # Verify contract exists and belongs to user's company
         contract_check = db.execute(text("""
-            SELECT id, contract_number, is_ai_generated 
-            FROM contracts 
-            WHERE id = :contract_id 
-            AND company_id = :company_id
+            SELECT id, contract_number, is_ai_generated, content
+            FROM contracts c
+            LEFT JOIN contract_versions cv ON c.id = cv.contract_id AND cv.version_number = c.current_version
+            WHERE c.id = :contract_id 
+            AND c.company_id = :company_id
         """), {
             "contract_id": contract_id,
             "company_id": current_user.company_id
@@ -6399,9 +6401,38 @@ async def update_contract_metadata(
 
         db.commit()
 
-        logger.info(f" Metadata updated for contract {contract_check.contract_number}")
+        logger.info(f"✅ Metadata updated for contract {contract_check.contract_number}")
 
-
+        # =====================================================
+        # 🔐 UPDATE BLOCKCHAIN HASH AFTER METADATA UPDATE
+        # =====================================================
+        try:
+            logger.info(f"🔗 Updating blockchain hash after metadata change...")
+            
+            # Get current contract content
+            contract_content = contract_check.content or ""
+            
+            # Update blockchain hash
+            from app.services.blockchain_service import blockchain_service
+            
+            blockchain_result = await blockchain_service.store_contract_hash_with_logging(
+                contract_id=contract_id,
+                document_content=contract_content,
+                uploaded_by=current_user.id,
+                company_id=current_user.company_id,
+                db=db
+            )
+            
+            if blockchain_result.get("success"):
+                logger.info(f"✅ Blockchain hash updated successfully")
+            else:
+                logger.warning(f"⚠️ Blockchain update failed: {blockchain_result.get('error')}")
+                
+        except Exception as blockchain_error:
+            # Don't fail the metadata update if blockchain fails
+            logger.error(f"⚠️ Blockchain update error (non-critical): {str(blockchain_error)}")
+        
+        # Log the action
         log_contract_action(
             db=db,
             action_type="contract_updated",
@@ -6409,7 +6440,8 @@ async def update_contract_metadata(
             user_id=current_user.id,
             details={
                 "update_type": "metadata_updated",
-                "contract_number": contract_check.contract_number
+                "contract_number": contract_check.contract_number,
+                "blockchain_updated": blockchain_result.get("success") if 'blockchain_result' in locals() else False
             },
             ip_address=None
         )
@@ -6419,7 +6451,8 @@ async def update_contract_metadata(
             "message": "Metadata updated successfully",
             "contract_id": contract_id,
             "contract_number": contract_check.contract_number,
-            "updated_params": request_data.ai_generation_params
+            "updated_params": request_data.ai_generation_params,
+            "blockchain_updated": blockchain_result.get("success") if 'blockchain_result' in locals() else False
         }
 
     except HTTPException:

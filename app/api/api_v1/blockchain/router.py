@@ -1,6 +1,7 @@
 # =====================================================
 # FILE: app/api/api_v1/blockchain/router.py
-# COMPLETE VERSION - All endpoints including verify-contract-hash
+# Updated for UC032 Comprehensive Hashing
+# Service now handles ALL data extraction from database
 # =====================================================
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -16,18 +17,11 @@ from app.models.user import User
 from app.models.contract import Contract
 from app.models.blockchain import BlockchainRecord, DocumentIntegrity
 
-
 from sqlalchemy import text
 from datetime import datetime
 import json
 
-import subprocess
-import uuid
-
-
-
 from app.api.api_v1.blockchain.terminal import router as terminal_router
-
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -40,10 +34,11 @@ router.include_router(terminal_router, prefix="/terminal")
 
 class VerifyContractRequest(BaseModel):
     contract_id: int
+    document_content: str = ""  # Optional - service fetches from DB
 
 
 # =====================================================
-# ENDPOINTS
+# CORE BLOCKCHAIN ENDPOINTS
 # =====================================================
 
 @router.post("/store-contract/{contract_id}")
@@ -53,12 +48,13 @@ async def store_contract_on_blockchain(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Store contract on blockchain with detailed activity logging
+    Store contract on blockchain with comprehensive hashing
+    ✅ UC032 COMPLIANT: Hashes ALL contract fields automatically
     """
     try:
         logger.info(f"🔗 Storing contract {contract_id} on blockchain")
         
-        # Get contract
+        # Get contract for access check
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
             raise HTTPException(status_code=404, detail="Contract not found")
@@ -67,32 +63,29 @@ async def store_contract_on_blockchain(
         if contract.company_id != current_user.company_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        # Prepare contract content for hashing
-        contract_content = {
-            "contract_number": contract.contract_number,
-            "contract_title": contract.contract_title,
-            "contract_type": contract.contract_type,
-            "contract_value": str(contract.contract_value) if contract.contract_value else "",
-            "start_date": str(contract.start_date) if contract.start_date else "",
-            "end_date": str(contract.end_date) if contract.end_date else "",
-            "created_at": contract.created_at.isoformat() if contract.created_at else ""
-        }
-        
-        # Store with activity logging
+        # ✅ NEW: Service handles ALL data extraction from database
+        # We just pass contract_id and let service fetch comprehensive data
         result = await blockchain_service.store_contract_hash_with_logging(
             contract_id=contract_id,
-            document_content=contract_content,
+            document_content="",  # Ignored - service fetches from DB
             uploaded_by=current_user.id,
             company_id=current_user.company_id,
-            db=db
+            db=db  # ✅ CRITICAL: Pass db session
         )
         
+        if not result.get("success"):
+            raise HTTPException(
+                status_code=500,
+                detail=result.get("error", "Failed to store on blockchain")
+            )
+        
+        logger.info(f"✅ Contract {contract_id} stored on blockchain successfully")
         return result
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f" Error storing contract on blockchain: {str(e)}")
+        logger.error(f"❌ Error storing contract on blockchain: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
@@ -105,45 +98,46 @@ async def verify_contract_hash_endpoint(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Verify contract hash against blockchain
-    Accepts JSON body: {"contract_id": 123}
-    This is the endpoint called by the frontend
+    ✅ UC032 COMPLIANT: Verify contract integrity with comprehensive hashing
+    
+    This endpoint is called by the frontend verification system.
+    Service automatically fetches and hashes ALL contract fields from database.
+    
+    Request body: {"contract_id": 123}
     """
     try:
         contract_id = request.contract_id
         logger.info(f"🔍 Verifying contract hash for contract {contract_id}")
         
-        # Get contract
+        # Get contract for access check (optional)
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
-            raise HTTPException(status_code=404, detail="Contract not found")
+            logger.warning(f"⚠️ Contract {contract_id} not found for verification")
+            return {
+                "success": False,
+                "verified": False,
+                "message": "Contract not found"
+            }
         
-        # Check access (optional - can be skipped for verification)
-        # if contract.company_id != current_user.company_id:
-        #     raise HTTPException(status_code=403, detail="Access denied")
-        
-        # Prepare contract content
-        contract_content = {
-            "contract_number": contract.contract_number,
-            "contract_title": contract.contract_title,
-            "contract_type": contract.contract_type,
-            "contract_value": str(contract.contract_value) if contract.contract_value else "",
-            "start_date": str(contract.start_date) if contract.start_date else "",
-            "end_date": str(contract.end_date) if contract.end_date else ""
-        }
-        
-        # Verify
+        # ✅ NEW: Service handles ALL data extraction from database
+        # document_content parameter is ignored - service fetches comprehensive data
         result = await blockchain_service.verify_contract_hash(
             contract_id=contract_id,
-            current_document_content=contract_content
+            current_document_content="",  # Ignored - service fetches from DB
+            db=db  # ✅ CRITICAL: Pass db session
         )
+        
+        if result.get("verified"):
+            logger.info(f"✅ Contract {contract_id} verification: PASSED")
+        else:
+            logger.warning(f"🚨 Contract {contract_id} verification: FAILED (tampering detected)")
         
         return result
         
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f" Error verifying contract hash: {str(e)}")
+        logger.error(f"❌ Error verifying contract hash: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
@@ -156,9 +150,12 @@ async def verify_contract_integrity(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Verify contract integrity against blockchain (path parameter version)
+    Verify contract integrity (path parameter version)
+    ✅ UC032 COMPLIANT
     """
     try:
+        logger.info(f"🔍 Verifying contract {contract_id} integrity")
+        
         # Get contract
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
         if not contract:
@@ -168,20 +165,11 @@ async def verify_contract_integrity(
         if contract.company_id != current_user.company_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        # Prepare contract content
-        contract_content = {
-            "contract_number": contract.contract_number,
-            "contract_title": contract.contract_title,
-            "contract_type": contract.contract_type,
-            "contract_value": str(contract.contract_value) if contract.contract_value else "",
-            "start_date": str(contract.start_date) if contract.start_date else "",
-            "end_date": str(contract.end_date) if contract.end_date else ""
-        }
-        
-        # Verify
+        # ✅ Service handles comprehensive data extraction
         result = await blockchain_service.verify_contract_hash(
             contract_id=contract_id,
-            current_document_content=contract_content
+            current_document_content="",  # Ignored
+            db=db  # ✅ Pass db session
         )
         
         return result
@@ -189,56 +177,19 @@ async def verify_contract_integrity(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f" Error verifying contract: {str(e)}")
+        logger.error(f"❌ Error verifying contract: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/activity-log/{contract_id}")
-async def get_blockchain_activity_log(
-    contract_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Get blockchain activity log for a contract
-    """
-    try:
-        # Get contract
-        contract = db.query(Contract).filter(Contract.id == contract_id).first()
-        if not contract:
-            raise HTTPException(status_code=404, detail="Contract not found")
-        
-        # Check access
-        if contract.company_id != current_user.company_id:
-            raise HTTPException(status_code=403, detail="Access denied")
-        
-        # Get activity log
-        activities = await blockchain_service.get_blockchain_activity_log(
-            contract_id=contract_id,
-            db=db
-        )
-        
-        return {
-            "success": True,
-            "contract_id": contract_id,
-            "activities": activities,
-            "total_activities": len(activities)
-        }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f" Error retrieving activity log: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
+# =====================================================
+# BLOCKCHAIN INFORMATION ENDPOINTS
+# =====================================================
 
 @router.get("/network-status")
 async def get_network_status(
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Get blockchain network status
-    """
+    """Get blockchain network status"""
     try:
         status = blockchain_service.get_network_status()
         return {
@@ -246,7 +197,7 @@ async def get_network_status(
             "network_status": status
         }
     except Exception as e:
-        logger.error(f" Error getting network status: {str(e)}")
+        logger.error(f"❌ Error getting network status: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -256,9 +207,7 @@ async def get_transaction_details(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Get detailed blockchain transaction information
-    """
+    """Get detailed blockchain transaction information"""
     try:
         # Get contract
         contract = db.query(Contract).filter(Contract.id == contract_id).first()
@@ -310,7 +259,7 @@ async def get_transaction_details(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f" Error getting transaction details: {str(e)}")
+        logger.error(f"❌ Error getting transaction details: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
@@ -322,9 +271,7 @@ async def get_contract_record(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Get blockchain record for a contract (legacy endpoint)
-    """
+    """Get blockchain record for a contract"""
     try:
         logger.info(f"🔍 Getting blockchain record for contract {contract_id}")
         
@@ -347,7 +294,6 @@ async def get_contract_record(
                 "integrity_record": None
             }
         
-        # Return database records
         return {
             "success": True,
             "blockchain_record": {
@@ -362,12 +308,12 @@ async def get_contract_record(
                 "verification_status": integrity_record.verification_status if integrity_record else "N/A",
                 "last_verified_at": integrity_record.last_verified_at.isoformat() if integrity_record and integrity_record.last_verified_at else None
             },
-            "mode": "database",
+            "mode": "comprehensive_hashing",
             "source": "mysql_database"
         }
         
     except Exception as e:
-        logger.error(f" Error getting record: {str(e)}")
+        logger.error(f"❌ Error getting record: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         return {
@@ -378,23 +324,106 @@ async def get_contract_record(
         }
 
 
-@router.get("/health")
-async def health():
-    """Health check endpoint"""
-    return {
-        "status": "ok",
-        "service": "blockchain",
-        "network_status": blockchain_service.get_network_status()
-    }
+@router.get("/contract-history/{contract_id}")
+async def get_contract_blockchain_history(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get blockchain history for a contract"""
+    try:
+        # Get all blockchain records
+        records = db.execute(text("""
+            SELECT 
+                br.id,
+                br.transaction_hash,
+                br.block_number,
+                br.blockchain_network,
+                br.status,
+                br.created_at,
+                di.document_hash,
+                di.verification_status,
+                di.last_verified_at
+            FROM blockchain_records br
+            LEFT JOIN document_integrity di ON br.entity_id = di.document_id
+            WHERE br.entity_type = 'contract' 
+                AND br.entity_id = :contract_id
+            ORDER BY br.created_at DESC
+        """), {"contract_id": str(contract_id)}).fetchall()
+        
+        history = []
+        for record in records:
+            history.append({
+                "id": record.id,
+                "transaction_hash": record.transaction_hash,
+                "block_number": record.block_number,
+                "network": record.blockchain_network,
+                "status": record.status,
+                "document_hash": record.document_hash,
+                "verification_status": record.verification_status,
+                "created_at": record.created_at.isoformat() if record.created_at else None,
+                "last_verified_at": record.last_verified_at.isoformat() if record.last_verified_at else None
+            })
+        
+        return {
+            "success": True,
+            "contract_id": contract_id,
+            "total_records": len(history),
+            "history": history
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting contract history: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/tamper-events/{contract_id}")
+async def get_tamper_events(
+    contract_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get tamper events for a contract"""
+    try:
+        events = db.execute(text("""
+            SELECT 
+                id,
+                document_id,
+                detected_at,
+                current_hash,
+                stored_hash,
+                response_action,
+                resolved,
+                resolved_at
+            FROM tamper_events
+            WHERE document_id = :contract_id
+            ORDER BY detected_at DESC
+        """), {"contract_id": str(contract_id)}).fetchall()
+        
+        tamper_events = []
+        for event in events:
+            tamper_events.append({
+                "id": event.id,
+                "document_id": event.document_id,
+                "detected_at": event.detected_at.isoformat() if event.detected_at else None,
+                "current_hash": event.current_hash[:16] + "..." if event.current_hash else None,
+                "stored_hash": event.stored_hash[:16] + "..." if event.stored_hash else None,
+                "response_action": event.response_action,
+                "resolved": event.resolved,
+                "resolved_at": event.resolved_at.isoformat() if event.resolved_at else None
+            })
+        
+        return {
+            "success": True,
+            "contract_id": contract_id,
+            "total_events": len(tamper_events),
+            "events": tamper_events
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error getting tamper events: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
-# =====================================================
-# ADD THIS TO: app/api/api_v1/blockchain/router.py
-# Add at the END of the file, before the last line
-# =====================================================
-
-# ... (keep all your existing code above)
 
 # =====================================================
 # BLOCKCHAIN ACTIVITY MONITORING ENDPOINTS
@@ -414,14 +443,10 @@ async def get_blockchain_activity(
     try:
         logger.info(f"📊 Fetching blockchain activity for contract {contract_id}")
         
-        # =====================================================
-        # 1. Get Network Status
-        # =====================================================
+        # Get network status
         network_status = blockchain_service.get_network_status()
         
-        # =====================================================
-        # 2. Get Audit Logs (Blockchain Operations)
-        # =====================================================
+        # Get audit logs
         sql_audit = """
             SELECT 
                 id,
@@ -439,7 +464,6 @@ async def get_blockchain_activity(
             LIMIT :limit
         """
         
-        from sqlalchemy import text
         result = db.execute(text(sql_audit), {
             "contract_id": contract_id,
             "limit": limit
@@ -447,8 +471,6 @@ async def get_blockchain_activity(
         
         audit_logs = []
         for row in result:
-            # Parse action_details if it's a JSON string
-            import json
             try:
                 if isinstance(row.action_details, str):
                     action_details = json.loads(row.action_details)
@@ -465,9 +487,7 @@ async def get_blockchain_activity(
                 "user_id": row.user_id
             })
         
-        # =====================================================
-        # 3. Get Blockchain Records for Statistics
-        # =====================================================
+        # Get blockchain statistics
         sql_blockchain = """
             SELECT 
                 COUNT(*) as total_count,
@@ -484,9 +504,7 @@ async def get_blockchain_activity(
         
         blockchain_stats = blockchain_result.fetchone()
         
-        # =====================================================
-        # 4. Get Document Integrity Records
-        # =====================================================
+        # Get integrity statistics
         sql_integrity = """
             SELECT COUNT(*) as verified_count
             FROM document_integrity
@@ -500,9 +518,7 @@ async def get_blockchain_activity(
         
         integrity_stats = integrity_result.fetchone()
         
-        # =====================================================
-        # 5. Calculate Statistics
-        # =====================================================
+        # Calculate statistics
         statistics = {
             "total_transactions": blockchain_stats.total_count if blockchain_stats else 0,
             "last_block_hash": blockchain_stats.last_hash if blockchain_stats else None,
@@ -513,10 +529,7 @@ async def get_blockchain_activity(
             "total_activities": len(audit_logs)
         }
         
-        # =====================================================
-        # 6. Return Complete Response
-        # =====================================================
-        logger.info(f" Retrieved {len(audit_logs)} blockchain activities for contract {contract_id}")
+        logger.info(f"✅ Retrieved {len(audit_logs)} blockchain activities for contract {contract_id}")
         
         return {
             "success": True,
@@ -528,7 +541,7 @@ async def get_blockchain_activity(
         }
         
     except Exception as e:
-        logger.error(f" Error fetching blockchain activity: {str(e)}")
+        logger.error(f"❌ Error fetching blockchain activity: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(
@@ -543,9 +556,7 @@ async def get_recent_blockchain_activity(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Get recent blockchain activity across all contracts
-    """
+    """Get recent blockchain activity across all contracts"""
     try:
         logger.info(f"📊 Fetching recent blockchain activity (limit: {limit})")
         
@@ -568,12 +579,10 @@ async def get_recent_blockchain_activity(
             LIMIT :limit
         """
         
-        from sqlalchemy import text
         result = db.execute(text(sql), {"limit": limit})
         
         activities = []
         for row in result:
-            import json
             try:
                 if isinstance(row.action_details, str):
                     action_details = json.loads(row.action_details)
@@ -592,7 +601,7 @@ async def get_recent_blockchain_activity(
                 "contract_title": row.contract_title
             })
         
-        logger.info(f" Retrieved {len(activities)} recent blockchain activities")
+        logger.info(f"✅ Retrieved {len(activities)} recent blockchain activities")
         
         return {
             "success": True,
@@ -601,7 +610,7 @@ async def get_recent_blockchain_activity(
         }
         
     except Exception as e:
-        logger.error(f" Error fetching recent activity: {str(e)}")
+        logger.error(f"❌ Error fetching recent activity: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Error fetching recent activity: {str(e)}"
@@ -613,13 +622,9 @@ async def get_blockchain_statistics(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Get overall blockchain statistics for dashboard
-    """
+    """Get overall blockchain statistics for dashboard"""
     try:
         logger.info(f"📊 Fetching blockchain statistics")
-        
-        from sqlalchemy import text
         
         # Total blockchain records
         sql_total = "SELECT COUNT(*) as count FROM blockchain_records"
@@ -651,16 +656,28 @@ async def get_blockchain_statistics(
                 "today_activity": today_activity or 0,
                 "verified_contracts": verified_contracts or 0,
                 "network_status": network_status.get("status", "unknown"),
-                "peers_count": network_status.get("peers_count", 0)
+                "peers_count": network_status.get("peers_count", 0),
+                "hashing_mode": "comprehensive (UC032 compliant)"
             }
         }
         
     except Exception as e:
-        logger.error(f" Error fetching blockchain statistics: {str(e)}")
+        logger.error(f"❌ Error fetching blockchain statistics: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"Error fetching blockchain statistics: {str(e)}"
         )
+
+
+@router.get("/health")
+async def health():
+    """Health check endpoint"""
+    return {
+        "status": "ok",
+        "service": "blockchain",
+        "version": "UC032_comprehensive_hashing_v2.0",
+        "network_status": blockchain_service.get_network_status()
+    }
 
 
 # =====================================================
@@ -672,7 +689,6 @@ def format_relative_time(timestamp):
     if not timestamp:
         return "Never"
     
-    from datetime import datetime
     now = datetime.utcnow()
     if isinstance(timestamp, str):
         timestamp = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))

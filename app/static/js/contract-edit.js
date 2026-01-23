@@ -546,12 +546,12 @@ document.getElementById('contractContent')?.addEventListener('drop', function(e)
 });
 
 // Auto-save every 30 seconds
-setInterval(() => {
-    const content = document.getElementById('contractContent');
-    if (content && content.textContent.length > 0) {
-        saveAsDraft();
-    }
-}, 30000);
+// setInterval(() => {
+//     const content = document.getElementById('contractContent');
+//     if (content && content.textContent.length > 0) {
+//         saveAsDraft();
+//     }
+// }, 30000);
 
 // Add comment
 function addComment() {
