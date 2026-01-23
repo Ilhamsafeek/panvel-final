@@ -1038,6 +1038,79 @@
             lastTouchEnd = now;
         }, false);
     </script>
+
+    <script>
+        // Add hover/touch feedback
+        document.querySelectorAll('.app:not(.center)').forEach(app => {
+            // Desktop hover
+            app.addEventListener('mouseenter', () => {
+                app.style.filter = 'brightness(1.1)';
+            });
+
+            app.addEventListener('mouseleave', () => {
+                app.style.filter = '';
+            });
+
+            // Mobile touch feedback
+            app.addEventListener('touchstart', (e) => {
+                app.style.filter = 'brightness(1.1)';
+            }, { passive: true });
+
+            app.addEventListener('touchend', (e) => {
+                app.style.filter = '';
+            }, { passive: true });
+        });
+
+        // Show all tooltips on center app hover with animation
+        const centerApp = document.querySelector('.app.center');
+        const allTooltips = document.querySelectorAll('.tooltip');
+        
+        centerApp.addEventListener('mouseenter', () => {
+            allTooltips.forEach((tooltip, index) => {
+                setTimeout(() => {
+                    tooltip.style.opacity = '1';
+                    tooltip.style.visibility = 'visible';
+                    tooltip.style.transform = 'translateY(-50%) translateX(0)';
+                    tooltip.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.2)';
+                }, index * 50); // Staggered animation - 50ms delay between each
+            });
+        });
+
+        centerApp.addEventListener('mouseleave', () => {
+            allTooltips.forEach((tooltip, index) => {
+                setTimeout(() => {
+                    tooltip.style.opacity = '';
+                    tooltip.style.visibility = '';
+                    tooltip.style.transform = '';
+                    tooltip.style.boxShadow = '';
+                }, index * 30); // Faster fade out
+            });
+        });
+
+        // Animate apps on load
+        window.addEventListener('load', () => {
+            const apps = document.querySelectorAll('.app:not(.center)');
+            apps.forEach((app, index) => {
+                app.style.opacity = '0';
+                app.style.transform = 'scale(0.5)';
+
+                setTimeout(() => {
+                    app.style.transition = 'all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                    app.style.opacity = '1';
+                    app.style.transform = 'scale(1)';
+                }, 100 + (index * 100));
+            });
+        });
+
+        // Prevent zoom on double-tap for iOS
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
 </body>
 
 </html>

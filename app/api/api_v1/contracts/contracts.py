@@ -542,6 +542,14 @@ async def create_contract_from_template(
 # Function: generate_contract_with_ai()
 # =====================================================
 
+
+def is_internal_user(user) -> bool:
+    """Check if user is internal (Client/Contractor/Sub-Contractor/Consultant/Supplier/PMO)"""
+    internal_types = ['internal']
+    user_type = getattr(user, 'user_type', '').lower()
+    return user_type in internal_types
+
+
 @router.post("/ai-generate")
 async def generate_contract_with_ai(
     request_data: AIContractGenerationRequest,
@@ -1109,6 +1117,7 @@ async def get_contract_editor_data(
     db: Session = Depends(get_db)
 ):
     """Get contract data for editor with execution certificate"""
+    is_internal = is_internal_user(current_user)
     try:
         query = text("""
             SELECT 
@@ -1421,7 +1430,9 @@ async def get_contract_editor_data(
                 "department": current_approver.department if current_approver else None,
                 "step_type": current_approver.step_type if current_approver else None
             } if current_approver else None,
-            "certificate": certificate_data  #  ADDED CERTIFICATE DATA
+            "certificate": certificate_data,  #  ADDED CERTIFICATE DATA
+            "is_internal_user": is_internal,
+            
         }
         
     except HTTPException:
@@ -1440,6 +1451,10 @@ async def save_contract_draft(
 ):
     """Save contract draft - creates a new version with blockchain logging"""
     try:
+        # ✅ CHECK IF INTERNAL USER
+        is_internal = is_internal_user(current_user)
+        logger.info(f"👤 User: {current_user.email} (Type: {current_user.user_type}, Internal: {is_internal})")
+        
         # Get the latest version number
         version_check = text("""
             SELECT MAX(version_number) as max_version
@@ -1461,7 +1476,7 @@ async def save_contract_draft(
             "contract_id": contract_id,
             "version_number": next_version,
             "content": content.get("content", ""),
-            "change_summary": "Auto-saved draft",
+            "change_summary": "Internal edit - DB only" if is_internal else "Auto-saved draft",
             "user_id": current_user.id
         })
         
@@ -1475,44 +1490,52 @@ async def save_contract_draft(
         db.execute(update_contract, {"contract_id": contract_id})
         db.commit()
 
-        #  Store on blockchain WITH ACTIVITY LOGGING
+        # ✅ BLOCKCHAIN BYPASS FOR INTERNAL USERS
         blockchain_activities = []
         blockchain_success = False
         
-        try:
-            logger.info(f"🔗 Storing contract {contract_id} on blockchain with activity logging")
-            
-            #  USE THE LOGGING VERSION
-            blockchain_result = await blockchain_service.store_contract_hash_with_logging(
-                contract_id=contract_id,
-                document_content=content.get("content", ""),
-                uploaded_by=current_user.id,
-                company_id=current_user.company_id,
-                db=db
-            )
-            
-            if blockchain_result.get("success"):
-                blockchain_success = True
-                blockchain_activities = blockchain_result.get("activities", [])
-                logger.info(f" Blockchain storage successful with {len(blockchain_activities)} activity steps")
-            else:
-                logger.warning(f" Blockchain storage failed: {blockchain_result.get('error')}")
+        if is_internal:
+            # ⚠️ SKIP BLOCKCHAIN FOR INTERNAL USERS
+            logger.warning(f"⚠️ INTERNAL USER EDIT: Skipping blockchain for contract {contract_id}")
+            logger.warning(f"   User: {current_user.email} (Type: {current_user.user_type})")
+            logger.warning(f"   Changes saved to DATABASE ONLY - No blockchain update")
+        else:
+            # Only update blockchain for EXTERNAL users
+            try:
+                logger.info(f"🔗 Storing contract {contract_id} on blockchain with activity logging")
                 
-        except Exception as blockchain_error:
-            # Don't fail the save if blockchain fails
-            logger.error(f" Blockchain storage error (non-critical): {str(blockchain_error)}")
-            import traceback
-            logger.error(traceback.format_exc())
+                # USE THE LOGGING VERSION
+                blockchain_result = await blockchain_service.store_contract_hash_with_logging(
+                    contract_id=contract_id,
+                    document_content=content.get("content", ""),
+                    uploaded_by=current_user.id,
+                    company_id=current_user.company_id,
+                    db=db
+                )
+                
+                if blockchain_result.get("success"):
+                    blockchain_success = True
+                    blockchain_activities = blockchain_result.get("activities", [])
+                    logger.info(f"✅ Blockchain storage successful with {len(blockchain_activities)} activity steps")
+                else:
+                    logger.warning(f"⚠️ Blockchain storage failed: {blockchain_result.get('error')}")
+                    
+            except Exception as blockchain_error:
+                # Don't fail the save if blockchain fails
+                logger.error(f"❌ Blockchain storage error (non-critical): {str(blockchain_error)}")
+                import traceback
+                logger.error(traceback.format_exc())
         
-        #  RETURN ACTIVITIES IN RESPONSE
+        # ✅ RETURN RESPONSE WITH INTERNAL FLAG
         response = {
             "success": True, 
             "message": "Draft saved successfully",
             "version": next_version,
             "blockchain_success": blockchain_success,
-            "blockchain_activities": blockchain_activities  # ← This is what frontend needs!
+            "blockchain_activities": blockchain_activities,
+            "internal_edit": is_internal  # ✅ FLAG FOR FRONTEND
         }
-
+        
         log_contract_action(
             db=db,
             action_type="contract_updated",
@@ -1520,20 +1543,23 @@ async def save_contract_draft(
             user_id=current_user.id,
             details={
                 "update_type": "content_saved",
-                "has_blockchain": len(blockchain_activities) > 0
+                "has_blockchain": len(blockchain_activities) > 0,
+                "internal_edit": is_internal  # ✅ LOG THIS TOO
             },
             ip_address=None
         )
         
-        logger.info(f" Returning response with {len(blockchain_activities)} blockchain activities")
+        logger.info(f"✅ Returning response (Internal: {is_internal}, Blockchain activities: {len(blockchain_activities)})")
+        
         return response
         
     except Exception as e:
         db.rollback()
-        logger.error(f"Error saving draft: {str(e)}")
+        logger.error(f"❌ Error saving draft: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.post("/send-for-signature")
 async def send_contract_for_signature(

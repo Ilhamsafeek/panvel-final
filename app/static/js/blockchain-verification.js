@@ -180,12 +180,7 @@ function showTamperAlert(contractId, verificationResult) {
                             <i class="ti ti-history"></i> View Audit Log
                         </button>
                         
-                        <button 
-                            onclick="contactAdministrator(${contractId})" 
-                            class="btn btn-warning"
-                            style="background: #ed8936; border: none; color: white;">
-                            <i class="ti ti-mail"></i> Contact Admin
-                        </button>
+                       
                         
                         <button 
                             onclick="closeTamperAlert()" 
