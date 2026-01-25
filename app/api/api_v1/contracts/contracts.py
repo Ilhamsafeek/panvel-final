@@ -1441,7 +1441,6 @@ async def get_contract_editor_data(
         logger.error(f"Error fetching contract editor data: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
         
-
 @router.post("/save-draft/{contract_id}")
 async def save_contract_draft(
     contract_id: int,
@@ -1533,6 +1532,9 @@ async def save_contract_draft(
             current_status in finalized_statuses
         )
         
+        # ✅ Variable to track the new status after update
+        new_status = current_status  # Default: keep current status
+        
         if should_mark_tampered:
             # Internal user changed FINALIZED contract = tampered
             update_contract = text("""
@@ -1540,6 +1542,7 @@ async def save_contract_draft(
                 SET updated_at = NOW(), status = 'tampered'
                 WHERE id = :contract_id
             """)
+            new_status = 'tampered'  # ✅ Track that status changed
             logger.warning(f"⚠️ FINALIZED CONTRACT EDITED by internal user - Status set to 'tampered'")
             logger.warning(f"   Previous status: {current_status}")
         else:
@@ -1585,7 +1588,7 @@ async def save_contract_draft(
             import traceback
             logger.error(traceback.format_exc())
         
-        # ✅ RETURN RESPONSE
+        # ✅ RETURN RESPONSE WITH NEW STATUS
         response = {
             "success": True, 
             "message": "Draft saved successfully",
@@ -1594,8 +1597,8 @@ async def save_contract_draft(
             "blockchain_activities": blockchain_activities,
             "internal_edit": is_internal,
             "content_changed": content_changed,
-            "current_status": current_status,
-            "status_updated": should_mark_tampered
+            "current_status": new_status,  # ✅ Return the ACTUAL current status (tampered or original)
+            "status_updated": should_mark_tampered  # ✅ Flag if status changed to tampered
         }
         
         log_contract_action(
@@ -1610,12 +1613,13 @@ async def save_contract_draft(
                 "internal_edit": is_internal,
                 "content_changed": content_changed,
                 "previous_status": current_status,
+                "new_status": new_status,  # ✅ Log new status
                 "status_tampered": should_mark_tampered
             },
             ip_address=None
         )
         
-        logger.info(f"✅ Draft saved - Version: {next_version}, Status: {current_status}, Tampered: {should_mark_tampered}")
+        logger.info(f"✅ Draft saved - Version: {next_version}, Status: {new_status}, Tampered: {should_mark_tampered}")
         
         return response
         
@@ -1625,8 +1629,8 @@ async def save_contract_draft(
         import traceback
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
-
         
+            
 
 @router.post("/send-for-signature")
 async def send_contract_for_signature(
