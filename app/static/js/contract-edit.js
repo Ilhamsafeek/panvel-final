@@ -83,39 +83,39 @@ function closeModal(modalId) {
 // =====================================================
 // SAVE DRAFT - UPDATED WITH BACKEND
 // =====================================================
-async function saveAsDraft() {
-    const status = document.querySelector('.document-status');
-    status.innerHTML = '<i class="ti ti-loader-2"></i> Saving...';
-    status.classList.remove('saved');
+// async function saveAsDraft() {
+//     const status = document.querySelector('.document-status');
+//     status.innerHTML = '<i class="ti ti-loader-2"></i> Saving...';
+//     status.classList.remove('saved');
     
-    const content = document.getElementById('contractContent').innerHTML;
+//     const content = document.getElementById('contractContent').innerHTML;
     
-    try {
-        const response = await fetch(`/api/contracts/save-draft/${contractId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                content: content,
-                auto_save: true 
-            })
-        });
+//     try {
+//         const response = await fetch(`/api/contracts/save-draft/${contractId}`, {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify({ 
+//                 content: content,
+//                 auto_save: true 
+//             })
+//         });
         
-        const data = await response.json();
+//         const data = await response.json();
         
-        if (data.success) {
-            status.innerHTML = '<i class="ti ti-circle-check"></i> Auto-saved';
-            status.classList.add('saved');
-        } else {
-            throw new Error('Save failed');
-        }
-    } catch (error) {
-        console.error('Error saving draft:', error);
-        status.innerHTML = '<i class="ti ti-alert-circle"></i> Save failed';
-        status.classList.remove('saved');
-    }
-}
+//         if (data.success) {
+//             status.innerHTML = '<i class="ti ti-circle-check"></i> Auto-saved';
+//             status.classList.add('saved');
+//         } else {
+//             throw new Error('Save failed');
+//         }
+//     } catch (error) {
+//         console.error('Error saving draft:', error);
+//         status.innerHTML = '<i class="ti ti-alert-circle"></i> Save failed';
+//         status.classList.remove('saved');
+//     }
+// }
 
 // =====================================================
 // SUBMIT FOR REVIEW - UPDATED WITH BACKEND

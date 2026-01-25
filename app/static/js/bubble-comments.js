@@ -232,7 +232,7 @@ function highlightCommentByAnchor(container, comment, className) {
         // If text was modified, add visual indicator
         if (result.modified) {
             wrapper.classList.add('comment-modified');
-            wrapper.title = 'Comment text has been edited. Original: "' + comment.anchor.text + '"';
+            // wrapper.title = 'Comment text has been edited. Original: "' + comment.anchor.text + '"';
             console.log('🔄 Comment', comment.id, 'text modified - highlighting current text');
         }
         
@@ -625,6 +625,10 @@ function submitComment() {
 // =====================================================
 // SHOW BUBBLE
 // =====================================================
+
+// Find the showBubble function in app/static/js/bubble-comments.js
+// Update the modifiedWarning section (around line 190-200)
+
 function showBubble(commentId, event) {
     var comment = findComment(commentId);
     if (!comment) return;
@@ -653,10 +657,10 @@ function showBubble(commentId, event) {
 
     var details = '';
     
-    // Show if text has been modified
+    // Show if text has been modified - UPDATED TEXT
     var modifiedWarning = '';
     if (comment._currentText && comment._currentText !== comment.selected_text) {
-        modifiedWarning = '<div style="margin-top:10px;padding:10px;background:#fff3cd;border-left:3px solid #ff9800;border-radius:6px;"><div style="color:#ff9800;font-weight:600;font-size:12px;margin-bottom:6px;">⚠️ Text Modified</div><div style="font-size:12px;color:#856404;">The commented text has been edited. This comment is highlighting the current text at this location.</div></div>';
+        modifiedWarning = '<div style="margin-top:10px;padding:10px;background:#fff3cd;border-left:3px solid #ff9800;border-radius:6px;"><div style="color:#ff9800;font-weight:600;font-size:12px;margin-bottom:6px;">⚠️ Text Modified</div><div style="font-size:12px;color:#856404;">Comment text has been edited. Original: [' + escapeHtml(comment.selected_text) + ']</div></div>';
     }
     
     if (comment.change_type === 'delete') {

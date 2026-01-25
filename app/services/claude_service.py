@@ -235,7 +235,8 @@ Draft the clause now:"""
     4. **All required clauses fully developed** - Each clause must include detailed provisions, sub-clauses, procedures, and timelines
     5. **No placeholders** - Use actual dates, values, and specific terms provided. No [TBD], [INSERT], or generic text
     6. **Production-ready quality** - This contract should be ready for signature and legal enforcement
-
+    7. Use Current Year and Current Date if needed
+    
     **DELIVERABLE:**
     - Minimum 3,500 words with thorough legal detail
     - Professional contract language suitable for commercial transactions

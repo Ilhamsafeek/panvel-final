@@ -324,7 +324,7 @@
 
         /* CLM - Emerald Green (Active) */
         .app.bottom-left .app-icon {
-            background: #1dc4e4;
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
             border-color: white;
             box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -336,7 +336,7 @@
 
         /* Closeout - Purple */
         .app.left .app-icon {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+            background: color(display-p3 1 0.949 0.3137);
             border-color: white;
             box-shadow: 0 8px 32px rgba(139, 92, 246, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -348,7 +348,7 @@
 
         /* DPR - Indigo */
         .app.top-left .app-icon {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            background: #1dc4e4;
             border-color: white;
             box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4),
                 inset 0 1px 0 rgba(255, 255, 255, 0.3);
@@ -939,53 +939,64 @@
                         </div>
                         <div class="tooltip-status">Coming Soon</div>
                     </div>
+                    
                 </div>
 
                 <!-- Bottom Left - CLM (Emerald Green - Active) -->
-                <a href="/dashboard" class="app bottom-left" data-module="clm">
-                    <div class="app-icon">
-                        <i class="ti ti-file-check"></i>
-                    </div>
-                    <div class="app-name">CLM</div>
-                    <div class="tooltip">
-                        <div class="tooltip-title">Contract Lifecycle Management</div>
-                        <div class="tooltip-description">
-                            Smart CLM: Manage contracts from draft to execution - seamless automation.
-                            
-                        </div>
-                    </div>
-                </a>
-
-                <!-- Left - Closeout (Purple) -->
-                <div class="app left" data-module="closeout">
+                <div class="app bottom-left" data-module="clm">
                     <div class="coming-soon-badge">Soon</div>
                     <div class="app-icon">
-                        <i class="ti ti-circle-check"></i>
-                    </div>
-                    <div class="app-name">Project Management</div>
-                    <div class="tooltip">
-                        <div class="tooltip-title">Project Management</div>
-                        <div class="tooltip-description">
-                            Organize, track and deliver projects - efficient and collaborative.
-                        </div>
-                        <div class="tooltip-status">Coming Soon</div>
-                    </div>
-                </div>
-
-                <!-- Top Left - DPR (Indigo) -->
-                <div class="app top-left" data-module="dpr">
-                    <div class="coming-soon-badge">Soon</div>
-                    <div class="app-icon">
+                       
                         <i class="ti ti-report-analytics"></i>
                     </div>
                     <div class="app-name">DPR</div>
-                    <div class="tooltip">
+                  
+                      <div class="tooltip">
                         <div class="tooltip-title">Daily Progress Report</div>
                         <div class="tooltip-description">
                             Capture,monitor and report daily site progress - real-time updates.
                         </div>
                         <div class="tooltip-status">Coming Soon</div>
                     </div>
+                </div>
+
+                <!-- Left - Closeout (Purple) -->
+                <a href="/dashboard" class="app left" data-module="closeout">
+                    
+                    <div class="app-icon">
+                       
+                        <i class="ti ti-file-check"></i>
+                    </div>
+                    <div class="app-name">CLM</div>
+                  
+                      <div class="tooltip">
+                        <div class="tooltip-title">Contract Lifecycle Management</div>
+                        <div class="tooltip-description">
+                            Smart CLM: Manage contracts from draft to execution - seamless automation.
+                            
+                        </div>
+                    </div>
+
+                </a>
+
+                <!-- Top Left - DPR (Indigo) -->
+                <div class="app top-left" data-module="dpr">
+                    <div class="coming-soon-badge">Soon</div>
+                    <div class="app-icon">
+                        
+                         <i class="ti ti-circle-check"></i>
+                    </div>
+                    <div class="app-name">Project Management</div>
+                  
+
+                      <div class="tooltip">
+                        <div class="tooltip-title">Project Management</div>
+                        <div class="tooltip-description">
+                            Organize, track and deliver projects - efficient and collaborative.
+                        </div>
+                        <div class="tooltip-status">Coming Soon</div>
+                    </div>
+
                 </div>
             </div>
         </div>

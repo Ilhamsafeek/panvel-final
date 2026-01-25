@@ -885,22 +885,22 @@ async def contract_creation_page(
         "profile_type": current_user.user_type
     })
 
-# @app.get("/contract/editor", response_class=HTMLResponse)
-# async def contract_editor_page(
-#     request: Request,
-#     current_user: User = Depends(get_current_user),
-#     db: Session = Depends(get_db)
-# ):
-#     """Display Contract Editor Screen"""
-#     user_context = get_user_context_with_subscriptions(current_user, db)
+@app.get("/contract/editor", response_class=HTMLResponse)
+async def contract_editor_page(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Display Contract Editor Screen"""
+    user_context = get_user_context_with_subscriptions(current_user, db)
     
-#     return templates.TemplateResponse("screens/drafting/SCR_016_contract_editor.html", {
-#         "request": request,
-#         "current_page": "editor",
-#         "user": user_context,
-#         "subscriptions": user_context['subscriptions'],
-#         "current_user": current_user,
-#     })
+    return templates.TemplateResponse("screens/drafting/SCR_016_contract_editor.html", {
+        "request": request,
+        "current_page": "editor",
+        "user": user_context,
+        "subscriptions": user_context['subscriptions'],
+        "current_user": current_user,
+    })
 
 @app.get("/contract/edit/{contract_id}", response_class=HTMLResponse)
 async def contract_editor_with_id(
