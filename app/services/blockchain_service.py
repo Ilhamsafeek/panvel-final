@@ -497,7 +497,7 @@ class BlockchainService:
                 """), {"contract_id": str(contract_id)})
                 
                 # ⚠️ Update contract status to 'tampered' ONLY if finalized
-                finalized_statuses = ['signed', 'executed', 'approved', 'completed']
+                finalized_statuses = ['approved', 'signature', 'signed', 'executed', 'completed', 'active']
                 if current_status in finalized_statuses:
                     db.execute(text("""
                         UPDATE contracts

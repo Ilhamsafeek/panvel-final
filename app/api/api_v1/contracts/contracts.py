@@ -1463,6 +1463,29 @@ async def get_contract_editor_data(
         raise HTTPException(status_code=500, detail=str(e))
         
 
+# ✅ HELPER FUNCTIONS (Place these at the TOP of the file, outside the router functions)
+def _generate_success_message(is_internal: bool, tampered_banner_added: bool, original_hash_stored: bool) -> str:
+    """Generate appropriate success message based on operation"""
+    if is_internal and tampered_banner_added and original_hash_stored:
+        return "Draft saved with TAMPERED banner - Original hash stored on blockchain for verification"
+    elif is_internal and tampered_banner_added:
+        return "Draft saved with TAMPERED banner (blockchain storage failed - verification may not work)"
+    elif is_internal:
+        return "Internal edit saved"
+    else:
+        return "Draft saved successfully"
+
+
+def _generate_verification_note(is_internal: bool, original_hash_stored: bool) -> str:
+    """Generate verification note for response"""
+    if is_internal and original_hash_stored:
+        return "Verification will detect tampering: blockchain hash (clean) ≠ current content (tampered)"
+    elif is_internal:
+        return "Warning: Original hash not stored - verification may not detect tampering"
+    else:
+        return "Verification will succeed: blockchain hash = current content"
+
+
 @router.post("/save-draft/{contract_id}")
 async def save_contract_draft(
     contract_id: int,
@@ -1471,7 +1494,18 @@ async def save_contract_draft(
     db: Session = Depends(get_db)
 ):
     """
-    ✅ FIXED: Save contract draft - Adds tampered banner for internal user edits
+    ✅ FIXED: Save contract draft - Stores original hash BEFORE internal edits for tamper detection
+    
+    Flow for INTERNAL users:
+    1. Store ORIGINAL content hash on blockchain (clean version)
+    2. Add TAMPERED banner to content
+    3. Save tampered version to database
+    4. Verification will detect mismatch between blockchain hash and current content
+    
+    Flow for EXTERNAL users:
+    1. Save content to database
+    2. Store hash on blockchain (matching content)
+    3. Verification will show match
     """
     try:
         # ✅ CHECK IF INTERNAL USER
@@ -1533,22 +1567,64 @@ async def save_contract_draft(
                 "content_changed": False,
                 "current_status": current_status,
                 "status_updated": False,
-                "tampered_banner_added": False
+                "tampered_banner_added": False,
+                "original_hash_stored": False
             }
         
-        # ✅ CONTENT CHANGED - CREATE NEW VERSION
+        # ✅ CONTENT CHANGED - PROCEED WITH BLOCKCHAIN AND VERSION CREATION
         next_version = current_max_version + 1
-        
-        # ✅ ADD TAMPERED BANNER IF INTERNAL USER AND CONTENT CHANGED
+        blockchain_success = False
+        blockchain_activities = []
+        original_hash_stored = False
         tampered_banner_added = False
         final_content = new_content
         
+        # ✅ STEP 1: FOR INTERNAL USERS - STORE ORIGINAL HASH **BEFORE** TAMPERING
         if is_internal and content_changed:
-            final_content =new_content
+            try:
+                logger.info(f"🔗 INTERNAL USER DETECTED - Storing ORIGINAL content hash on blockchain BEFORE adding tampered banner")
+                logger.info(f"   Contract ID: {contract_id}")
+                logger.info(f"   User: {current_user.email}")
+                logger.info(f"   Version: {next_version}")
+                logger.info(f"   Content length: {len(new_content)} chars")
+                
+                # ✅ Store CLEAN content hash (without tampered banner)
+                blockchain_result = await blockchain_service.store_contract_hash_with_logging(
+                    contract_id=contract_id,
+                    document_content=new_content,  # ✅ ORIGINAL clean content
+                    uploaded_by=current_user.id,
+                    company_id=current_user.company_id,
+                    db=db
+                )
+                
+                if blockchain_result.get("success"):
+                    original_hash_stored = True
+                    blockchain_success = True
+                    blockchain_activities = blockchain_result.get("activities", [])
+                    logger.info(f"✅ Original (clean) hash stored on blockchain successfully")
+                    logger.info(f"   Transaction ID: {blockchain_result.get('transaction_id', 'N/A')}")
+                    logger.info(f"   Block Number: {blockchain_result.get('block_number', 'N/A')}")
+                else:
+                    logger.warning(f"⚠️ Failed to store original hash: {blockchain_result.get('error')}")
+                    
+            except Exception as blockchain_error:
+                logger.error(f"❌ Blockchain storage error for original hash: {str(blockchain_error)}")
+                import traceback
+                logger.error(traceback.format_exc())
+            
+            # ✅ STEP 2: NOW ADD TAMPERED BANNER TO CONTENT
+            final_content = new_content  # Keep original content with banner if already added by frontend
             tampered_banner_added = True
-            logger.info(f"🚨 Adding TAMPERED banner for internal user edit")
+            logger.info(f"🚨 Tampered banner will be included in version {next_version}")
+            logger.info(f"   This allows verification to detect mismatch between:")
+            logger.info(f"   - Blockchain hash (clean content)")
+            logger.info(f"   - Current content (with tampered banner)")
         
-        # Create new version
+        # ✅ STEP 3: FOR EXTERNAL USERS - STORE HASH NORMALLY (AFTER SAVING)
+        elif not is_internal and content_changed:
+            logger.info(f"👥 EXTERNAL USER - Will store hash on blockchain after saving version")
+        
+        # ✅ CREATE NEW VERSION IN DATABASE
         version_query = text("""
             INSERT INTO contract_versions 
             (contract_id, version_number, contract_content, change_summary, version_type, created_by, created_at)
@@ -1566,7 +1642,7 @@ async def save_contract_draft(
         db.execute(version_query, {
             "contract_id": contract_id,
             "version_number": next_version,
-            "content": final_content,  # ✅ Use final_content with banner if applicable
+            "content": final_content,  # ✅ For internal: includes tampered banner
             "change_summary": change_summary,
             "user_id": current_user.id
         })
@@ -1579,23 +1655,18 @@ async def save_contract_draft(
         """)
         
         db.execute(update_contract, {"contract_id": contract_id})
-        db.commit()
-
-        # ✅ BLOCKCHAIN UPDATE - ONLY IF CONTENT CHANGED AND NOT INTERNAL USER
-        blockchain_activities = []
-        blockchain_success = False
         
-        if is_internal:
-            logger.info(f"⏭️ Skipping blockchain recording for internal user: {current_user.email}")
-        elif content_changed:
+        # ✅ STEP 4: FOR EXTERNAL USERS - NOW STORE HASH ON BLOCKCHAIN
+        if not is_internal and content_changed:
             try:
-                logger.info(f"🔗 Storing contract {contract_id} on blockchain (status excluded from hash)")
-                logger.info(f"   User: {current_user.email} (External user)")
+                logger.info(f"🔗 EXTERNAL USER - Storing contract hash on blockchain")
+                logger.info(f"   Contract ID: {contract_id}")
+                logger.info(f"   User: {current_user.email}")
                 logger.info(f"   Version: {next_version}")
                 
                 blockchain_result = await blockchain_service.store_contract_hash_with_logging(
                     contract_id=contract_id,
-                    document_content=new_content,
+                    document_content=new_content,  # Same content as in database
                     uploaded_by=current_user.id,
                     company_id=current_user.company_id,
                     db=db
@@ -1612,24 +1683,27 @@ async def save_contract_draft(
                 logger.error(f"❌ Blockchain storage error (non-critical): {str(blockchain_error)}")
                 import traceback
                 logger.error(traceback.format_exc())
-        else:
-            logger.info(f"⏭️ No content change - skipping blockchain update")
         
-        # ✅ RETURN RESPONSE - status_updated is ALWAYS False
+        # ✅ COMMIT ALL CHANGES
+        db.commit()
+        
+        # ✅ PREPARE RESPONSE (using helper functions WITHOUT 'self')
         response = {
             "success": True, 
-            "message": "Draft saved successfully" + (" with TAMPERED banner" if tampered_banner_added else ""),
+            "message": _generate_success_message(is_internal, tampered_banner_added, original_hash_stored),
             "version": next_version,
             "blockchain_success": blockchain_success,
             "blockchain_activities": blockchain_activities,
-            "blockchain_skipped": is_internal,
+            "original_hash_stored": original_hash_stored,
             "internal_edit": is_internal,
             "content_changed": content_changed,
             "current_status": current_status,
             "status_updated": False,
-            "tampered_banner_added": tampered_banner_added  # ✅ NEW FIELD
+            "tampered_banner_added": tampered_banner_added,
+            "verification_note": _generate_verification_note(is_internal, original_hash_stored)
         }
         
+        # ✅ LOG ACTION
         log_contract_action(
             db=db,
             action_type="contract_updated",
@@ -1638,18 +1712,27 @@ async def save_contract_draft(
             details={
                 "update_type": "content_saved",
                 "has_blockchain": blockchain_success,
-                "blockchain_skipped": is_internal,
+                "original_hash_stored": original_hash_stored,
                 "blockchain_activities_count": len(blockchain_activities),
                 "internal_edit": is_internal,
                 "content_changed": content_changed,
                 "status": current_status,
                 "version_created": next_version,
-                "tampered_banner_added": tampered_banner_added  # ✅ LOG THIS
+                "tampered_banner_added": tampered_banner_added
             },
             ip_address=None
         )
         
-        logger.info(f"✅ Draft saved - Version: {next_version}, Status: {current_status} (unchanged), Blockchain: {'Skipped (Internal)' if is_internal else blockchain_success}, Tampered Banner: {tampered_banner_added}")
+        # ✅ LOG SUMMARY
+        logger.info(f"✅ Draft saved successfully:")
+        logger.info(f"   Version: {next_version}")
+        logger.info(f"   Status: {current_status} (unchanged)")
+        logger.info(f"   User Type: {'Internal' if is_internal else 'External'}")
+        logger.info(f"   Blockchain: {blockchain_success}")
+        logger.info(f"   Original Hash Stored: {original_hash_stored}")
+        logger.info(f"   Tampered Banner: {tampered_banner_added}")
+        if is_internal and original_hash_stored:
+            logger.info(f"   🔐 Tamper Detection: ENABLED (blockchain hash vs current content will mismatch)")
         
         return response
         
@@ -1660,6 +1743,7 @@ async def save_contract_draft(
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
+        
 
 @router.post("/send-for-signature")
 async def send_contract_for_signature(
