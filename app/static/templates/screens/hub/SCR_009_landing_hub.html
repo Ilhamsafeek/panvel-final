@@ -362,7 +362,7 @@
         .coming-soon-badge {
             position: absolute;
             top: -8px;
-            right: -8px;
+            right: 35px;
             background: linear-gradient(135deg, #ff9800, #f57c00);
             color: white;
             font-size: 0.65rem;
@@ -805,48 +805,56 @@
                     </defs>
 
                     <!-- Connection lines from center to each surrounding app -->
+                    <!-- Top - Tender -->
                     <g class="connection-group">
                         <line class="connection-line" x1="349" y1="270" x2="350" y2="135" />
                         <circle cx="349" cy="135" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
                         <circle cx="349" cy="135" r="10" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
                     </g>
 
+                    <!-- Top Right - Bid -->
                     <g class="connection-group">
                         <line class="connection-line" x1="406" y1="294" x2="485" y2="215" />
                         <circle cx="485" cy="215" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
                         <circle cx="485" cy="215" r="10" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
                     </g>
 
+                    <!-- Right - Correspondence -->
                     <g class="connection-group">
                         <line class="connection-line" x1="430" y1="353" x2="565" y2="352" />
                         <circle cx="565" cy="352" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
                         <circle cx="565" cy="352" r="10" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
                     </g>
 
+                    <!-- Bottom Right - Variation -->
                     <g class="connection-group">
                         <line class="connection-line" x1="406" y1="406" x2="485" y2="485" />
                         <circle cx="485" cy="485" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
                         <circle cx="485" cy="485" r="10" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
                     </g>
 
+                    <!-- Bottom - Claim -->
                     <g class="connection-group">
                         <line class="connection-line" x1="351" y1="430" x2="350" y2="565" />
                         <circle cx="350" cy="565" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
                         <circle cx="350" cy="565" r="10" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
                     </g>
 
+                    <!-- Bottom Left - DPR (FIXED) -->
                     <g class="connection-group">
                         <line class="connection-line" x1="294" y1="406" x2="215" y2="485" />
                         <circle cx="215" cy="485" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
-                        <circle cx="215" cy="215" r="10" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
+                        <circle cx="215" cy="485" r="10" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
                     </g>
 
+                    <!-- Left - CLM -->
                     <g class="connection-group">
                         <line class="connection-line" x1="270" y1="351" x2="135" y2="350" />
                         <circle cx="135" cy="350" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
                         <circle cx="135" cy="350" r="10" fill="none" stroke="white" stroke-width="1" opacity="0.4" />
                     </g>
 
+                    <!-- Top Left - Project Management -->
                     <g class="connection-group">
                         <line class="connection-line" x1="294" y1="294" x2="215" y2="215" />
                         <circle cx="215" cy="215" r="5" fill="white" opacity="0.8" filter="url(#glow)" />
@@ -939,67 +947,67 @@
                         </div>
                         <div class="tooltip-status">Coming Soon</div>
                     </div>
-                    
+
                 </div>
 
                 <!-- Bottom Left - CLM (Emerald Green - Active) -->
-                <div class="app bottom-left" data-module="clm">
+                <dFiv class="app bottom-left" data-module="clm">
                     <div class="coming-soon-badge">Soon</div>
                     <div class="app-icon">
-                       
+
                         <i class="ti ti-report-analytics"></i>
                     </div>
                     <div class="app-name">DPR</div>
-                  
-                      <div class="tooltip">
+
+                    <div class="tooltip">
                         <div class="tooltip-title">Daily Progress Report</div>
                         <div class="tooltip-description">
                             Capture,monitor and report daily site progress - real-time updates.
                         </div>
                         <div class="tooltip-status">Coming Soon</div>
                     </div>
+            </div>
+
+            <!-- Left - Closeout (Purple) -->
+            <a href="/dashboard" class="app left" data-module="closeout">
+
+                <div class="app-icon">
+
+                    <i class="ti ti-file-check"></i>
+                </div>
+                <div class="app-name">CLM</div>
+
+                <div class="tooltip">
+                    <div class="tooltip-title">Contract Lifecycle Management</div>
+                    <div class="tooltip-description">
+                        Smart CLM: Manage contracts from draft to execution - seamless automation.
+
+                    </div>
                 </div>
 
-                <!-- Left - Closeout (Purple) -->
-                <a href="/dashboard" class="app left" data-module="closeout">
-                    
-                    <div class="app-icon">
-                       
-                        <i class="ti ti-file-check"></i>
-                    </div>
-                    <div class="app-name">CLM</div>
-                  
-                      <div class="tooltip">
-                        <div class="tooltip-title">Contract Lifecycle Management</div>
-                        <div class="tooltip-description">
-                            Smart CLM: Manage contracts from draft to execution - seamless automation.
-                            
-                        </div>
-                    </div>
+            </a>
 
-                </a>
+            <!-- Top Left - DPR (Indigo) -->
+            <div class="app top-left" data-module="dpr">
+                <div class="coming-soon-badge">Soon</div>
+                <div class="app-icon">
 
-                <!-- Top Left - DPR (Indigo) -->
-                <div class="app top-left" data-module="dpr">
-                    <div class="coming-soon-badge">Soon</div>
-                    <div class="app-icon">
-                        
-                         <i class="ti ti-circle-check"></i>
-                    </div>
-                    <div class="app-name">Project Management</div>
-                  
-
-                      <div class="tooltip">
-                        <div class="tooltip-title">Project Management</div>
-                        <div class="tooltip-description">
-                            Organize, track and deliver projects - efficient and collaborative.
-                        </div>
-                        <div class="tooltip-status">Coming Soon</div>
-                    </div>
-
+                    <i class="ti ti-circle-check"></i>
                 </div>
+                <div class="app-name">Project Management</div>
+
+
+                <div class="tooltip">
+                    <div class="tooltip-title">Project Management</div>
+                    <div class="tooltip-description">
+                        Organize, track and deliver projects - efficient and collaborative.
+                    </div>
+                    <div class="tooltip-status">Coming Soon</div>
+                </div>
+
             </div>
         </div>
+    </div>
     </div>
 
     <script>
@@ -1050,7 +1058,7 @@
         }, false);
     </script>
 
-    
+
 </body>
 
 </html>

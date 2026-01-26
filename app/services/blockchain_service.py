@@ -73,21 +73,14 @@ class BlockchainService:
             logger.error(f"❌ Hash computation error: {str(e)}")
             return hashlib.sha256(str(content).encode('utf-8')).hexdigest()
     
+
     def _extract_comprehensive_contract_data(
         self,
         db: Session,
         contract_id: int
     ) -> Optional[Dict[str, Any]]:
         """
-        ✅ UC032 COMPLIANT: Extract ALL contract data for comprehensive hashing
-        
-        Includes:
-        - Contract metadata (number, title, type, value, dates, status)
-        - Full contract content (HTML)
-        - Version information
-        - Profile type, currency, workflow status
-        
-        Returns normalized dictionary with consistent ordering for hashing
+        ✅ FIXED: Extract contract data for hashing - EXCLUDES status field
         """
         try:
             query = text("""
@@ -101,8 +94,6 @@ class BlockchainService:
                     c.currency,
                     c.start_date,
                     c.end_date,
-                    c.status,
-                    c.workflow_status,
                     c.current_version,
                     cv.contract_content,
                     cv.contract_content_ar,
@@ -113,6 +104,7 @@ class BlockchainService:
                     AND cv.version_number = c.current_version
                 WHERE c.id = :contract_id
             """)
+            # ⚠️ NOTE: status, workflow_status REMOVED from SELECT
             
             result = db.execute(query, {"contract_id": contract_id}).fetchone()
             
@@ -120,7 +112,7 @@ class BlockchainService:
                 logger.error(f"❌ Contract {contract_id} not found in database")
                 return None
             
-            # Build comprehensive data structure with consistent ordering
+            # ✅ Build data structure WITHOUT status, workflow_status
             contract_data = {
                 "contract_id": result.id,
                 "contract_number": result.contract_number or "",
@@ -131,23 +123,23 @@ class BlockchainService:
                 "currency": result.currency or "QAR",
                 "start_date": result.start_date.isoformat() if result.start_date else "",
                 "end_date": result.end_date.isoformat() if result.end_date else "",
-                "status": result.status or "",
-                "workflow_status": result.workflow_status or "",
                 "current_version": result.current_version or 1,
                 "version_type": result.version_type or "",
                 "contract_content": result.contract_content or "",
                 "contract_content_ar": result.contract_content_ar or "",
                 "change_summary": result.change_summary or ""
+                # ❌ REMOVED: "status": result.status
+                # ❌ REMOVED: "workflow_status": result.workflow_status
             }
             
             content_length = len(contract_data['contract_content'])
-            logger.info(f"📊 Extracted comprehensive contract data:")
+            logger.info(f"📊 Extracted IMMUTABLE contract data:")
             logger.info(f"   - Contract ID: {contract_id}")
             logger.info(f"   - Contract Number: {contract_data['contract_number']}")
             logger.info(f"   - Contract Title: {contract_data['contract_title']}")
             logger.info(f"   - Contract Value: {contract_data['contract_value']} {contract_data['currency']}")
             logger.info(f"   - Content Length: {content_length} bytes")
-            logger.info(f"   - Dates: {contract_data['start_date']} to {contract_data['end_date']}")
+            logger.info(f"   ⚠️ STATUS EXCLUDED from hash - workflow changes allowed")
             
             return contract_data
             
@@ -156,6 +148,8 @@ class BlockchainService:
             import traceback
             logger.error(traceback.format_exc())
             return None
+
+
 
     async def store_contract_hash_with_logging(
         self,
@@ -372,26 +366,26 @@ class BlockchainService:
     async def verify_contract_hash(
         self,
         contract_id: int,
-        current_document_content: Union[str, dict],  # This parameter is IGNORED - we fetch from DB
+        current_document_content: str = "",
         db: Session = None
-    ) -> Dict[str, Any]:
+    ) -> dict:
         """
-        ✅ UC032 COMPLIANT: Verify document integrity using comprehensive hashing
-        
-        Verifies ALL fields match (metadata + content), not just content
+        ✅ FIXED: Verify contract integrity
+        - Status field NOT included in hash
+        - Removed blockchain_txn_id (column doesn't exist)
         """
         try:
-            logger.info(f"🔍 Verifying contract {contract_id} with comprehensive hashing")
-            
             if not db:
-                logger.error(f"❌ No database session provided for verification")
+                logger.error("❌ Database session required for verification")
                 return {
                     "success": False,
                     "verified": False,
                     "error": "Database session required for verification"
                 }
             
-            # ✅ Extract COMPREHENSIVE contract data (same as save operation)
+            logger.info(f"🔐 Verifying contract {contract_id} integrity (status excluded from hash)")
+            
+            # ✅ Extract COMPREHENSIVE contract data (WITHOUT status)
             contract_data = self._extract_comprehensive_contract_data(db, contract_id)
             
             if not contract_data:
@@ -401,22 +395,21 @@ class BlockchainService:
                     "message": "Failed to extract contract data for verification"
                 }
             
+            # Get current status SEPARATELY (not for hashing, just for response)
+            status_query = text("SELECT status FROM contracts WHERE id = :contract_id")
+            status_result = db.execute(status_query, {"contract_id": contract_id}).fetchone()
+            current_status = status_result.status if status_result else 'unknown'
+            
+            logger.info(f"📋 Current status: {current_status} (NOT included in hash verification)")
+            
             # Convert to JSON for consistent hashing
             hashable_content = json.dumps(contract_data, sort_keys=True)
             
-            # DEBUG: Show what we're hashing when VERIFYING
-            logger.info(f"🔍 VERIFY - Hashable content length: {len(hashable_content)}")
-            logger.info(f"🔍 VERIFY - Contract number: {contract_data['contract_number']}")
-            logger.info(f"🔍 VERIFY - Contract title: {contract_data['contract_title']}")
-            logger.info(f"🔍 VERIFY - Contract value: {contract_data['contract_value']}")
-            logger.info(f"🔍 VERIFY - Content length: {len(contract_data['contract_content'])}")
-            logger.info(f"🔍 VERIFY - First 100 chars of content: {contract_data['contract_content'][:100]}")
-            
-            # Compute current hash
+            # Compute current hash (from immutable fields only)
             current_hash = self.compute_hash(hashable_content)
             logger.info(f"📊 Current hash: {current_hash[:16]}...")
             
-            # Get stored hash from database
+            # ✅ FIXED: Get stored hash WITHOUT blockchain_txn_id (column doesn't exist)
             result = db.execute(text("""
                 SELECT document_hash, created_at, last_verified_at
                 FROM document_integrity
@@ -432,103 +425,113 @@ class BlockchainService:
                     "verified": False,
                     "message": "No blockchain record found. Please save the contract first.",
                     "current_hash": current_hash,
-                    "stored_hash": None
+                    "stored_hash": None,
+                    "current_status": current_status
                 }
             
             stored_hash = result.document_hash
             logger.info(f"📊 Stored hash: {stored_hash[:16]}...")
             
-            # ✅ Compare hashes
+            # ✅ Compare hashes (status changes don't affect this)
             is_verified = (current_hash == stored_hash)
             
             if is_verified:
                 logger.info(f"✅ VERIFIED - Contract {contract_id} integrity confirmed")
-                logger.info(f"   All fields match: metadata + content + version")
+                logger.info(f"   Current status: {current_status}")
+                logger.info(f"   Status changes (draft→signed) do NOT trigger tampering")
                 
-                # Update last_verified_at timestamp
+                # Update verification timestamp
                 db.execute(text("""
                     UPDATE document_integrity
-                    SET last_verified_at = :now,
+                    SET last_verified_at = NOW(),
                         verification_status = 'verified'
                     WHERE document_id = :contract_id
-                """), {
-                    "contract_id": str(contract_id),
-                    "now": datetime.utcnow()
-                })
+                """), {"contract_id": str(contract_id)})
                 db.commit()
                 
+                return {
+                    "success": True,
+                    "verified": True,
+                    "tampered": False,
+                    "current_hash": current_hash,
+                    "stored_hash": stored_hash,
+                    "message": "Contract integrity verified",
+                    "current_status": current_status
+                }
+            
             else:
+                # 🚨 ACTUAL TAMPERING DETECTED
                 logger.error(f"🚨 TAMPERING DETECTED - Contract {contract_id}")
                 logger.error(f"   Current hash:  {current_hash}")
                 logger.error(f"   Stored hash:   {stored_hash}")
-                logger.error(f"   This means one or more fields have been modified:")
-                logger.error(f"   - Contract metadata (number, title, value, dates)")
-                logger.error(f"   - Contract content (HTML)")
-                logger.error(f"   - Version information")
+                logger.error(f"   CONTENT MODIFICATION detected (not status change)")
                 
-                # ✅ UC032: Log tamper event
+                # Log tamper event
                 tamper_event_id = str(uuid.uuid4())
                 db.execute(text("""
                     INSERT INTO tamper_events (
                         id, document_id, detected_at, current_hash, stored_hash,
                         response_action, resolved, contract_data
                     ) VALUES (
-                        :id, :document_id, :detected_at, :current_hash, :stored_hash,
-                        :response_action, :resolved, :contract_data
+                        :id, :document_id, NOW(), :current_hash, :stored_hash,
+                        'Admin Notified / Logged', FALSE, :contract_data
                     )
                 """), {
                     "id": tamper_event_id,
                     "document_id": str(contract_id),
-                    "detected_at": datetime.utcnow(),
                     "current_hash": current_hash,
                     "stored_hash": stored_hash,
-                    "response_action": "Admin Notified / Logged",
-                    "resolved": False,
                     "contract_data": json.dumps({
                         "contract_id": contract_data["contract_id"],
                         "contract_number": contract_data["contract_number"],
-                        "contract_title": contract_data["contract_title"],
-                        "contract_value": contract_data["contract_value"],
-                        "detection_reason": "Hash mismatch detected"
+                        "detection_reason": "Content hash mismatch - Actual tampering"
                     })
                 })
                 
                 # Update verification status
                 db.execute(text("""
                     UPDATE document_integrity
-                    SET last_verified_at = :now,
+                    SET last_verified_at = NOW(),
                         verification_status = 'tampered'
                     WHERE document_id = :contract_id
-                """), {
-                    "contract_id": str(contract_id),
-                    "now": datetime.utcnow()
-                })
+                """), {"contract_id": str(contract_id)})
+                
+                # ⚠️ Update contract status to 'tampered' ONLY if finalized
+                finalized_statuses = ['signed', 'executed', 'approved', 'completed']
+                if current_status in finalized_statuses:
+                    db.execute(text("""
+                        UPDATE contracts
+                        SET status = 'tampered', updated_at = NOW()
+                        WHERE id = :contract_id
+                    """), {"contract_id": contract_id})
+                    logger.warning(f"⚠️ Contract status changed to 'tampered' (was {current_status})")
+                    current_status = 'tampered'
                 
                 db.commit()
                 
-                logger.info(f"📝 Tamper event logged with ID: {tamper_event_id}")
-            
-            return {
-                "success": True,
-                "verified": is_verified,
-                "current_hash": current_hash,
-                "stored_hash": stored_hash,
-                "contract_id": contract_id,
-                "verification_timestamp": datetime.utcnow().isoformat(),
-                "message": "✅ Document integrity verified - All fields match" if is_verified else "🚨 TAMPERING DETECTED - Contract has been modified",
-                "mode": "mock" if self.mock_mode else "live",
-                "tamper_event_logged": not is_verified
-            }
-        
+                return {
+                    "success": False,
+                    "verified": False,
+                    "tampered": True,
+                    "current_hash": current_hash,
+                    "stored_hash": stored_hash,
+                    "message": "TAMPERING DETECTED: Content has been modified",
+                    "detection_reason": "Content hash mismatch",
+                    "current_status": current_status
+                }
+                
         except Exception as e:
-            logger.error(f"❌ Verification failed: {str(e)}")
+            logger.error(f"❌ Error verifying contract integrity: {str(e)}")
             import traceback
             logger.error(traceback.format_exc())
             return {
                 "success": False,
                 "verified": False,
-                "error": str(e)
+                "tampered": False,
+                "error": str(e),
+                "message": "Verification failed due to system error"
             }
+
 
     def get_network_status(self) -> Dict[str, Any]:
         """Get blockchain network status"""

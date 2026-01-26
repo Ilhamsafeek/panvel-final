@@ -1938,7 +1938,7 @@
             formData.append('profile_type', profileType);
 
             // Update loading message
-            updateLoadingMessage('📤 Uploading file to server...');
+            updateLoadingMessage('Uploading file to server...');
 
             // Upload the contract file with timeout
             const controller = new AbortController();
@@ -2920,10 +2920,10 @@ End of Report
                     <i class="ti ti-file-text"></i> Extracting content
                 </div>
                 <div class="step-item pending" data-step="analyze">
-                    <i class="ti ti-brain"></i> AI risk analysis
+                    <i class="ti ti-brain"></i> Preparing for risk analysis
                 </div>
                 <div class="step-item pending" data-step="save">
-                    <i class="ti ti-check"></i> Saving results
+                    <i class="ti ti-check"></i> Generating AI Report
                 </div>
             </div>
         </div>
@@ -2990,7 +2990,7 @@ End of Report
                 if (progress > 75) {
                     updateStepStatus('analyze', 'completed');
                     updateStepStatus('save', 'active');
-                    updateLoadingMessage('Saving analysis results...');
+                    updateLoadingMessage('our document is being analyzed and it will take a while...');
                 }
             } else {
                 clearInterval(interval);

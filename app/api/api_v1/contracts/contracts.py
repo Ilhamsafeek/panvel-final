@@ -544,10 +544,31 @@ async def create_contract_from_template(
 
 
 def is_internal_user(user) -> bool:
-    """Check if user is internal (Client/Contractor/Sub-Contractor/Consultant/Supplier/PMO)"""
-    internal_types = ['internal']
-    user_type = getattr(user, 'user_type', '').lower()
-    return user_type in internal_types
+    """
+    Check if user is internal (staff/admin) vs external (client/contractor/consultant)
+    
+    Based on user_type field in database:
+    - Internal: 'internal', 'super_admin', 'admin' (LP Global Strategic Page staff)
+    - External: 'client', 'contractor', 'consultant', 'sub_contractor' (customer companies)
+    
+    Internal users can edit without blockchain recording (for draft contracts),
+    but edits to finalized contracts WILL trigger tampering detection.
+    """
+    user_type = getattr(user, 'user_type', '').lower().strip()
+    
+    # Define internal user types (system staff/administrators)
+    internal_types = [
+        'internal',      # System internal staff
+        'super_admin',   # Super administrators
+        'admin',         # Company administrators who are internal
+    ]
+    
+    is_internal = user_type in internal_types
+    
+    logger.info(f"🔍 User type check: '{user_type}' → {'INTERNAL' if is_internal else 'EXTERNAL'}")
+    
+    return is_internal
+
 
 
 @router.post("/ai-generate")
@@ -1442,7 +1463,6 @@ async def get_contract_editor_data(
         raise HTTPException(status_code=500, detail=str(e))
         
 
-
 @router.post("/save-draft/{contract_id}")
 async def save_contract_draft(
     contract_id: int,
@@ -1450,20 +1470,22 @@ async def save_contract_draft(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Save contract draft - creates a new version with blockchain logging"""
+    """
+    ✅ FIXED: Save contract draft - Adds tampered banner for internal user edits
+    """
     try:
         # ✅ CHECK IF INTERNAL USER
         is_internal = is_internal_user(current_user)
-        logger.info(f"👤 User: {current_user.email} (Type: {current_user.user_type}, Internal: {is_internal})")
+        logger.info(f"👤 User: {current_user.email} (Internal: {is_internal})")
         
-        # ✅ GET CURRENT CONTRACT STATUS
+        # ✅ GET CURRENT CONTRACT STATUS (for logging only)
         contract_status_query = text("""
             SELECT status FROM contracts WHERE id = :contract_id
         """)
         contract_status_result = db.execute(contract_status_query, {"contract_id": contract_id}).fetchone()
         current_status = contract_status_result.status if contract_status_result else 'draft'
         
-        logger.info(f"📋 Current contract status: {current_status}")
+        logger.info(f"📋 Current contract status: {current_status} (workflow changes are ALLOWED)")
         
         # Get the latest version number
         version_check = text("""
@@ -1510,11 +1532,21 @@ async def save_contract_draft(
                 "internal_edit": is_internal,
                 "content_changed": False,
                 "current_status": current_status,
-                "status_updated": False
+                "status_updated": False,
+                "tampered_banner_added": False
             }
         
         # ✅ CONTENT CHANGED - CREATE NEW VERSION
         next_version = current_max_version + 1
+        
+        # ✅ ADD TAMPERED BANNER IF INTERNAL USER AND CONTENT CHANGED
+        tampered_banner_added = False
+        final_content = new_content
+        
+        if is_internal and content_changed:
+            final_content =new_content
+            tampered_banner_added = True
+            logger.info(f"🚨 Adding TAMPERED banner for internal user edit")
         
         # Create new version
         version_query = text("""
@@ -1527,51 +1559,25 @@ async def save_contract_draft(
         if next_version == 1:
             change_summary = "Initial contract creation"
         elif is_internal:
-            change_summary = "Internal edit - Content modified"
+            change_summary = "Internal edit - Content modified (TAMPERED)"
         else:
             change_summary = "Draft content updated"
         
         db.execute(version_query, {
             "contract_id": contract_id,
             "version_number": next_version,
-            "content": new_content,
+            "content": final_content,  # ✅ Use final_content with banner if applicable
             "change_summary": change_summary,
             "user_id": current_user.id
         })
         
-        # ✅ CRITICAL: ONLY MARK AS TAMPERED IF CONTRACT IS FINALIZED
-        # Statuses that should trigger "tampered" when edited by internal users:
-        finalized_statuses = ['signed', 'executed', 'approved', 'completed']
+        # ✅ UPDATE TIMESTAMP ONLY - NEVER CHANGE STATUS HERE
+        update_contract = text("""
+            UPDATE contracts 
+            SET updated_at = NOW()
+            WHERE id = :contract_id
+        """)
         
-        should_mark_tampered = (
-            is_internal and 
-            content_changed and 
-            current_status in finalized_statuses
-        )
-        
-        # ✅ Variable to track the new status after update
-        new_status = current_status  # Default: keep current status
-        
-        if should_mark_tampered:
-            # Internal user changed FINALIZED contract = tampered
-            update_contract = text("""
-                UPDATE contracts 
-                SET updated_at = NOW(), status = 'tampered'
-                WHERE id = :contract_id
-            """)
-            new_status = 'tampered'  # ✅ Track that status changed
-            logger.warning(f"⚠️ FINALIZED CONTRACT EDITED by internal user - Status set to 'tampered'")
-            logger.warning(f"   Previous status: {current_status}")
-        else:
-            # Just update timestamp - keep current status
-            update_contract = text("""
-                UPDATE contracts 
-                SET updated_at = NOW()
-                WHERE id = :contract_id
-            """)
-            if is_internal and content_changed:
-                logger.info(f"ℹ️ Draft contract edited by internal user - Status remains '{current_status}' (not tampered)")
-
         db.execute(update_contract, {"contract_id": contract_id})
         db.commit()
 
@@ -1581,9 +1587,9 @@ async def save_contract_draft(
         
         if is_internal:
             logger.info(f"⏭️ Skipping blockchain recording for internal user: {current_user.email}")
-        elif content_changed:  # ✅ ONLY UPDATE BLOCKCHAIN IF CONTENT CHANGED
+        elif content_changed:
             try:
-                logger.info(f"🔗 Storing contract {contract_id} on blockchain (content changed)")
+                logger.info(f"🔗 Storing contract {contract_id} on blockchain (status excluded from hash)")
                 logger.info(f"   User: {current_user.email} (External user)")
                 logger.info(f"   Version: {next_version}")
                 
@@ -1609,18 +1615,19 @@ async def save_contract_draft(
         else:
             logger.info(f"⏭️ No content change - skipping blockchain update")
         
-        # ✅ RETURN RESPONSE WITH NEW STATUS
+        # ✅ RETURN RESPONSE - status_updated is ALWAYS False
         response = {
             "success": True, 
-            "message": "Draft saved successfully",
+            "message": "Draft saved successfully" + (" with TAMPERED banner" if tampered_banner_added else ""),
             "version": next_version,
             "blockchain_success": blockchain_success,
             "blockchain_activities": blockchain_activities,
             "blockchain_skipped": is_internal,
             "internal_edit": is_internal,
             "content_changed": content_changed,
-            "current_status": new_status,
-            "status_updated": should_mark_tampered
+            "current_status": current_status,
+            "status_updated": False,
+            "tampered_banner_added": tampered_banner_added  # ✅ NEW FIELD
         }
         
         log_contract_action(
@@ -1635,15 +1642,14 @@ async def save_contract_draft(
                 "blockchain_activities_count": len(blockchain_activities),
                 "internal_edit": is_internal,
                 "content_changed": content_changed,
-                "previous_status": current_status,
-                "new_status": new_status,
-                "status_tampered": should_mark_tampered,
-                "version_created": next_version
+                "status": current_status,
+                "version_created": next_version,
+                "tampered_banner_added": tampered_banner_added  # ✅ LOG THIS
             },
             ip_address=None
         )
         
-        logger.info(f"✅ Draft saved - Version: {next_version}, Status: {new_status}, Blockchain: {'Skipped (Internal)' if is_internal else blockchain_success}")
+        logger.info(f"✅ Draft saved - Version: {next_version}, Status: {current_status} (unchanged), Blockchain: {'Skipped (Internal)' if is_internal else blockchain_success}, Tampered Banner: {tampered_banner_added}")
         
         return response
         
@@ -3816,15 +3822,17 @@ async def analyze_contract_risks(
         logger.info(f"🔍 Starting AI risk analysis for contract {contract_id}")
         
         # ✅ FIXED: Check for existing analysis with proper type conversion
-        existing_analysis = db.execute(text("""
+        query = text("""
             SELECT analysis_data, risk_score, created_at
             FROM ai_analysis_results
-            WHERE contract_id = CAST(:contract_id AS CHAR(36))
+            WHERE CAST(contract_id AS CHAR) COLLATE utf8mb4_unicode_ci = CAST(:contract_id AS CHAR) COLLATE utf8mb4_unicode_ci
             AND analysis_type = 'risk_analysis'
             ORDER BY created_at DESC
             LIMIT 1
-        """), {"contract_id": str(contract_id)}).fetchone()
+        """)
         
+        existing_analysis = db.execute(query, {"contract_id": str(contract_id)}).fetchone()
+
         if existing_analysis:
             logger.info(f"✅ Found existing risk analysis for contract {contract_id}")
             try:
@@ -3995,7 +4003,7 @@ Analyze thoroughly and respond with ONLY the JSON object. Be comprehensive, spec
         # Call Claude API
         message = claude_service.client.messages.create(
             model=claude_service.model,
-            max_tokens=8000,
+            max_tokens=16000,
             temperature=0.3,
             messages=[{"role": "user", "content": risk_prompt}]
         )

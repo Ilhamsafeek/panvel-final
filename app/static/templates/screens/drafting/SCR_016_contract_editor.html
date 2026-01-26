@@ -2924,6 +2924,11 @@
             <i data-lucide="shield" class="blockchain-icon-shield"></i>
             Blockchain Verification
         </h5>
+            <small>
+                <i data-lucide="lock"></i>
+                This contract is secured on Hyperledger Fabric blockchain for tamper-proof verification.
+            </small>
+
     </div>
     <div class="card-body blockchain-body">
         <!-- Verification Status -->
@@ -2957,13 +2962,6 @@
 
         </div>
 
-        <!-- Info Text -->
-        <div class="blockchain-info-text">
-            <small>
-                <i data-lucide="lock"></i>
-                This contract is secured on Hyperledger Fabric blockchain for tamper-proof verification.
-            </small>
-        </div>
     </div>
 </div>
 <!-- END BLOCKCHAIN VERIFICATION SECTION -->
@@ -10368,33 +10366,102 @@ ${(riskAnalysisData.risk_items || []).map(item => `
         saveAsDraft();
     }
 
+    let openModals = [];
+
     // Utility Functions
-    function openModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'block';
-            document.body.style.overflow = 'hidden';
-        }
+ function openModal(modalId) {
+    console.log('🔓 Opening modal:', modalId);
+    
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        console.error('❌ Modal not found:', modalId);
+        return;
     }
 
+    // Add to open modals stack
+    if (!openModals.includes(modalId)) {
+        openModals.push(modalId);
+    }
 
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-            document.body.style.overflow = 'auto';
+    // Show modal
+    modal.style.display = 'block';
+    
+    // Add show class with slight delay for animation
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
 
-            //  If closing workflow modal, reset it
-            if (modalId === 'contractWorkflowModal') {
-                // Don't reset completely, just clear table to prevent duplicates
-                const tbody = document.getElementById('contractWorkflowSteps');
-                if (tbody) {
-                    tbody.innerHTML = '';
-                }
-                contractWorkflowStepCount = 0;
+    // Lock body scroll ONLY if this is the first modal
+    if (openModals.length === 1) {
+        document.body.style.overflow = 'hidden';
+        document.body.classList.add('modal-open');
+    }
+
+    // Special handling for specific modals
+    switch(modalId) {
+        case 'signatureModal':
+            if (typeof initCanvas === 'function') {
+                initCanvas();
             }
+            break;
+        case 'contractWorkflowModal':
+            selectedContractWorkflow = null;
+            break;
+        case 'templatePreviewModal':
+            if (selectedTemplate) {
+                updateTemplatePreview();
+            }
+            break;
+    }
+
+    console.log('✅ Modal opened. Stack:', openModals);
+}
+
+
+function closeModal(modalId) {
+    console.log('🔒 Closing modal:', modalId);
+    
+    const modal = document.getElementById(modalId);
+    if (!modal) {
+        console.error('❌ Modal not found:', modalId);
+        return;
+    }
+
+    // Remove from stack
+    openModals = openModals.filter(id => id !== modalId);
+
+    // Hide modal
+    modal.classList.remove('show');
+    
+    // Wait for animation, then hide completely
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+
+    // Clear modal-specific content
+    if (modalId === 'contractWorkflowModal') {
+        const tbody = document.getElementById('contractWorkflowSteps');
+        if (tbody) {
+            tbody.innerHTML = '';
+            contractWorkflowStepCount = 0;
         }
     }
+
+    // Restore body scroll ONLY if no modals are open
+    if (openModals.length === 0) {
+        document.body.style.overflow = 'auto';
+        document.body.classList.remove('modal-open');
+        
+        // Remove any stray backdrops
+        document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+            backdrop.remove();
+        });
+    }
+
+    console.log('✅ Modal closed. Remaining stack:', openModals);
+}
+
+
 
     function showLoader(message) {
         let loader = document.getElementById('loader');
